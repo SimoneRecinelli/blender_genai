@@ -1,18 +1,24 @@
 bl_info = {
-    "name": "GenAI Assistant",
+    "name": "Blender GenAI Assistant",
     "author": "Simone",
-    "version": (1, 0),
-    "blender": (4, 0, 0),
-    "description": "Assistente AI per la modellazione con LLaVA",
-    "category": "3D View"
+    "version": (0, 1),
+    "blender": (3, 0, 0),
+    "location": "View3D > Sidebar > GenAI",
+    "description": "AI assistant for modeling via Llama Vision",
+    "category": "3D View",
 }
 
-from . import panel, operator
+import bpy
+from . import genai_operator, panel
 
 def register():
+    genai_operator.register()
     panel.register()
-    operator.register()
 
 def unregister():
     panel.unregister()
-    operator.unregister()
+    genai_operator.unregister()
+
+if __name__ == "__main__":
+    register()
+
