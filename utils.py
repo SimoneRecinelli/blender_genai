@@ -1,4 +1,5 @@
 import bpy
+import subprocess
 
 def get_model_context():
     selected_objs = [obj for obj in bpy.context.selected_objects if obj.type == 'MESH']
@@ -23,19 +24,15 @@ def get_model_context():
     return header + "\n\n".join(context_list)
 
 
-import subprocess
-
 def query_ollama(prompt):
-    #print(f"[DEBUG] query_ollama ricevuto prompt: {prompt!r}")
     try:
         result = subprocess.run(
-            ["ollama", "run", "llama3.2:latest"],  # usa il modello corretto
+            ["ollama", "run", "llama3.2:latest"],
             input=prompt,
             capture_output=True,
             text=True,
             check=True
         )
-        #print(f"[DEBUG] Output Ollama: {result.stdout!r}")
         return result.stdout.strip()
     except subprocess.CalledProcessError as e:
         print(f"[ERROR] CalledProcessError: {e.stderr}")
@@ -43,4 +40,3 @@ def query_ollama(prompt):
     except Exception as e:
         print(f"[ERROR] Errore generico: {e}")
         return f"Errore generico: {e}"
-
