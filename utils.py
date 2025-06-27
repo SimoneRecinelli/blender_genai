@@ -5,6 +5,7 @@ import os
 from bs4 import BeautifulSoup
 
 # ===================== PARTE 1 – CONTEXT MODELLO BLENDER =====================
+# Prova commento
 
 def get_model_context():
     selected_objs = [obj for obj in bpy.context.selected_objects if obj.type == 'MESH']
