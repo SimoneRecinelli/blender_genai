@@ -1,18 +1,22 @@
-"""
 import bpy
 
+# Ogni messaggio nella chat
+class GenAIChatEntry(bpy.types.PropertyGroup):
+    sender: bpy.props.EnumProperty(
+        name="Sender",
+        items=[
+            ('USER', "Utente", "Messaggio inviato"),
+            ('AI', "GenAI", "Risposta ricevuta")
+        ]
+    )
+    message: bpy.props.StringProperty(name="Messaggio")
+
+# Proprietà della scena
 class GenAIProperties(bpy.types.PropertyGroup):
-    genai_question: bpy.props.StringProperty(
-        name="Domanda AI",
-        default=""
-    )
+    genai_question: bpy.props.StringProperty(name="Domanda", default="")
+    chat_history: bpy.props.CollectionProperty(type=GenAIChatEntry)
 
-    genai_response_text: bpy.props.StringProperty(
-        name="Risposta AI",
-        default=""
-    )
-
-
+# Pannello laterale in Blender
 class GENAI_PT_Panel(bpy.types.Panel):
     bl_label = "GenAI Assistant"
     bl_idname = "GENAI_PT_panel"
@@ -24,88 +28,57 @@ class GENAI_PT_Panel(bpy.types.Panel):
         layout = self.layout
         props = context.scene.genai_props
 
-        layout.prop(props, "genai_question", text="Domanda")
-        layout.operator("genai.ask_operator", text="Chiedi a GenAI")
+        # Storico visivo tipo chat
+        chat_box = layout.box()
+        chat_box.label(text="🧠 Chat:")
+        for entry in props.chat_history[-20:]:  # mostra ultimi 20 messaggi
+            row = chat_box.row()
+            icon = 'USER' if entry.sender == 'USER' else 'COMMUNITY'
+            row.label(text=entry.sender + ":", icon=icon)
+            row.operator("genai.show_message", text="📰 Mostra").message = entry.message
+
 
         layout.separator()
-        layout.label(text="Risposta AI:")
-        layout.prop(props, "genai_response_text", text="")
 
-        layout.separator()
-        layout.operator("genai.show_full_response", text="Apri risposta estesa")
+        # Input utente in fondo
+        input_box = layout.box()
+        input_box.prop(props, "genai_question", text="Scrivi la tua domanda")
+        input_box.operator("genai.ask_operator", text="📤 Invia")
 
-classes = [GenAIProperties, GENAI_PT_Panel]
+class GENAI_OT_ShowMessage(bpy.types.Operator):
+    bl_idname = "genai.show_message"
+    bl_label = "Messaggio completo"
 
-def register():
-    for cls in classes:
-        try:
-            bpy.utils.register_class(cls)
-        except:
-            print(f"[WARNING] Classe già registrata: {cls.__name__}")
-
-    if not hasattr(bpy.types.Scene, "genai_props"):
-        bpy.types.Scene.genai_props = bpy.props.PointerProperty(type=GenAIProperties)
-
-def unregister():
-    for cls in reversed(classes):
-        try:
-            bpy.utils.unregister_class(cls)
-        except:
-            print(f"[WARNING] Impossibile deregistrare: {cls.__name__}")
-
-    if hasattr(bpy.types.Scene, "genai_props"):
-        del bpy.types.Scene.genai_props
-"""
-
-import bpy
-
-class GenAIProperties(bpy.types.PropertyGroup):
-    genai_question: bpy.props.StringProperty(
-        name="Domanda AI",
-        default=""
-    )
-
-    genai_response_text: bpy.props.StringProperty(
-        name="Risposta AI",
-        default=""
-    )
-
-class GENAI_PT_Panel(bpy.types.Panel):
-    bl_label = "GenAI Assistant"
-    bl_idname = "GENAI_PT_panel"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = "GenAI"
+    message: bpy.props.StringProperty()
 
     def draw(self, context):
-        layout = self.layout
-        props = context.scene.genai_props
+        col = self.layout.column()
+        for line in self.message.split("\n"):
+            col.label(text=line)
 
-        layout.prop(props, "genai_question", text="Domanda")
-        layout.operator("genai.ask_operator", text="Chiedi a GenAI")
+    def execute(self, context):
+        return {'FINISHED'}
 
-        layout.separator()
-        layout.label(text="Risposta AI:")
-        # Visualizzazione multilinea con `text=""` (trucco per più righe)
-        layout.prop(props, "genai_response_text", text="")
-
-        layout.separator()
-        layout.operator("genai.show_full_response", text="Apri risposta estesa")
-
-        layout.separator()
-        layout.operator("genai.build_docs", text="Rigenera documentazione AI")
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self, width=600)
 
 
-classes = [GenAIProperties, GENAI_PT_Panel]
+# Registrazione classi
+classes = [
+    GenAIChatEntry,
+    GenAIProperties,
+    GENAI_PT_Panel,
+    GENAI_OT_ShowMessage
+]
 
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
-
     bpy.types.Scene.genai_props = bpy.props.PointerProperty(type=GenAIProperties)
 
 def unregister():
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
-
     del bpy.types.Scene.genai_props
+
+

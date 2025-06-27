@@ -21,27 +21,41 @@ class GENAI_OT_BuildDocs(bpy.types.Operator):
             self.report({'ERROR'}, f"Errore nella generazione: {e}")
         return {'FINISHED'}
 
-
 class GENAI_OT_AskOperator(bpy.types.Operator):
     bl_idname = "genai.ask_operator"
     bl_label = "Chiedi a GenAI"
 
     def execute(self, context):
         props = context.scene.genai_props
-        question = props.genai_question
+        question = props.genai_question.strip()
 
-        path_to_docs = "/Users/andreamarini/Desktop/blender_genai/blender_docs.txt"
+        if not question:
+            self.report({'WARNING'}, "Domanda vuota.")
+            return {'CANCELLED'}
 
-        response = query_ollama_with_docs(question, path_to_docs)
-        props.genai_response_text = response
+        # Aggiungi la domanda allo storico
+        user_msg = props.chat_history.add()
+        user_msg.sender = 'USER'
+        user_msg.message = question
 
-        # Scrive nel Text Editor interno
+        # Chiama Ollama
+        response = query_ollama_with_docs(question, "/Users/andreamarini/Desktop/blender_genai/blender_docs.txt")
+
+        # Salva anche come risposta nel Text Editor (opzionale)
         if "RispostaGenAI" not in bpy.data.texts:
             text_block = bpy.data.texts.new("RispostaGenAI")
         else:
             text_block = bpy.data.texts["RispostaGenAI"]
         text_block.clear()
         text_block.write(response)
+
+        # Aggiungi la risposta allo storico della chat
+        ai_msg = props.chat_history.add()
+        ai_msg.sender = 'AI'
+        ai_msg.message = response
+
+        # Svuota la domanda
+        props.genai_question = ""
 
         self.report({'INFO'}, "Risposta aggiornata e salvata nel Text Editor.")
         return {'FINISHED'}

@@ -88,41 +88,48 @@ def costruisci_blender_docs(carp_html_folder, output_txt):
 # ===================== PARTE 3 – QUERY OLLAMA CON DOCUMENTAZIONE =====================
 
 def query_ollama_with_docs(user_question, path_to_docs="blender_docs.txt"):
-    # Costruisce contesto della scena
-    model_context = get_model_context()
+    print("[DEBUG] Esecuzione query_ollama_with_docs")
 
-    # Carica documentazione
+    model_context = get_model_context()
+    print("[DEBUG] Contesto modello ottenuto")
+
     try:
         with open(path_to_docs, "r", encoding="utf-8") as f:
             blender_docs = f.read()
+        print("[DEBUG] Documentazione letta con successo")
     except FileNotFoundError:
         blender_docs = "Documentazione non disponibile."
+        print("[DEBUG] Documentazione NON trovata")
 
-    # Costruisce prompt con vincolo forte all'uso del testo documentale
     prompt = (
         "Ti fornisco la documentazione ufficiale di Blender e una domanda.\n"
         "Rispondi **solo** con le informazioni contenute nella documentazione.\n"
         "Se la risposta non è presente, **dichiara esplicitamente** che non hai trovato nulla nella documentazione.\n\n"
         "=== Documentazione Ufficiale Blender ===\n"
-        f"{blender_docs}\n\n"
+        f"{blender_docs[:1000]}...\n\n"
         "=== Contesto Modello nella Scena ===\n"
         f"{model_context}\n\n"
         f"=== Domanda Utente ===\n{user_question}\n\n"
-        "Rispondi in italiano, come esperto di Blender, con esempi o riferimenti a menu se presenti."
+        "Rispondi in italiano."
     )
+
+    print("[DEBUG] Prompt costruito (lunghezza:", len(prompt), "caratteri)")
 
     try:
         result = subprocess.run(
-            ["ollama", "run", "deepseek-r1"],
+            ["/usr/local/bin/ollama", "run", "deepseek-r1"],
             input=prompt,
             capture_output=True,
             text=True,
             check=True
         )
+        print("[DEBUG] Chiamata Ollama eseguita")
         return result.stdout.strip()
     except subprocess.CalledProcessError as e:
+        print(f"[ERRORE] Ollama ha restituito errore: {e.stderr}")
         return f"[Errore Ollama] {e.stderr}"
     except Exception as e:
+        print(f"[ERRORE] Generico: {e}")
         return f"[Errore generico] {str(e)}"
 
 # ===================== ESEMPIO USO =====================
