@@ -1,50 +1,13 @@
 import bpy
-import subprocess
-
-"""
-def get_model_context():
-    selected_objs = [obj for obj in bpy.context.selected_objects if obj.type == 'MESH']
-
-    if not selected_objs:
-        return "Nessun oggetto mesh selezionato nella scena."
-
-    context_list = []
-    for obj in selected_objs:
-        mesh = obj.data
-        bounds = obj.bound_box
-        dimensions = obj.dimensions
-        materials = [slot.material.name if slot.material else "Nessuno" for slot in obj.material_slots]
-        uv_layers = mesh.uv_layers.keys()
-        modifiers = [m.type for m in obj.modifiers] or ["Nessuno"]
-        shading = "Smooth" if any(p.use_smooth for p in mesh.polygons) else "Flat"
-
-        context = {
-            "Nome oggetto": obj.name,
-            "Vertici": len(mesh.vertices),
-            "Spigoli": len(mesh.edges),
-            "Facce": len(mesh.polygons),
-            "Dimensioni (X,Y,Z)": f"{dimensions.x:.2f}, {dimensions.y:.2f}, {dimensions.z:.2f}",
-            "Modificatori": modifiers,
-            "Materiali": materials or ["Nessuno"],
-            "UV Maps": list(uv_layers) or ["Nessuna"],
-            "Shading": shading,
-            "Parent": obj.parent.name if obj.parent else "Nessuno"
-        }
-
-        summary = "\n".join([f"{k}: {v}" for k, v in context.items()])
-        context_list.append(summary)
-
-    header = f"Hai selezionato {len(selected_objs)} oggetto/i. Ecco i dettagli:\n"
-    return header + "\n\n".join(context_list)
-
-"""
-
-import bpy
 import bmesh
+import subprocess
+import os
+from bs4 import BeautifulSoup
+
+# ===================== PARTE 1 – CONTEXT MODELLO BLENDER =====================
 
 def get_model_context():
     selected_objs = [obj for obj in bpy.context.selected_objects if obj.type == 'MESH']
-
     if not selected_objs:
         return "Nessun oggetto mesh selezionato nella scena."
 
@@ -58,7 +21,6 @@ def get_model_context():
         shading = "Smooth" if any(p.use_smooth for p in mesh.polygons) else "Flat"
         parent_name = obj.parent.name if obj.parent else "Nessuno"
 
-        # Analisi avanzata della mesh
         bm = bmesh.new()
         bm.from_mesh(mesh)
         bm.normal_update()
@@ -95,12 +57,62 @@ def get_model_context():
     header = f"Hai selezionato {len(selected_objs)} oggetto/i. Ecco i dettagli:\n"
     return header + "\n\n".join(context_list)
 
+# ===================== PARTE 2 – ESTRAZIONE DOCUMENTAZIONE =====================
+
+def estrai_testo_da_html(file_path):
+    with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+        soup = BeautifulSoup(f, "html.parser")
+        return soup.get_text(separator="\n")
+
+def costruisci_blender_docs(carp_html_folder, output_txt):
+    tutto_il_testo = ""
+    for root, _, files in os.walk(carp_html_folder):
+        for file in files:
+            if file.endswith(".html"):
+                path_file = os.path.join(root, file)
+                try:
+                    testo = estrai_testo_da_html(path_file)
+                    tutto_il_testo += f"\n\n--- {file} ---\n{testo}"
+                except Exception as e:
+                    print(f"[ERRORE] File {file}: {e}")
+
+    try:
+        with open(output_txt, "w", encoding="utf-8") as out:
+            out.write(tutto_il_testo)
+        print(f"[INFO] File della documentazione salvato in: {output_txt}")
+    except Exception as e:
+        print(f"[ERRORE] Scrittura file: {e}")
 
 
-def query_ollama(prompt):
+# ===================== PARTE 3 – QUERY OLLAMA CON DOCUMENTAZIONE =====================
+
+def query_ollama_with_docs(user_question, path_to_docs="blender_docs.txt"):
+    # Costruisce contesto della scena
+    model_context = get_model_context()
+
+    # Carica documentazione
+    try:
+        with open(path_to_docs, "r", encoding="utf-8") as f:
+            blender_docs = f.read()
+    except FileNotFoundError:
+        blender_docs = "Documentazione non disponibile."
+
+    # Costruisce prompt con vincolo forte all'uso del testo documentale
+    prompt = (
+        "Ti fornisco la documentazione ufficiale di Blender e una domanda.\n"
+        "Rispondi **solo** con le informazioni contenute nella documentazione.\n"
+        "Se la risposta non è presente, **dichiara esplicitamente** che non hai trovato nulla nella documentazione.\n\n"
+        "=== Documentazione Ufficiale Blender ===\n"
+        f"{blender_docs}\n\n"
+        "=== Contesto Modello nella Scena ===\n"
+        f"{model_context}\n\n"
+        f"=== Domanda Utente ===\n{user_question}\n\n"
+        "Rispondi in italiano, come esperto di Blender, con esempi o riferimenti a menu se presenti."
+    )
+
     try:
         result = subprocess.run(
-            ["ollama", "run", "llama3.2:latest"],
+            ["ollama", "run", "deepseek-r1"],
             input=prompt,
             capture_output=True,
             text=True,
@@ -108,8 +120,16 @@ def query_ollama(prompt):
         )
         return result.stdout.strip()
     except subprocess.CalledProcessError as e:
-        print(f"[ERROR] CalledProcessError: {e.stderr}")
-        return f"Errore nella chiamata Ollama: {e.stderr}"
+        return f"[Errore Ollama] {e.stderr}"
     except Exception as e:
-        print(f"[ERROR] Errore generico: {e}")
-        return f"Errore generico: {e}"
+        return f"[Errore generico] {str(e)}"
+
+# ===================== ESEMPIO USO =====================
+
+if __name__ == "__main__":
+    # Costruzione documentazione una volta sola (decommenta solo la prima volta)
+    costruisci_blender_docs("/Users/andreamarini/Desktop/blender_genai/blender_manual_v440_en.html", "blender_docs.txt")
+
+    # Esegui una domanda all’AI
+    risposta = query_ollama_with_docs("Come posso applicare un modificatore booleano a questo oggetto?")
+    print(risposta)

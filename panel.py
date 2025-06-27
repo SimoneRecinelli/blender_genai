@@ -92,6 +92,10 @@ class GENAI_PT_Panel(bpy.types.Panel):
         layout.separator()
         layout.operator("genai.show_full_response", text="Apri risposta estesa")
 
+        layout.separator()
+        layout.operator("genai.build_docs", text="Rigenera documentazione AI")
+
+
 classes = [GenAIProperties, GENAI_PT_Panel]
 
 def register():

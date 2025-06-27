@@ -1,31 +1,47 @@
 import bpy
-from .utils import query_ollama, get_model_context
+import os
+from .utils import query_ollama_with_docs, get_model_context, costruisci_blender_docs
+
+class GENAI_OT_BuildDocs(bpy.types.Operator):
+    bl_idname = "genai.build_docs"
+    bl_label = "Genera documento Blender RAG"
+    bl_description = "Estrae il contenuto della documentazione HTML di Blender per l'AI"
+
+    def execute(self, context):
+        try:
+            # Cartella contenente i file HTML della documentazione
+            cartella_docs = "/Users/andreamarini/Desktop/blender_genai/blender_manual_v440_en.html"
+
+            # File di output salvato fuori dalla cartella HTML
+            output_txt = "/Users/andreamarini/Desktop/blender_genai/blender_docs.txt"
+
+            costruisci_blender_docs(cartella_docs, output_txt)
+            self.report({'INFO'}, f"Documentazione salvata in: {output_txt}")
+        except Exception as e:
+            self.report({'ERROR'}, f"Errore nella generazione: {e}")
+        return {'FINISHED'}
+
 
 class GENAI_OT_AskOperator(bpy.types.Operator):
     bl_idname = "genai.ask_operator"
     bl_label = "Chiedi a GenAI"
 
     def execute(self, context):
-        props = context.scene.genai_props  # <- usa il PropertyGroup
-
+        props = context.scene.genai_props
         question = props.genai_question
-        model_context = get_model_context()
 
-        full_prompt = f"Sto lavorando su questo modello in Blender:\n{model_context}\n\nDomanda: {question}"
-        response = query_ollama(full_prompt)
+        path_to_docs = "/Users/andreamarini/Desktop/blender_genai/blender_docs.txt"
 
+        response = query_ollama_with_docs(question, path_to_docs)
         props.genai_response_text = response
 
-        # Scrive anche in un datablock testuale interno
+        # Scrive nel Text Editor interno
         if "RispostaGenAI" not in bpy.data.texts:
             text_block = bpy.data.texts.new("RispostaGenAI")
         else:
             text_block = bpy.data.texts["RispostaGenAI"]
         text_block.clear()
         text_block.write(response)
-
-        print("\n[DEBUG] Prompt:\n", full_prompt)
-        print("[DEBUG] Risposta:\n", response)
 
         self.report({'INFO'}, "Risposta aggiornata e salvata nel Text Editor.")
         return {'FINISHED'}
@@ -48,7 +64,8 @@ class GENAI_OT_ShowFullResponse(bpy.types.Operator):
         return context.window_manager.invoke_props_dialog(self, width=600)
 
 
-classes = [GENAI_OT_AskOperator, GENAI_OT_ShowFullResponse]
+# Registrazione classi
+classes = [GENAI_OT_BuildDocs, GENAI_OT_AskOperator, GENAI_OT_ShowFullResponse]
 
 def register():
     for cls in classes:
