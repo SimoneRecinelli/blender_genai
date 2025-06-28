@@ -39,12 +39,22 @@ class GENAI_OT_AskOperator(bpy.types.Operator):
         user_msg.message = question
 
         # Chiama Ollama
-        response = query_ollama_with_docs(question, "/Users/andreamarini/Desktop/blender_genai/blender_docs.txt")
+        response = query_ollama_with_docs(question, "/Users/andreamarini/Desktop/blender_genai/blender_docs.txt", props=props)
 
-        if "MessaggioCompletoGenAI" not in bpy.data.texts:
-            text_block = bpy.data.texts.new("MessaggioCompletoGenAI")
+        # Rimuove blocco "Thinking..." ... "...done thinking."
+        def strip_thinking_blocks(text):
+            if "Thinking..." in text and "...done thinking." in text:
+                start = text.find("Thinking...")
+                end = text.find("...done thinking.") + len("...done thinking.")
+                return (text[:start] + text[end:]).strip()
+            return text
+
+        response = strip_thinking_blocks(response)
+
+        if "MessaggioCompletoGenAI.txt" not in bpy.data.texts:
+            text_block = bpy.data.texts.new("MessaggioCompletoGenAI.txt")
         else:
-            text_block = bpy.data.texts["MessaggioCompletoGenAI"]
+            text_block = bpy.data.texts["MessaggioCompletoGenAI.txt"]
 
         text_block.clear()
         text_block.write(response)

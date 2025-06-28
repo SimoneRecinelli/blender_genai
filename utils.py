@@ -4,6 +4,14 @@ import subprocess
 import os
 from bs4 import BeautifulSoup
 
+def build_conversational_context(props):
+    history_lines = []
+    for entry in props.chat_history:
+        prefix = "Utente" if entry.sender == 'USER' else "GenAI"
+        history_lines.append(f"{prefix}: {entry.message}")
+    return "\n".join(history_lines)
+
+
 # ===================== PARTE 1 – CONTEXT MODELLO BLENDER =====================
 # Prova commento
 
@@ -87,10 +95,12 @@ def costruisci_blender_docs(carp_html_folder, output_txt):
 
 # ===================== PARTE 3 – QUERY OLLAMA CON DOCUMENTAZIONE =====================
 
-def query_ollama_with_docs(user_question, path_to_docs="blender_docs.txt"):
+def query_ollama_with_docs(user_question, path_to_docs="blender_docs.txt", props=None):
     print("[DEBUG] Esecuzione query_ollama_with_docs")
 
     model_context = get_model_context()
+    chat_history = build_conversational_context(props) if props else ""
+    print("[DEBUG] Cronologia passata al modello:\n", chat_history)
     print("[DEBUG] Contesto modello ottenuto")
 
     try:
@@ -102,16 +112,21 @@ def query_ollama_with_docs(user_question, path_to_docs="blender_docs.txt"):
         print("[DEBUG] Documentazione NON trovata")
 
     prompt = (
-        "Ti fornisco la documentazione ufficiale di Blender e una domanda.\n"
-        "Rispondi **solo** con le informazioni contenute nella documentazione.\n"
-        "Se la risposta non è presente, **dichiara esplicitamente** che non hai trovato nulla nella documentazione.\n\n"
+        "Rispondi basandoti **prima di tutto** sulla documentazione ufficiale di Blender.\n"
+        "Puoi anche tenere conto della **cronologia della conversazione** per rispondere meglio, se utile.\n"
+        "Se la risposta non è nella documentazione ma è deducibile dal contesto della conversazione, puoi comunque rispondere.\n"
+        "Se non trovi nulla né nella documentazione né nella conversazione, **dillo chiaramente**.\n\n"
+        "Se la risposta non è presente, **dillo esplicitamente**.\n\n"
         "=== Documentazione Ufficiale Blender ===\n"
         f"{blender_docs[:1000]}...\n\n"
         "=== Contesto Modello nella Scena ===\n"
         f"{model_context}\n\n"
-        f"=== Domanda Utente ===\n{user_question}\n\n"
+        "=== Cronologia conversazione ===\n"
+        f"{chat_history}\n\n"
+        f"=== Domanda utente ===\n{user_question}\n\n"
         "Rispondi in italiano."
     )
+
 
     print("[DEBUG] Prompt costruito (lunghezza:", len(prompt), "caratteri)")
 
