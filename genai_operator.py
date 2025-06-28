@@ -41,11 +41,11 @@ class GENAI_OT_AskOperator(bpy.types.Operator):
         # Chiama Ollama
         response = query_ollama_with_docs(question, "/Users/andreamarini/Desktop/blender_genai/blender_docs.txt")
 
-        # Salva anche come risposta nel Text Editor (opzionale)
-        if "RispostaGenAI" not in bpy.data.texts:
-            text_block = bpy.data.texts.new("RispostaGenAI")
+        if "MessaggioCompletoGenAI" not in bpy.data.texts:
+            text_block = bpy.data.texts.new("MessaggioCompletoGenAI")
         else:
-            text_block = bpy.data.texts["RispostaGenAI"]
+            text_block = bpy.data.texts["MessaggioCompletoGenAI"]
+
         text_block.clear()
         text_block.write(response)
 
@@ -53,6 +53,9 @@ class GENAI_OT_AskOperator(bpy.types.Operator):
         ai_msg = props.chat_history.add()
         ai_msg.sender = 'AI'
         ai_msg.message = response
+
+        props.genai_response = response
+
 
         # Svuota la domanda
         props.genai_question = ""

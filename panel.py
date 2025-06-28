@@ -32,10 +32,15 @@ class GENAI_PT_Panel(bpy.types.Panel):
         chat_box = layout.box()
         chat_box.label(text="🧠 Chat:")
         for entry in props.chat_history[-20:]:  # mostra ultimi 20 messaggi
-            row = chat_box.row()
+            box = chat_box.box()
             icon = 'USER' if entry.sender == 'USER' else 'COMMUNITY'
-            row.label(text=entry.sender + ":", icon=icon)
-            row.operator("genai.show_message", text="📰 Mostra").message = entry.message
+            box.label(text=entry.sender + ":", icon=icon)
+
+            if entry.sender == 'USER':
+                box.label(text=entry.message)
+            else:
+                op = box.operator("genai.open_response", text="🧠 Apri nel Text Editor")
+                op.message = entry.message
 
 
         layout.separator()
@@ -44,7 +49,9 @@ class GENAI_PT_Panel(bpy.types.Panel):
         input_box = layout.box()
         input_box.prop(props, "genai_question", text="Scrivi la tua domanda")
         input_box.operator("genai.ask_operator", text="📤 Invia")
+        layout.operator("genai.open_text_editor", text="📝 Apri risposta nel Text Editor")
 
+'''
 class GENAI_OT_ShowMessage(bpy.types.Operator):
     bl_idname = "genai.show_message"
     bl_label = "Messaggio completo"
@@ -61,6 +68,73 @@ class GENAI_OT_ShowMessage(bpy.types.Operator):
 
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self, width=600)
+'''
+
+# Pannello laterale in Text Editor con risposta completa scrollabile
+class GENAI_PT_FullResponsePanel(bpy.types.Panel):
+    bl_label = "Risposta completa"
+    bl_idname = "GENAI_PT_full_response_panel"
+    bl_space_type = 'TEXT_EDITOR'
+    bl_region_type = 'UI'
+    bl_category = "GenAI"
+
+    def draw(self, context):
+        layout = self.layout
+        props = context.scene.genai_props
+        layout.label(text="Ultima risposta generata:")
+        layout.prop(props, "genai_response", text="")
+
+
+class GENAI_OT_OpenResponseInEditor(bpy.types.Operator):
+    bl_idname = "genai.open_response"
+    bl_label = "Apri risposta AI"
+
+    message: bpy.props.StringProperty()
+
+    def execute(self, context):
+        name = "MessaggioCompletoGenAI.txt"
+        text_block = bpy.data.texts.get(name) or bpy.data.texts.new(name)
+        text_block.clear()
+        text_block.write(self.message)
+
+        area = context.area
+        area.type = 'TEXT_EDITOR'
+
+        for space in area.spaces:
+            if space.type == 'TEXT_EDITOR':
+                space.text = text_block
+                break
+
+        return {'FINISHED'}
+
+'''
+class GENAI_OT_OpenTextEditor(bpy.types.Operator):
+    bl_idname = "genai.open_text_editor"
+    bl_label = "Apri Text Editor con risposta"
+    bl_description = "Apre la risposta completa nel Text Editor nella finestra corrente"
+
+    def execute(self, context):
+        # Crea o recupera il TextBlock
+        name = "MessaggioCompletoGenAI"
+        if name not in bpy.data.texts:
+            text_block = bpy.data.texts.new(name)
+        else:
+            text_block = bpy.data.texts[name]
+
+        # Cambia l'area corrente in TEXT_EDITOR
+        area = context.area
+        if area.type != 'TEXT_EDITOR':
+            area.type = 'TEXT_EDITOR'
+
+        # Imposta il text block nella nuova area
+        for space in area.spaces:
+            if space.type == 'TEXT_EDITOR':
+                space.text = text_block
+                break
+
+        self.report({'INFO'}, "Aperto il Text Editor con la risposta.")
+        return {'FINISHED'}
+'''
 
 
 # Registrazione classi
@@ -68,7 +142,10 @@ classes = [
     GenAIChatEntry,
     GenAIProperties,
     GENAI_PT_Panel,
-    GENAI_OT_ShowMessage
+    GENAI_PT_FullResponsePanel,
+    #GENAI_OT_OpenTextEditor,
+    GENAI_OT_OpenResponseInEditor
+    #GENAI_OT_ShowMessage
 ]
 
 def register():
