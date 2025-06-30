@@ -1,3 +1,7 @@
+import bpy
+import os
+import sys
+
 bl_info = {
     "name": "Blender GenAI Assistant",
     "author": "Simone",
@@ -8,7 +12,11 @@ bl_info = {
     "category": "3D View",
 }
 
-import bpy
+addon_path = os.path.dirname(__file__)
+modules_path = os.path.join(addon_path, "modules")
+if modules_path not in sys.path:
+    sys.path.append(modules_path)
+
 from . import genai_operator, panel
 
 def register():

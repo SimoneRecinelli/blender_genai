@@ -1,25 +1,5 @@
 import bpy
-import os
-from .utils import query_ollama_with_docs, get_model_context, costruisci_blender_docs
-
-class GENAI_OT_BuildDocs(bpy.types.Operator):
-    bl_idname = "genai.build_docs"
-    bl_label = "Genera documento Blender RAG"
-    bl_description = "Estrae il contenuto della documentazione HTML di Blender per l'AI"
-
-    def execute(self, context):
-        try:
-            # Cartella contenente i file HTML della documentazione
-            cartella_docs = "/Users/andreamarini/Desktop/blender_genai/blender_manual_v440_en.html"
-
-            # File di output salvato fuori dalla cartella HTML
-            output_txt = "/Users/andreamarini/Desktop/blender_genai/blender_docs.txt"
-
-            costruisci_blender_docs(cartella_docs, output_txt)
-            self.report({'INFO'}, f"Documentazione salvata in: {output_txt}")
-        except Exception as e:
-            self.report({'ERROR'}, f"Errore nella generazione: {e}")
-        return {'FINISHED'}
+from .utils import query_ollama_with_docs, get_model_context
 
 class GENAI_OT_AskOperator(bpy.types.Operator):
     bl_idname = "genai.ask_operator"
@@ -33,15 +13,12 @@ class GENAI_OT_AskOperator(bpy.types.Operator):
             self.report({'WARNING'}, "Domanda vuota.")
             return {'CANCELLED'}
 
-        # Aggiungi la domanda allo storico
         user_msg = props.chat_history.add()
         user_msg.sender = 'USER'
         user_msg.message = question
 
-        # Chiama Ollama
-        response = query_ollama_with_docs(question, "/Users/andreamarini/Desktop/blender_genai/blender_docs.txt", props=props)
+        response = query_ollama_with_docs(question, props=props)
 
-        # Rimuove blocco "Thinking..." ... "...done thinking."
         def strip_thinking_blocks(text):
             if "Thinking..." in text and "...done thinking." in text:
                 start = text.find("Thinking...")
@@ -59,15 +36,11 @@ class GENAI_OT_AskOperator(bpy.types.Operator):
         text_block.clear()
         text_block.write(response)
 
-        # Aggiungi la risposta allo storico della chat
         ai_msg = props.chat_history.add()
         ai_msg.sender = 'AI'
         ai_msg.message = response
 
         props.genai_response = response
-
-
-        # Svuota la domanda
         props.genai_question = ""
 
         self.report({'INFO'}, "Risposta aggiornata e salvata nel Text Editor.")
@@ -90,9 +63,7 @@ class GENAI_OT_ShowFullResponse(bpy.types.Operator):
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self, width=600)
 
-
-# Registrazione classi
-classes = [GENAI_OT_BuildDocs, GENAI_OT_AskOperator, GENAI_OT_ShowFullResponse]
+classes = [GENAI_OT_AskOperator, GENAI_OT_ShowFullResponse]
 
 def register():
     for cls in classes:

@@ -2,7 +2,41 @@ import bpy
 import bmesh
 import subprocess
 import os
-from bs4 import BeautifulSoup
+import pickle
+import faiss
+from sentence_transformers import SentenceTransformer
+
+# === MODELLO SEMANTICO ===
+INDEX_PATH = os.path.join(os.path.dirname(__file__), "blender_faiss_index.pkl")
+model = SentenceTransformer("all-MiniLM-L6-v2")
+
+with open(INDEX_PATH, "rb") as f:
+    data = pickle.load(f)
+    index = data["index"]
+    texts = data["texts"]
+    metadatas = data["metadatas"]
+
+def query_rag(question, top_k=5):
+    query_embedding = model.encode([question])
+    distances, indices = index.search(query_embedding, top_k)
+    results = []
+
+    for i in indices[0]:
+        results.append({
+            "text": texts[i],
+            "source": metadatas[i]["source"]
+        })
+    return results
+
+
+def recupera_chunk_simili_faiss(domanda, k=5):
+    risultati = query_rag(domanda, top_k=k)
+    return "\n\n".join(
+        [f"[Fonte: {r['source']}]\n{r['text']}" for r in risultati]
+    )
+
+
+# === CONTESTO CHAT ===
 
 def build_conversational_context(props):
     history_lines = []
@@ -12,8 +46,7 @@ def build_conversational_context(props):
     return "\n".join(history_lines)
 
 
-# ===================== PARTE 1 – CONTEXT MODELLO BLENDER =====================
-# Prova commento
+# === CONTESTO MESH BLENDER ===
 
 def get_model_context():
     selected_objs = [obj for obj in bpy.context.selected_objects if obj.type == 'MESH']
@@ -66,93 +99,51 @@ def get_model_context():
     header = f"Hai selezionato {len(selected_objs)} oggetto/i. Ecco i dettagli:\n"
     return header + "\n\n".join(context_list)
 
-# ===================== PARTE 2 – ESTRAZIONE DOCUMENTAZIONE =====================
 
-def estrai_testo_da_html(file_path):
-    with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
-        soup = BeautifulSoup(f, "html.parser")
-        return soup.get_text(separator="\n")
+# === QUERY OLLAMA CON DOCUMENTAZIONE ===
 
-def costruisci_blender_docs(carp_html_folder, output_txt):
-    tutto_il_testo = ""
-    for root, _, files in os.walk(carp_html_folder):
-        for file in files:
-            if file.endswith(".html"):
-                path_file = os.path.join(root, file)
-                try:
-                    testo = estrai_testo_da_html(path_file)
-                    tutto_il_testo += f"\n\n--- {file} ---\n{testo}"
-                except Exception as e:
-                    print(f"[ERRORE] File {file}: {e}")
-
-    try:
-        with open(output_txt, "w", encoding="utf-8") as out:
-            out.write(tutto_il_testo)
-        print(f"[INFO] File della documentazione salvato in: {output_txt}")
-    except Exception as e:
-        print(f"[ERRORE] Scrittura file: {e}")
-
-
-# ===================== PARTE 3 – QUERY OLLAMA CON DOCUMENTAZIONE =====================
-
-def query_ollama_with_docs(user_question, path_to_docs="blender_docs.txt", props=None):
+def query_ollama_with_docs(user_question, props=None):
     print("[DEBUG] Esecuzione query_ollama_with_docs")
 
     model_context = get_model_context()
     chat_history = build_conversational_context(props) if props else ""
-    print("[DEBUG] Cronologia passata al modello:\n", chat_history)
-    print("[DEBUG] Contesto modello ottenuto")
 
     try:
-        with open(path_to_docs, "r", encoding="utf-8") as f:
-            blender_docs = f.read()
-        print("[DEBUG] Documentazione letta con successo")
-    except FileNotFoundError:
+        blender_docs = recupera_chunk_simili_faiss(user_question)
+        print("[DEBUG] Chunk documentazione recuperati.")
+    except Exception as e:
         blender_docs = "Documentazione non disponibile."
-        print("[DEBUG] Documentazione NON trovata")
+        print("[ERRORE] Recupero documentazione:", str(e))
 
     prompt = (
-        "Rispondi basandoti **prima di tutto** sulla documentazione ufficiale di Blender.\n"
-        "Puoi anche tenere conto della **cronologia della conversazione** per rispondere meglio, se utile.\n"
-        "Se la risposta non è nella documentazione ma è deducibile dal contesto della conversazione, puoi comunque rispondere.\n"
-        "Se non trovi nulla né nella documentazione né nella conversazione, **dillo chiaramente**.\n\n"
-        "Se la risposta non è presente, **dillo esplicitamente**.\n\n"
-        "=== Documentazione Ufficiale Blender ===\n"
-        f"{blender_docs[:1000]}...\n\n"
-        "=== Contesto Modello nella Scena ===\n"
+        "Answer based **only** on the official Blender documentation provided below.\n"
+        "If the answer is not found there, rely on the scene context or say 'I don't know'.\n\n"
+        
+        "=== Blender Documentation ===\n"
+        f"{blender_docs}\n\n"
+
+        "=== Scene Model Context ===\n"
         f"{model_context}\n\n"
-        "=== Cronologia conversazione ===\n"
+
+        "=== Conversation History ===\n"
         f"{chat_history}\n\n"
-        f"=== Domanda utente ===\n{user_question}\n\n"
-        "Rispondi in italiano."
+
+        "=== User Question ===\n"
+        f"{user_question}\n\n"
+
+        "Answer in English."
     )
-
-
-    print("[DEBUG] Prompt costruito (lunghezza:", len(prompt), "caratteri)")
 
     try:
         result = subprocess.run(
-            ["/usr/local/bin/ollama", "run", "deepseek-r1"],
+            ["/usr/local/bin/ollama", "run", "llama3.2-vision"],
             input=prompt,
             capture_output=True,
             text=True,
             check=True
         )
-        print("[DEBUG] Chiamata Ollama eseguita")
         return result.stdout.strip()
     except subprocess.CalledProcessError as e:
-        print(f"[ERRORE] Ollama ha restituito errore: {e.stderr}")
         return f"[Errore Ollama] {e.stderr}"
     except Exception as e:
-        print(f"[ERRORE] Generico: {e}")
         return f"[Errore generico] {str(e)}"
-
-# ===================== ESEMPIO USO =====================
-
-if __name__ == "__main__":
-    # Costruzione documentazione una volta sola (decommenta solo la prima volta)
-    costruisci_blender_docs("/Users/andreamarini/Desktop/blender_genai/blender_manual_v440_en.html", "blender_docs.txt")
-
-    # Esegui una domanda all’AI
-    risposta = query_ollama_with_docs("Come posso applicare un modificatore booleano a questo oggetto?")
-    print(risposta)
