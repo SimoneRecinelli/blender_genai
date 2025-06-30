@@ -107,34 +107,28 @@ class GENAI_OT_OpenResponseInEditor(bpy.types.Operator):
 
         return {'FINISHED'}
 
-'''
 class GENAI_OT_OpenTextEditor(bpy.types.Operator):
     bl_idname = "genai.open_text_editor"
     bl_label = "Apri Text Editor con risposta"
     bl_description = "Apre la risposta completa nel Text Editor nella finestra corrente"
 
     def execute(self, context):
-        # Crea o recupera il TextBlock
         name = "MessaggioCompletoGenAI"
         if name not in bpy.data.texts:
             text_block = bpy.data.texts.new(name)
         else:
             text_block = bpy.data.texts[name]
 
-        # Cambia l'area corrente in TEXT_EDITOR
-        area = context.area
-        if area.type != 'TEXT_EDITOR':
-            area.type = 'TEXT_EDITOR'
-
-        # Imposta il text block nella nuova area
-        for space in area.spaces:
-            if space.type == 'TEXT_EDITOR':
-                space.text = text_block
-                break
-
-        self.report({'INFO'}, "Aperto il Text Editor con la risposta.")
-        return {'FINISHED'}
-'''
+        # Cerca un'area di tipo TEXT_EDITOR
+        for area in context.window.screen.areas:
+            if area.type == 'TEXT_EDITOR':
+                for space in area.spaces:
+                    if space.type == 'TEXT_EDITOR':
+                        space.text = text_block
+                        self.report({'INFO'}, "Risposta aperta nel Text Editor.")
+                        return {'FINISHED'}
+        self.report({'WARNING'}, "Nessuna area Text Editor trovata. Aprine una manualmente.")
+        return {'CANCELLED'}
 
 
 # Registrazione classi
@@ -143,7 +137,7 @@ classes = [
     GenAIProperties,
     GENAI_PT_Panel,
     GENAI_PT_FullResponsePanel,
-    #GENAI_OT_OpenTextEditor,
+    GENAI_OT_OpenTextEditor,
     GENAI_OT_OpenResponseInEditor
     #GENAI_OT_ShowMessage
 ]
