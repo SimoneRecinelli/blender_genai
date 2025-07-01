@@ -49,7 +49,7 @@ class GENAI_PT_Panel(bpy.types.Panel):
         input_box = layout.box()
         input_box.prop(props, "genai_question", text="Scrivi la tua domanda")
         input_box.operator("genai.ask_operator", text="📤 Invia")
-        layout.operator("genai.open_text_editor", text="📝 Apri risposta nel Text Editor")
+        # layout.operator("genai.open_text_editor", text="📝 Apri risposta nel Text Editor")
 
 '''
 class GENAI_OT_ShowMessage(bpy.types.Operator):

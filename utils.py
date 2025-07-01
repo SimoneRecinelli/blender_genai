@@ -264,14 +264,17 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
             print("[ERRORE] Recupero documentazione:", str(e))
 
         prompt = (
-            "Answer based on the provided scene model context and documentation. "
-            "Prioritize the scene model details in your answer. "
-            "Include as many specific details as possible about the selected object(s), such as geometry, materials, modifiers, shading, UV maps, and parent relationships.\n\n"
+            "You are a helpful assistant for Blender 4.4.\n\n"
+            "Answer based **strictly and exclusively** on the official Blender 4.4 documentation provided below.\n"
+            "Do not include any information from unofficial sources, online forums, previous versions of Blender, or general knowledge.\n"
+            "If the answer is not explicitly covered in the documentation, respond with: 'not present in the documentation'.\n\n"
+            "In your response, also take into account the following detailed description of the selected object(s) in the Blender scene.\n"
+            "Include as many specific details as possible about each selected object, such as geometry, materials, modifiers, shading, UV maps, and parent relationships.\n\n"
 
             "=== Scene Model Context ===\n"
             f"{model_context}\n\n"
 
-            "=== Blender Documentation ===\n"
+            "=== Blender 4.4 Official Documentation ===\n"
             f"{blender_docs}\n\n"
 
             "=== Conversation History ===\n"
@@ -280,8 +283,9 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
             "=== User Question ===\n"
             f"{user_question}\n\n"
 
-            "Answer in English."
+            "Respond in clear and technical English."
         )
+
 
         try:
             result = subprocess.run(
