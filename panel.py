@@ -1,4 +1,5 @@
 import bpy
+import os
 
 # Ogni messaggio nella chat
 class GenAIChatEntry(bpy.types.PropertyGroup):
@@ -14,7 +15,11 @@ class GenAIChatEntry(bpy.types.PropertyGroup):
 # Proprietà della scena
 class GenAIProperties(bpy.types.PropertyGroup):
     genai_question: bpy.props.StringProperty(name="Domanda", default="")
+    genai_response: bpy.props.StringProperty(name="Risposta", default="")
+    genai_response_text: bpy.props.StringProperty(name="Risposta completa", default="")
     chat_history: bpy.props.CollectionProperty(type=GenAIChatEntry)
+    genai_image_path: bpy.props.StringProperty(name="Percorso immagine", subtype='FILE_PATH')
+    genai_status: bpy.props.StringProperty(name="Stato", default="")
 
 # Pannello laterale in Blender
 class GENAI_PT_Panel(bpy.types.Panel):
@@ -28,49 +33,33 @@ class GENAI_PT_Panel(bpy.types.Panel):
         layout = self.layout
         props = context.scene.genai_props
 
-        # Storico visivo tipo chat
+        # Storico chat
         chat_box = layout.box()
         chat_box.label(text="🧠 Chat:")
-        for entry in props.chat_history[-20:]:  # mostra ultimi 20 messaggi
+        for entry in props.chat_history[-20:]:
             box = chat_box.box()
             icon = 'USER' if entry.sender == 'USER' else 'COMMUNITY'
             box.label(text=entry.sender + ":", icon=icon)
-
             if entry.sender == 'USER':
                 box.label(text=entry.message)
             else:
                 op = box.operator("genai.open_response", text="🧠 Apri nel Text Editor")
                 op.message = entry.message
 
-
         layout.separator()
 
-        # Input utente in fondo
+        # Input e bottoni
         input_box = layout.box()
         input_box.prop(props, "genai_question", text="Scrivi la tua domanda")
-        input_box.operator("genai.ask_operator", text="📤 Invia")
-        # layout.operator("genai.open_text_editor", text="📝 Apri risposta nel Text Editor")
 
-'''
-class GENAI_OT_ShowMessage(bpy.types.Operator):
-    bl_idname = "genai.show_message"
-    bl_label = "Messaggio completo"
+        row = input_box.row(align=True)
+        row.operator("genai.ask_operator", text="📤 Invia")
+        row.operator("genai.load_image", text="📷 Carica Immagine")
 
-    message: bpy.props.StringProperty()
+        # ✅ Mostra stato (es: immagine caricata)
+        if props.genai_status:
+            input_box.label(text=props.genai_status, icon='INFO')
 
-    def draw(self, context):
-        col = self.layout.column()
-        for line in self.message.split("\n"):
-            col.label(text=line)
-
-    def execute(self, context):
-        return {'FINISHED'}
-
-    def invoke(self, context, event):
-        return context.window_manager.invoke_props_dialog(self, width=600)
-'''
-
-# Pannello laterale in Text Editor con risposta completa scrollabile
 class GENAI_PT_FullResponsePanel(bpy.types.Panel):
     bl_label = "Risposta completa"
     bl_idname = "GENAI_PT_full_response_panel"
@@ -83,7 +72,6 @@ class GENAI_PT_FullResponsePanel(bpy.types.Panel):
         props = context.scene.genai_props
         layout.label(text="Ultima risposta generata:")
         layout.prop(props, "genai_response", text="")
-
 
 class GENAI_OT_OpenResponseInEditor(bpy.types.Operator):
     bl_idname = "genai.open_response"
@@ -99,18 +87,15 @@ class GENAI_OT_OpenResponseInEditor(bpy.types.Operator):
 
         area = context.area
         area.type = 'TEXT_EDITOR'
-
         for space in area.spaces:
             if space.type == 'TEXT_EDITOR':
                 space.text = text_block
                 break
-
         return {'FINISHED'}
 
 class GENAI_OT_OpenTextEditor(bpy.types.Operator):
     bl_idname = "genai.open_text_editor"
     bl_label = "Apri Text Editor con risposta"
-    bl_description = "Apre la risposta completa nel Text Editor nella finestra corrente"
 
     def execute(self, context):
         name = "MessaggioCompletoGenAI"
@@ -119,7 +104,6 @@ class GENAI_OT_OpenTextEditor(bpy.types.Operator):
         else:
             text_block = bpy.data.texts[name]
 
-        # Cerca un'area di tipo TEXT_EDITOR
         for area in context.window.screen.areas:
             if area.type == 'TEXT_EDITOR':
                 for space in area.spaces:
@@ -127,9 +111,8 @@ class GENAI_OT_OpenTextEditor(bpy.types.Operator):
                         space.text = text_block
                         self.report({'INFO'}, "Risposta aperta nel Text Editor.")
                         return {'FINISHED'}
-        self.report({'WARNING'}, "Nessuna area Text Editor trovata. Aprine una manualmente.")
+        self.report({'WARNING'}, "Nessuna area Text Editor trovata.")
         return {'CANCELLED'}
-
 
 # Registrazione classi
 classes = [
@@ -139,7 +122,6 @@ classes = [
     GENAI_PT_FullResponsePanel,
     GENAI_OT_OpenTextEditor,
     GENAI_OT_OpenResponseInEditor
-    #GENAI_OT_ShowMessage
 ]
 
 def register():
@@ -151,5 +133,3 @@ def unregister():
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
     del bpy.types.Scene.genai_props
-
-
