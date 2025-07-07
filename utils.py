@@ -9,19 +9,31 @@ import json
 
 # === QUERY RAG (senza import globali) ===
 
-def query_rag(question, top_k=5):
+def query_rag(question, top_k=5, use_popup=True):
     try:
         import faiss
         from sentence_transformers import SentenceTransformer
     except ImportError:
-        return [{"text": "Dipendenze non installate. Premi 'Installa Dipendenze' dal pannello.", "source": "Sistema"}]
+        if use_popup:
+            bpy.ops.genai.missing_deps_popup('INVOKE_DEFAULT',
+                                             message="Dipendenze mancanti.\nPremi 'Installa Dipendenze' nel pannello GenAI.")
+        return [{
+            "text": "Dipendenze non installate. Premi 'Installa Dipendenze' dal pannello.",
+            "source": "Sistema"
+        }]
 
     INDEX_PATH = os.path.join(os.path.dirname(__file__), "blender_faiss_index.pkl")
 
     if not os.path.exists(INDEX_PATH):
-        return [{"text": "Indice documentazione non trovato.", "source": "Sistema"}]
+        if use_popup:
+            bpy.ops.genai.missing_deps_popup('INVOKE_DEFAULT',
+                                             message="Indice documentazione mancante.\nPremi 'Aggiorna Documentazione' nel pannello GenAI.")
+        return [{
+            "text": "Indice documentazione non trovato. Premi 'Aggiorna Documentazione'.",
+            "source": "Sistema"
+        }]
 
-    model = SentenceTransformer("all-MiniLM-L6-v2")
+    model = SentenceTransformer("BAAI/bge-large-en-v1.5")
 
     with open(INDEX_PATH, "rb") as f:
         data = pickle.load(f)
@@ -29,14 +41,18 @@ def query_rag(question, top_k=5):
         texts = data["texts"]
         metadatas = data["metadatas"]
 
-    query_embedding = model.encode([question])
-    distances, indices = index.search(query_embedding, top_k)
+    query = "query: " + question
+    query_embedding = model.encode(query, normalize_embeddings=True)
+
+    distances, indices = index.search(query_embedding.reshape(1, -1), top_k)
+
     results = []
     for i in indices[0]:
         results.append({
             "text": texts[i],
             "source": metadatas[i]["source"]
         })
+
     return results
 
 def recupera_chunk_simili_faiss(domanda, k=5):

@@ -13,30 +13,25 @@ except ImportError as e:
     print("   pip install faiss-cpu sentence-transformers bs4")
     sys.exit(1)
 
-
-# CAMBIA QUESTO PATH in base a dove hai salvato la cartella HTML
+# === CONFIGURAZIONE ===
 HTML_FOLDER = "/Users/diegosantarelli/Desktop/blender_genai/blender_manual_v440_en"
 INDEX_PATH = "blender_faiss_index.pkl"
 CHUNK_SIZE = 500
 
-model = SentenceTransformer("all-MiniLM-L6-v2")
+# Modello di embedding ad alte prestazioni per semantic search
+model = SentenceTransformer("BAAI/bge-large-en-v1.5")
 
 def extract_text_from_html(file_path):
-
     with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
         soup = BeautifulSoup(f, "html.parser")
 
-        # Rimuovi script e roba ovvia
         for tag in soup(["nav", "header", "footer", "script", "style", "noscript", "form", "aside"]):
             tag.decompose()
 
-        # Trova il div centrale, di solito è il primo <div class="section"> significativo
         section_divs = soup.find_all("div", class_="section")
-
         all_text = ""
         for div in section_divs:
             text = div.get_text(separator=" ", strip=True)
-            # ignora blocchi tipo "Contents Menu Expand Light mode..."
             if "Contents Menu Expand" in text or "Toggle Light" in text:
                 continue
             all_text += text + "\n"
@@ -44,7 +39,6 @@ def extract_text_from_html(file_path):
         if all_text.strip():
             return all_text.strip()
 
-        # Fallback finale sul body, ma attenzione: con filtro extra
         body = soup.find("body")
         if body:
             body_text = body.get_text(separator=" ", strip=True)
@@ -62,14 +56,12 @@ def chunk_text(text, size=CHUNK_SIZE):
 
 texts = []
 metadatas = []
-
 html_file_count = 0
 
-# 🔍 Estrai e chunkizza
+# Estrazione da HTML e suddivisione in chunk
 for root, dirs, files in os.walk(HTML_FOLDER):
-    # ignora i file della root
     if root == HTML_FOLDER:
-        continue
+        continue  # ignora file della root
     for file in files:
         if file.endswith(".html"):
             html_file_count += 1
@@ -79,7 +71,8 @@ for root, dirs, files in os.walk(HTML_FOLDER):
                 continue
             chunks = chunk_text(text)
             for chunk in chunks:
-                texts.append(chunk)
+                # Prompt tuning: "passage: " per ogni chunk
+                texts.append("passage: " + chunk)
                 metadatas.append({"source": path})
 
 print(f"File HTML letti: {html_file_count}")
@@ -89,13 +82,13 @@ if not texts:
     print("ERRORE: Nessun testo trovato. Controlla il path in HTML_FOLDER.")
     exit(1)
 
-# Calcolo embedding
+# Calcolo embedding (con normalizzazione per cosine similarity)
 print("Calcolo degli embeddings...")
-embeddings = model.encode(texts, show_progress_bar=True)
+embeddings = model.encode(texts, show_progress_bar=True, normalize_embeddings=True)
 
-# Costruzione indice FAISS
+# Costruzione indice FAISS con cosine similarity
 dim = embeddings.shape[1]
-index = faiss.IndexFlatL2(dim)
+index = faiss.IndexFlatIP(dim)  # IP = Inner Product, usato per cosine similarity normalizzata
 index.add(embeddings)
 
 # Salvataggio
