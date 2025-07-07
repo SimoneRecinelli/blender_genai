@@ -114,11 +114,7 @@ def send_vision_prompt_to_ollama(prompt: str, image_path: str = None, model: str
         "model": model,
         "prompt": prompt,
         "options": {
-<<<<<<< HEAD
-            "num_predict": 512
-=======
             "num_predict": 300
->>>>>>> 6326d307a9f31c15b557be8e319806919b970339
         }
     }
 
