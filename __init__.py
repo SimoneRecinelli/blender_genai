@@ -1,6 +1,6 @@
 import bpy
-import os
-import sys
+# Import dei file interni all'addon
+from . import genai_operator, panel, install_operator
 
 bl_info = {
     "name": "Blender GenAI Assistant",
@@ -12,18 +12,13 @@ bl_info = {
     "category": "3D View",
 }
 
-addon_path = os.path.dirname(__file__)
-modules_path = os.path.join(addon_path, "modules")
-if modules_path not in sys.path:
-    sys.path.append(modules_path)
-
-from . import genai_operator, panel
-
 def register():
     genai_operator.register()
     panel.register()
+    install_operator.register()  # ✅ registra l’operatore per installare le dipendenze
 
 def unregister():
+    install_operator.unregister()  # ✅ unregister dell’operatore
     panel.unregister()
     genai_operator.unregister()
 

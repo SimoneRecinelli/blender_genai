@@ -1,9 +1,18 @@
 import os
 import pickle
-from bs4 import BeautifulSoup
-from sentence_transformers import SentenceTransformer
-import faiss
-from tqdm import tqdm
+import sys
+
+# Controllo dipendenze esterne
+try:
+    from sentence_transformers import SentenceTransformer
+    import faiss
+    from bs4 import BeautifulSoup
+except ImportError as e:
+    print("Errore: modulo mancante.")
+    print("Risoluzione: esegui questo comando per installare le dipendenze:")
+    print("   pip install faiss-cpu sentence-transformers bs4")
+    sys.exit(1)
+
 
 # CAMBIA QUESTO PATH in base a dove hai salvato la cartella HTML
 HTML_FOLDER = "/Users/diegosantarelli/Desktop/blender_genai/blender_manual_v440_en"
@@ -13,7 +22,6 @@ CHUNK_SIZE = 500
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
 def extract_text_from_html(file_path):
-    from bs4 import BeautifulSoup
 
     with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
         soup = BeautifulSoup(f, "html.parser")

@@ -1,5 +1,6 @@
 import bpy
 import os
+from .install_operator import GENAI_OT_InstallDeps
 
 # Ogni messaggio nella chat
 class GenAIChatEntry(bpy.types.PropertyGroup):
@@ -59,6 +60,11 @@ class GENAI_PT_Panel(bpy.types.Panel):
         # ✅ Mostra stato (es: immagine caricata)
         if props.genai_status:
             input_box.label(text=props.genai_status, icon='INFO')
+
+        layout.separator()
+        layout.operator("genai.install_deps", text="Installa Dipendenze", icon="CONSOLE")
+        layout.operator("genai.build_index", text="Aggiorna Documentazione (RAG)", icon="FILE_REFRESH")
+
 
 class GENAI_PT_FullResponsePanel(bpy.types.Panel):
     bl_label = "Risposta completa"
