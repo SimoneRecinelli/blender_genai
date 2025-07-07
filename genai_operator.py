@@ -180,10 +180,23 @@ class GENAI_OT_LoadImage(bpy.types.Operator):
         props = context.scene.genai_props
         props.genai_image_path = self.filepath
 
-        # Mostra conferma visiva e aggiorna stato nell'UI (opzionale)
-        self.report({'INFO'}, f"✅ Immagine caricata correttamente.")
+        # ✅ Messaggio nel pannello
         props.genai_status = f"Immagine caricata: {os.path.basename(self.filepath)}"
+
+        # ✅ Funzione di reset + aggiornamento forzato UI
+        def clear_status():
+            props.genai_status = ""
+            for window in bpy.context.window_manager.windows:
+                for area in window.screen.areas:
+                    if area.type == 'VIEW_3D':
+                        area.tag_redraw()
+            return None  # disattiva timer
+
+        bpy.app.timers.register(clear_status, first_interval=10.0)
+
+        self.report({'INFO'}, "✅ Immagine caricata correttamente.")
         return {'FINISHED'}
+
 
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)

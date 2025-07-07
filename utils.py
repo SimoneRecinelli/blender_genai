@@ -430,6 +430,7 @@ def get_model_context(selected_objs):
     header = f"Hai selezionato {len(selected_objs)} oggetto/i. Ecco i dettagli:\n"
     return header + "\n\n".join(context_list)
 
+
 # === INVIO HTTP A OLLAMA VISION ===
 
 def send_vision_prompt_to_ollama(prompt: str, image_path: str = None, model: str = "llava:7b") -> str:
@@ -437,7 +438,7 @@ def send_vision_prompt_to_ollama(prompt: str, image_path: str = None, model: str
         "model": model,
         "prompt": prompt,
         "options": {
-            "num_predict": 512  # limita la lunghezza della risposta per evitare loop
+            "num_predict": 300
         }
     }
 
@@ -448,7 +449,7 @@ def send_vision_prompt_to_ollama(prompt: str, image_path: str = None, model: str
             payload["images"] = [image_b64]
 
     try:
-        response = requests.post("http://localhost:11434/api/generate", json=payload, stream=True)
+        response = requests.post("http://localhost:11434/api/generate", json=payload, stream=False)
         response.raise_for_status()
         output = ""
         for line in response.iter_lines():
@@ -477,8 +478,10 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
 
         prompt = (
             "You are a helpful assistant for Blender 4.4.\n\n"
-            "Answer based **strictly and exclusively** on the official Blender 4.4 documentation provided below.\n"
-            "If the answer is not explicitly covered in the documentation, respond with: 'not present in the documentation'.\n\n"
+            "You must answer the user's question strictly and exclusively based on the official Blender 4.4 documentation **and** the description of the selected objects in the scene.\n"
+            "Do not use external knowledge, online forums, prior Blender versions, or generic reasoning.\n"
+            "If the answer is not explicitly supported by the documentation, respond with: 'not present in the documentation'.\n\n"
+
             "=== Scene Model Context ===\n"
             f"{model_context}\n\n"
             "=== Blender 4.4 Official Documentation ===\n"
@@ -487,7 +490,7 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
             f"{chat_history}\n\n"
             "=== User Question ===\n"
             f"{user_question}\n\n"
-            "Respond in clear and technical English."
+            "Respond using the same language as the user's question, with a clear and technical tone."
         )
 
         image_path = props.genai_image_path if props and props.genai_image_path else None
