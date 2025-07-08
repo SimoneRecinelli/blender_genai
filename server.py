@@ -54,8 +54,17 @@ def get_response():
             "status": "waiting"
         })
 
+_flask_server_started = False  # variabile globale di stato
+
 def start_flask_server():
-    threading.Thread(
-        target=lambda: app.run(host="127.0.0.1", port=5000),
-        daemon=True
-    ).start()
+    global _flask_server_started
+    if not _flask_server_started:
+        print("[DEBUG] Server Flask avviato su http://localhost:5000")
+        threading.Thread(
+            target=lambda: app.run(host="127.0.0.1", port=5000),
+            daemon=True
+        ).start()
+        _flask_server_started = True
+    else:
+        print("[DEBUG] Server Flask già attivo, non viene riavviato.")
+

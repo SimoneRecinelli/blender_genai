@@ -2,17 +2,11 @@ import sys
 import requests
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
-    QTextEdit, QLabel, QScrollArea, QSizePolicy
+    QTextEdit, QLabel, QScrollArea, QFileDialog
 )
-from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtWidgets import QFileDialog
-from PyQt5.QtGui import QIcon
-from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import QSize
+from PyQt5.QtGui import QIcon, QPixmap, QMovie
+from PyQt5.QtCore import Qt, QTimer, QSize
 
-
-
-from PyQt5.QtCore import QSize
 
 class MessageBubble(QLabel):
     def __init__(self, text, sender='user', parent=None):
@@ -20,28 +14,22 @@ class MessageBubble(QLabel):
         self.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.setWordWrap(True)
         self.setMargin(10)
-
         self.setStyleSheet(
-            f"""
-            QLabel {{
-                border-radius: 10px;
-                background-color: {"#2d2d2d" if sender == "user" else "#444"};
-                color: white;
-                padding: 10px;
-                font-size: 14px;
-            }}
-            """
-            
+            f"QLabel {{ background-color: {'#2d2d2d' if sender == 'user' else '#444'}; color: white; padding: 10px; font-size: 14px; border-radius: 10px; }}"
         )
-        # Si adatta dinamicamente, ma non supera il 70% della finestra
-        #self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Minimum)
-        if sender == 'user':
-            self.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Minimum)
+
+
+class ChatTextBox(QTextEdit):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.parent = parent
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Return and not (event.modifiers() & Qt.ShiftModifier):
+            if not self.parent.attesa_risposta:
+                self.parent.invia_domanda()
         else:
-            self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
-
-
-        #self.setMaximumWidth(int(parent.width() * 0.7) if parent else 400)
+            super().keyPressEvent(event)
 
 
 class GenAIClient(QWidget):
@@ -49,6 +37,7 @@ class GenAIClient(QWidget):
         super().__init__()
         self.setWindowTitle("GenAI Assistant Chat")
         self.setGeometry(100, 100, 600, 500)
+        self.attesa_risposta = False
 
         self.setStyleSheet("""
             QWidget {
@@ -63,40 +52,32 @@ class GenAIClient(QWidget):
                 border: 1px solid #444;
                 border-radius: 10px;
                 padding: 8px;
-            }F
+            }
             QPushButton {
                 background-color: #444;
                 color: white;
                 border: none;
-                padding: 8px;
             }
             QPushButton:hover {
                 background-color: #666;
             }
             QScrollBar:vertical {
                 background: transparent;
-                width: 6px;
-                margin: 0px;
+                width: 8px;
             }
-
             QScrollBar::handle:vertical {
                 background: white;
+                border-radius: 4px;
                 min-height: 20px;
-                border-radius: 3px;
             }
-
-            QScrollBar::add-line:vertical,
-            QScrollBar::sub-line:vertical {
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
                 height: 0px;
             }
             QScrollArea {
                 border: none;
-                background: transparent;
             }
-
         """)
 
-        # Chat layout
         self.chat_layout = QVBoxLayout()
         self.chat_layout.setAlignment(Qt.AlignTop)
 
@@ -107,165 +88,126 @@ class GenAIClient(QWidget):
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setWidget(self.scroll_content)
 
-        # Input layout con icone
-        self.textbox = QTextEdit()
+        self.textbox = ChatTextBox(self)
         self.textbox.setFixedHeight(60)
         self.textbox.setPlaceholderText("Scrivi una domanda...")
 
-        # === Pulsante "+" ===
         self.add_image_button = QPushButton()
-        self.add_image_button.setIcon(QIcon("plus.png"))
+        self.add_image_button.setIcon(QIcon("load.svg"))
         self.add_image_button.setIconSize(QSize(24, 24))
         self.add_image_button.setFixedSize(40, 40)
-        self.add_image_button.setStyleSheet("""
-            QPushButton {
-                border-radius: 20px;
-                background-color: white;
-            }
-        """)
+        self.add_image_button.setStyleSheet("QPushButton { border-radius: 20px; background-color: white; }")
         self.add_image_button.clicked.connect(self.carica_immagine)
 
-        # === Pulsante "invia" ===
         self.send_button = QPushButton()
-        self.send_button.setIcon(QIcon("paperplane.png"))
+        self.send_button.setIcon(QIcon("send.svg"))
         self.send_button.setIconSize(QSize(24, 24))
         self.send_button.setFixedSize(40, 40)
-        self.send_button.setStyleSheet("""
-            QPushButton {
-                border-radius: 20px;
-                background-color: white;
-            }
-        """)
+        self.send_button.setStyleSheet("QPushButton { border-radius: 20px; background-color: white; }")
         self.send_button.clicked.connect(self.invia_domanda)
 
-        # Componi layout input
+        self.preview_widget = QWidget()
+        self.preview_layout = QHBoxLayout()
+        self.preview_layout.setContentsMargins(10, 5, 10, 5)
+        self.preview_widget.setLayout(self.preview_layout)
+
         self.input_layout = QHBoxLayout()
         self.input_layout.setSpacing(10)
         self.input_layout.addWidget(self.add_image_button)
         self.input_layout.addWidget(self.textbox)
         self.input_layout.addWidget(self.send_button)
 
+        self.main_layout = QVBoxLayout()
+        self.main_layout.addWidget(self.scroll_area)
+        self.main_layout.addWidget(self.preview_widget)
+        self.main_layout.addLayout(self.input_layout)
+        self.setLayout(self.main_layout)
 
-        # Main layout
-        main_layout = QVBoxLayout()
-        main_layout.addWidget(self.scroll_area)
-        main_layout.addLayout(self.input_layout)
-
-
-        self.setLayout(main_layout)
-
+        self.image_path = None
+        self.image_preview_label = None
+        self.delete_button = None
+        self.image_container = None
+        self.loading_label = None
         self.timer = QTimer()
         self.timer.timeout.connect(self.check_response)
 
-        self.last_question = ""
-    
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-        max_width = int(self.width() * 0.7)
-        for i in range(self.chat_layout.count()):
-            container = self.chat_layout.itemAt(i).widget()
-            if container:
-                layout = container.layout()
-                if layout:
-                    for j in range(layout.count()):
-                        bubble = layout.itemAt(j).widget()
-                        if isinstance(bubble, MessageBubble):
-                            bubble.setMaximumWidth(max_width)
-
-    '''
     def add_message(self, text, sender='user'):
-        bubble = MessageBubble(text, sender, self)
-        bubble.setMaximumWidth(int(self.width() * 0.7))
-
-        container_layout = QHBoxLayout()
-        container_layout.setContentsMargins(10, 5, 10, 5)
-
-        if sender == 'user':
-            container_layout.addStretch()
-            container_layout.addWidget(bubble)
-        else:
-            container_layout.addWidget(bubble)
-            container_layout.addStretch()
-
-        container_widget = QWidget()
-        container_widget.setLayout(container_layout)
-        self.chat_layout.addWidget(container_widget)
-
-        QTimer.singleShot(100, lambda: self.scroll_area.verticalScrollBar().setValue(
-            self.scroll_area.verticalScrollBar().maximum()))
-    '''
-
-    def add_message(self, text, sender='user'):
-        bubble = MessageBubble(text, sender, self)
-
-        # Contenitore per forzare larghezza + allineamento
-        bubble_wrapper = QWidget()
-        bubble_wrapper_layout = QHBoxLayout()
-        bubble_wrapper_layout.setContentsMargins(0, 0, 0, 0)
-
-        if sender == 'user':
-            bubble_wrapper_layout.addStretch()
-            bubble_wrapper_layout.addWidget(bubble)
-        else:
-            bubble_wrapper_layout.addWidget(bubble)
-            bubble_wrapper_layout.addStretch()
-
-        bubble_wrapper.setLayout(bubble_wrapper_layout)
-
-        # Padding verticale e margini
         container = QWidget()
-        container_layout = QVBoxLayout()
-        container_layout.setContentsMargins(10, 5, 10, 5)
-        container_layout.addWidget(bubble_wrapper)
-        container.setLayout(container_layout)
+        layout = QVBoxLayout()
+        layout.setContentsMargins(10, 5, 10, 5)
 
+        # Mostra miniatura sopra il messaggio dell’utente se esiste
+        if sender == 'user' and self.image_path:
+            img_label = QLabel()
+            img_label.setPixmap(QPixmap(self.image_path).scaledToWidth(150, Qt.SmoothTransformation))
+            img_wrapper = QHBoxLayout()
+            img_wrapper.addStretch()
+            img_wrapper.addWidget(img_label)
+            layout.addLayout(img_wrapper)
+
+        bubble = MessageBubble(text, sender, self)
+        wrapper = QHBoxLayout()
+        wrapper.setContentsMargins(0, 0, 0, 0)
+
+        if sender == 'user':
+            wrapper.addStretch()
+            wrapper.addWidget(bubble)
+        else:
+            wrapper.addWidget(bubble)
+            wrapper.addStretch()
+
+        bubble_wrap = QWidget()
+        bubble_wrap.setLayout(wrapper)
+        layout.addWidget(bubble_wrap)
+
+        container.setLayout(layout)
         self.chat_layout.addWidget(container)
 
         QTimer.singleShot(100, lambda: self.scroll_area.verticalScrollBar().setValue(
             self.scroll_area.verticalScrollBar().maximum()))
 
-
-    '''
-    def invia_domanda(self):
-        domanda = self.textbox.toPlainText().strip()
-        if not domanda:
-            return
-        self.last_question = domanda
-        self.add_message(domanda, 'user')
-        self.textbox.clear()
-
-        try:
-            r = requests.post("http://127.0.0.1:5000/ask", json={"question": domanda})
-            if r.status_code == 200:
-                self.timer.start(2000)
-            else:
-                self.add_message("❌ Errore nella richiesta a Blender.", 'bot')
-        except Exception as e:
-            self.add_message(f"❌ Errore: {str(e)}", 'bot')
-    '''
+        # Rimuove anteprima e cestino dopo l’invio
+        if sender == 'user' and self.image_container:
+            self.image_container.deleteLater()
+            self.image_container = None
+            self.image_preview_label = None
+            self.delete_button = None
+            self.image_path = None
 
     def invia_domanda(self):
         domanda = self.textbox.toPlainText().strip()
-        if not domanda:
+        if not domanda or self.attesa_risposta:
             return
 
-        self.last_question = domanda
+        self.attesa_risposta = True
+        self.send_button.setEnabled(False)
         self.add_message(domanda, 'user')
         self.textbox.clear()
+
+        self.loading_label = QLabel()
+        movie = QMovie("loading.gif")
+        self.loading_label.setMovie(movie)
+        movie.start()
+        self.chat_layout.addWidget(self.loading_label)
 
         try:
             payload = {"question": domanda}
-            if hasattr(self, "image_path"):
+            if self.image_path:
                 payload["image_path"] = self.image_path
 
             r = requests.post("http://127.0.0.1:5000/ask", json=payload)
             if r.status_code == 200:
                 self.timer.start(2000)
             else:
+                self.loading_label.hide()
                 self.add_message("❌ Errore nella richiesta a Blender.", 'bot')
+                self.send_button.setEnabled(True)
+                self.attesa_risposta = False
         except Exception as e:
+            self.loading_label.hide()
             self.add_message(f"❌ Errore: {str(e)}", 'bot')
-
+            self.send_button.setEnabled(True)
+            self.attesa_risposta = False
 
     def check_response(self):
         try:
@@ -275,16 +217,70 @@ class GenAIClient(QWidget):
             data = r.json()
             if data["status"] == "ready":
                 self.timer.stop()
+                if self.loading_label:
+                    self.loading_label.hide()
+                self.send_button.setEnabled(True)
+                self.attesa_risposta = False
                 self.add_message(data["response"], 'bot')
         except Exception as e:
+            if self.loading_label:
+                self.loading_label.hide()
+            self.send_button.setEnabled(True)
+            self.attesa_risposta = False
             self.add_message(f"❌ Errore: {str(e)}", 'bot')
 
     def carica_immagine(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Seleziona immagine", "", "Immagini (*.png *.jpg *.jpeg *.bmp)")
         if file_path:
-            self.add_message(f"📷 Immagine caricata: {file_path.split('/')[-1]}", 'user')
-            # eventualmente puoi salvarla in una variabile globale:
             self.image_path = file_path
+
+            # Rimuove precedenti
+            for i in reversed(range(self.preview_layout.count())):
+                widget = self.preview_layout.itemAt(i).widget()
+                if widget:
+                    widget.setParent(None)
+
+            # Miniatura
+            self.image_preview_label = QLabel()
+            pixmap = QPixmap(file_path).scaledToWidth(100, Qt.SmoothTransformation)
+            self.image_preview_label.setPixmap(pixmap)
+
+            # Bottone cestino
+            self.delete_button = QPushButton()
+            self.delete_button.setIcon(QIcon("trash.svg"))
+            self.delete_button.setIconSize(QSize(20, 20))
+            self.delete_button.setFixedSize(28, 28)
+            self.delete_button.setStyleSheet("""
+                QPushButton {
+                    background-color: #444;
+                    color: white;
+                    border-radius: 14px;
+                }
+                QPushButton:hover {
+                    background-color: #c00;
+                }
+            """)
+            self.delete_button.clicked.connect(self.rimuovi_immagine)
+
+            # Layout miniatura + cestino
+            container = QWidget()
+            h_layout = QHBoxLayout()
+            h_layout.setContentsMargins(0, 0, 0, 0)
+            h_layout.setSpacing(6)
+            h_layout.addWidget(self.image_preview_label)
+            h_layout.addWidget(self.delete_button)
+            container.setLayout(h_layout)
+
+            self.image_container = container
+            self.preview_layout.addWidget(container)
+
+    def rimuovi_immagine(self):
+        self.image_path = None
+        if self.image_container:
+            self.image_container.deleteLater()
+        self.image_container = None
+        self.image_preview_label = None
+        self.delete_button = None
 
 
 if __name__ == '__main__':

@@ -142,6 +142,7 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
     def worker():
         print("[DEBUG] Esecuzione async query_ollama_with_docs")
 
+        image_path = props.genai_image_path if props and props.genai_image_path else None
         model_context = get_model_context(selected_objects)
         chat_history = build_conversational_context(props) if props else ""
 
@@ -152,24 +153,29 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
             blender_docs = "Documentazione non disponibile."
             print("[ERRORE] Recupero documentazione:", str(e))
 
-        prompt = (
-            "You are a helpful assistant for Blender 4.4.\n\n"
-            "You must answer the user's question strictly and exclusively based on the official Blender 4.4 documentation **and** the description of the selected objects in the scene.\n"
-            "Do not use external knowledge, online forums, prior Blender versions, or generic reasoning.\n"
-            "If the answer is not explicitly supported by the documentation, respond with: 'not present in the documentation'.\n\n"
+        if image_path and ("immagine" in user_question.lower() or "image" in user_question.lower()):
+            prompt = (
+                f"You are a vision assistant.\n"
+                f"The user uploaded an image and asked: '{user_question}'\n"
+                f"Analyze the image carefully and respond with a clear, structured and technical description."
+            )
+        else:
+            prompt = (
+                "You are a helpful assistant for Blender 4.4.\n\n"
+                "You must answer the user's question strictly and exclusively based on the official Blender 4.4 documentation **and** the description of the selected objects in the scene.\n"
+                "Do not use external knowledge, online forums, prior Blender versions, or generic reasoning.\n"
+                "If the answer is not explicitly supported by the documentation, respond with: 'not present in the documentation'.\n\n"
+                "=== Scene Model Context ===\n"
+                f"{model_context}\n\n"
+                "=== Blender 4.4 Official Documentation ===\n"
+                f"{blender_docs}\n\n"
+                "=== Conversation History ===\n"
+                f"{chat_history}\n\n"
+                "=== User Question ===\n"
+                f"{user_question}\n\n"
+                "Respond using the same language as the user's question, with a clear and technical tone."
+            )
 
-            "=== Scene Model Context ===\n"
-            f"{model_context}\n\n"
-            "=== Blender 4.4 Official Documentation ===\n"
-            f"{blender_docs}\n\n"
-            "=== Conversation History ===\n"
-            f"{chat_history}\n\n"
-            "=== User Question ===\n"
-            f"{user_question}\n\n"
-            "Respond using the same language as the user's question, with a clear and technical tone."
-        )
-
-        image_path = props.genai_image_path if props and props.genai_image_path else None
         risposta = send_vision_prompt_to_ollama(prompt, image_path)
 
         def update():
@@ -180,3 +186,4 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
         bpy.app.timers.register(update)
 
     threading.Thread(target=worker).start()
+
