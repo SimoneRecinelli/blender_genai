@@ -15,7 +15,16 @@ bl_info = {
 def register():
     genai_operator.register()
     panel.register()
-    install_operator.register()  # ✅ registra l’operatore per installare le dipendenze
+    install_operator.register()
+
+    # ✅ Avvia il server Flask
+    try:
+        from . import server
+        server.start_flask_server()
+        print("[DEBUG] Server Flask avviato su http://localhost:5000")
+    except Exception as e:
+        print("[ERRORE] Avvio server Flask:", e)
+
 
 def unregister():
     install_operator.unregister()  # ✅ unregister dell’operatore

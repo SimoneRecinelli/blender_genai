@@ -102,23 +102,7 @@ class GENAI_OT_ShowFullResponse(bpy.types.Operator):
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self, width=600)
 
-class GENAI_OT_MissingDepsPopup(bpy.types.Operator):
-    bl_idname = "genai.missing_deps_popup"
-    bl_label = "Errore GenAI"
-
-    message: bpy.props.StringProperty(default="Si è verificato un errore.")
-
-    def draw(self, context):
-        self.layout.label(text=self.message)
-
-    def execute(self, context):
-        return {'FINISHED'}
-
-    def invoke(self, context, event):
-        return context.window_manager.invoke_props_dialog(self, width=400)
-
-
-classes = [GENAI_OT_AskOperator, GENAI_OT_LoadImage, GENAI_OT_ShowFullResponse, GENAI_OT_MissingDepsPopup]
+classes = [GENAI_OT_AskOperator, GENAI_OT_LoadImage, GENAI_OT_ShowFullResponse]
 
 def register():
     for cls in classes:
