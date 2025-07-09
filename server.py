@@ -1,8 +1,11 @@
+import sys
+import os
+
 from flask import Flask, request, jsonify
 import threading
+import subprocess
 import bpy
 from .utils import query_ollama_with_docs_async
-
 
 app = Flask(__name__)
 
@@ -36,10 +39,7 @@ def ask_question():
             print("[ERRORE] Durante il recupero degli oggetti selezionati:", str(e))
         return None
 
-
-    # 🔁 Esegui nel thread principale
     bpy.app.timers.register(run_in_main_thread)
-
     return jsonify({"status": "Domanda ricevuta da Blender"})
 
 @app.route('/response', methods=['GET'])
@@ -54,7 +54,7 @@ def get_response():
             "status": "waiting"
         })
 
-_flask_server_started = False  # variabile globale di stato
+_flask_server_started = False
 
 def start_flask_server():
     global _flask_server_started
@@ -68,3 +68,26 @@ def start_flask_server():
     else:
         print("[DEBUG] Server Flask già attivo, non viene riavviato.")
 
+def start_gui():
+    if try_bring_gui_to_front():
+        print("[DEBUG] GUI già attiva → portata in primo piano.")
+        return
+
+    gui_path = os.path.join(os.path.dirname(__file__), "extern_gui.py")
+    try:
+        subprocess.Popen([sys.executable, gui_path])
+        print("[DEBUG] GUI PyQt5 avviata")
+    except Exception as e:
+        print("[ERRORE] Avvio GUI PyQt5:", e)
+
+def try_bring_gui_to_front():
+    import socket
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect(("localhost", 5055))
+        s.send(b"bring-to-front")
+        s.close()
+        return True
+    except Exception as e:
+        print("[DEBUG] Nessuna GUI attiva → motivo:", e)
+        return False

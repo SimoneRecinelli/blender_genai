@@ -1,4 +1,5 @@
 import bpy
+import importlib
 import os
 from .install_operator import GENAI_OT_InstallDeps
 
@@ -30,9 +31,20 @@ class GENAI_PT_Panel(bpy.types.Panel):
     bl_region_type = 'UI'
     bl_category = "GenAI"
 
+    _gui_started = False
+
     def draw(self, context):
         layout = self.layout
         props = context.scene.genai_props
+
+        # Avvia la GUI solo una volta alla prima apertura
+        if not GENAI_PT_Panel._gui_started:
+            try:
+                from . import server
+                server.start_gui()
+                GENAI_PT_Panel._gui_started = True
+            except Exception as e:
+                print("[ERRORE] Avvio GUI nel pannello:", e)
 
         # Storico chat
         chat_box = layout.box()
@@ -64,6 +76,7 @@ class GENAI_PT_Panel(bpy.types.Panel):
         layout.separator()
         layout.operator("genai.install_deps", text="Installa Dipendenze", icon="CONSOLE")
         layout.operator("genai.build_index", text="Aggiorna Documentazione (RAG)", icon="FILE_REFRESH")
+        layout.operator("genai.show_external_chat", text="Mostra Chat Esterna", icon="PLUGIN")
 
 
 class GENAI_PT_FullResponsePanel(bpy.types.Panel):

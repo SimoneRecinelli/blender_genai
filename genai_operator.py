@@ -1,5 +1,6 @@
 import bpy
 from .utils import query_ollama_with_docs_async
+from . import server
 import os
 
 
@@ -76,7 +77,7 @@ class GENAI_OT_LoadImage(bpy.types.Operator):
 
         bpy.app.timers.register(clear_status, first_interval=10.0)
 
-        self.report({'INFO'}, "✅ Immagine caricata correttamente.")
+        self.report({'INFO'}, "Immagine caricata correttamente.")
         return {'FINISHED'}
 
 
@@ -102,7 +103,21 @@ class GENAI_OT_ShowFullResponse(bpy.types.Operator):
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self, width=600)
 
-classes = [GENAI_OT_AskOperator, GENAI_OT_LoadImage, GENAI_OT_ShowFullResponse]
+
+class GENAI_OT_ShowExternalChat(bpy.types.Operator):
+    bl_idname = "genai.show_external_chat"
+    bl_label = "Mostra Chat Esterna"
+
+    def execute(self, context):
+        try:
+            from . import server
+            server.start_gui()
+            self.report({'INFO'}, "Chat avviata o portata in primo piano.")
+        except Exception as e:
+            self.report({'ERROR'}, f"Errore: {e}")
+        return {'FINISHED'}
+
+classes = [GENAI_OT_AskOperator, GENAI_OT_LoadImage, GENAI_OT_ShowFullResponse, GENAI_OT_ShowExternalChat]
 
 def register():
     for cls in classes:

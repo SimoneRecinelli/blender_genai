@@ -1,5 +1,8 @@
 import sys
+import os
 import requests
+import socket
+import threading
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
     QTextEdit, QLabel, QScrollArea, QFileDialog
@@ -7,6 +10,11 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QIcon, QPixmap, QMovie
 from PyQt5.QtCore import Qt, QTimer, QSize
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+ICON_SEND = os.path.join(BASE_DIR, "icons", "send.svg")
+ICON_LOAD = os.path.join(BASE_DIR, "icons", "load.svg")
+ICON_TRASH = os.path.join(BASE_DIR, "icons", "trash.svg")
+LOADING_GIF = os.path.join(BASE_DIR, "icons", "loading.gif")
 
 class MessageBubble(QLabel):
     def __init__(self, text, sender='user', parent=None):
@@ -36,6 +44,7 @@ class GenAIClient(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("GenAI Assistant Chat")
+        threading.Thread(target=self.listen_for_front_request, daemon=True).start()
         self.setGeometry(100, 100, 600, 500)
         self.attesa_risposta = False
 
@@ -93,14 +102,14 @@ class GenAIClient(QWidget):
         self.textbox.setPlaceholderText("Scrivi una domanda...")
 
         self.add_image_button = QPushButton()
-        self.add_image_button.setIcon(QIcon("load.svg"))
+        self.add_image_button.setIcon(QIcon(ICON_LOAD))
         self.add_image_button.setIconSize(QSize(24, 24))
         self.add_image_button.setFixedSize(40, 40)
         self.add_image_button.setStyleSheet("QPushButton { border-radius: 20px; background-color: white; }")
         self.add_image_button.clicked.connect(self.carica_immagine)
 
         self.send_button = QPushButton()
-        self.send_button.setIcon(QIcon("send.svg"))
+        self.send_button.setIcon(QIcon(ICON_SEND))
         self.send_button.setIconSize(QSize(24, 24))
         self.send_button.setFixedSize(40, 40)
         self.send_button.setStyleSheet("QPushButton { border-radius: 20px; background-color: white; }")
@@ -130,6 +139,26 @@ class GenAIClient(QWidget):
         self.loading_label = None
         self.timer = QTimer()
         self.timer.timeout.connect(self.check_response)
+
+    def listen_for_front_request(self):
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            s.bind(("localhost", 5055))
+            s.listen(1)
+            while True:
+                conn, _ = s.accept()
+                data = conn.recv(1024)
+                if b"bring-to-front" in data:
+                    self.showNormal()
+                    self.raise_()
+                    self.activateWindow()
+                conn.close()
+        except OSError:
+            print("[DEBUG] Porta già in uso — GUI probabilmente già attiva")
+
+    #def closeEvent(self, event):
+    #    self.hide()
+    #    event.ignore()
 
     def add_message(self, text, sender='user'):
         container = QWidget()
@@ -185,7 +214,7 @@ class GenAIClient(QWidget):
         self.textbox.clear()
 
         self.loading_label = QLabel()
-        movie = QMovie("loading.gif")
+        movie = QMovie(LOADING_GIF)
         self.loading_label.setMovie(movie)
         movie.start()
         self.chat_layout.addWidget(self.loading_label)
@@ -200,12 +229,12 @@ class GenAIClient(QWidget):
                 self.timer.start(2000)
             else:
                 self.loading_label.hide()
-                self.add_message("❌ Errore nella richiesta a Blender.", 'bot')
+                self.add_message("Errore nella richiesta a Blender.", 'bot')
                 self.send_button.setEnabled(True)
                 self.attesa_risposta = False
         except Exception as e:
             self.loading_label.hide()
-            self.add_message(f"❌ Errore: {str(e)}", 'bot')
+            self.add_message(f"Errore: {str(e)}", 'bot')
             self.send_button.setEnabled(True)
             self.attesa_risposta = False
 
@@ -227,7 +256,7 @@ class GenAIClient(QWidget):
                 self.loading_label.hide()
             self.send_button.setEnabled(True)
             self.attesa_risposta = False
-            self.add_message(f"❌ Errore: {str(e)}", 'bot')
+            self.add_message(f"Errore: {str(e)}", 'bot')
 
     def carica_immagine(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Seleziona immagine", "", "Immagini (*.png *.jpg *.jpeg *.bmp)")
@@ -247,7 +276,7 @@ class GenAIClient(QWidget):
 
             # Bottone cestino
             self.delete_button = QPushButton()
-            self.delete_button.setIcon(QIcon("trash.svg"))
+            self.delete_button.setIcon(QIcon(ICON_TRASH))
             self.delete_button.setIconSize(QSize(20, 20))
             self.delete_button.setFixedSize(28, 28)
             self.delete_button.setStyleSheet("""

@@ -10,11 +10,21 @@ class GENAI_OT_InstallDeps(bpy.types.Operator):
     def execute(self, context):
         blender_python = sys.executable
 
+        # (opzionale) assicura che pip sia presente
+        try:
+            subprocess.check_call([blender_python, "-m", "ensurepip"])
+        except Exception:
+            pass
+
         packages = [
             "requests",
             "flask",
             "faiss-cpu",
-            "sentence-transformers"
+            "sentence-transformers",
+            "bs4",
+            "PyQt5",
+            "socket",
+            "threading"
         ]
 
         success = True
@@ -40,13 +50,13 @@ class GENAI_OT_BuildIndex(bpy.types.Operator):
         try:
             script_path = os.path.join(os.path.dirname(__file__), "build_blender_index.py")
             if not os.path.exists(script_path):
-                self.report({'ERROR'}, "⚠️ File 'build_blender_index.py' non trovato.")
+                self.report({'ERROR'}, "File 'build_blender_index.py' non trovato.")
                 return {'CANCELLED'}
 
             subprocess.check_call([sys.executable, script_path])
-            self.report({'INFO'}, "✅ Indice aggiornato correttamente.")
+            self.report({'INFO'}, "Indice aggiornato correttamente.")
         except Exception as e:
-            self.report({'ERROR'}, f"❌ Errore durante l'aggiornamento: {e}")
+            self.report({'ERROR'}, f"Errore durante l'aggiornamento: {e}")
         return {'FINISHED'}
 
 # 🔧 Registrazione

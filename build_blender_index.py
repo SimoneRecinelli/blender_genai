@@ -10,7 +10,7 @@ try:
 except ImportError as e:
     print("Errore: modulo mancante.")
     print("Risoluzione: esegui questo comando per installare le dipendenze:")
-    print("   pip install faiss-cpu sentence-transformers bs4")
+    print("   pip install faiss-cpu sentence-transformers bs4 requests PyQt5 flask psutil")
     sys.exit(1)
 
 
