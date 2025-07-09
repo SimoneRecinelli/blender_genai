@@ -2,7 +2,7 @@ import sys
 import requests
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
-    QTextEdit, QLabel, QScrollArea, QFileDialog
+    QTextEdit, QLabel, QScrollArea, QFileDialog, QSizePolicy
 )
 from PyQt5.QtGui import QIcon, QPixmap, QMovie
 from PyQt5.QtCore import Qt, QTimer, QSize
@@ -17,6 +17,8 @@ class MessageBubble(QLabel):
         self.setStyleSheet(
             f"QLabel {{ background-color: {'#2d2d2d' if sender == 'user' else '#444'}; color: white; padding: 10px; font-size: 14px; border-radius: 10px; }}"
         )
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
+
 
 
 class ChatTextBox(QTextEdit):
@@ -131,12 +133,13 @@ class GenAIClient(QWidget):
         self.timer = QTimer()
         self.timer.timeout.connect(self.check_response)
 
+        self.bubbles = []  # Bubble list per il resize
+
     def add_message(self, text, sender='user'):
         container = QWidget()
         layout = QVBoxLayout()
         layout.setContentsMargins(10, 5, 10, 5)
 
-        # Mostra miniatura sopra il messaggio dell’utente se esiste
         if sender == 'user' and self.image_path:
             img_label = QLabel()
             img_label.setPixmap(QPixmap(self.image_path).scaledToWidth(150, Qt.SmoothTransformation))
@@ -146,9 +149,16 @@ class GenAIClient(QWidget):
             layout.addLayout(img_wrapper)
 
         bubble = MessageBubble(text, sender, self)
+        bubble.setMaximumWidth(int(self.width() * 0.85))
+        if sender == 'user':
+            bubble.setMinimumWidth(150)
+            bubble.setAlignment(Qt.AlignRight)
+        else:
+            bubble.setAlignment(Qt.AlignLeft)
+        self.bubbles.append(bubble)
+
         wrapper = QHBoxLayout()
         wrapper.setContentsMargins(0, 0, 0, 0)
-
         if sender == 'user':
             wrapper.addStretch()
             wrapper.addWidget(bubble)
@@ -166,7 +176,6 @@ class GenAIClient(QWidget):
         QTimer.singleShot(100, lambda: self.scroll_area.verticalScrollBar().setValue(
             self.scroll_area.verticalScrollBar().maximum()))
 
-        # Rimuove anteprima e cestino dopo l’invio
         if sender == 'user' and self.image_container:
             self.image_container.deleteLater()
             self.image_container = None
@@ -234,18 +243,15 @@ class GenAIClient(QWidget):
         if file_path:
             self.image_path = file_path
 
-            # Rimuove precedenti
             for i in reversed(range(self.preview_layout.count())):
                 widget = self.preview_layout.itemAt(i).widget()
                 if widget:
                     widget.setParent(None)
 
-            # Miniatura
             self.image_preview_label = QLabel()
             pixmap = QPixmap(file_path).scaledToWidth(100, Qt.SmoothTransformation)
             self.image_preview_label.setPixmap(pixmap)
 
-            # Bottone cestino
             self.delete_button = QPushButton()
             self.delete_button.setIcon(QIcon("trash.svg"))
             self.delete_button.setIconSize(QSize(20, 20))
@@ -262,7 +268,6 @@ class GenAIClient(QWidget):
             """)
             self.delete_button.clicked.connect(self.rimuovi_immagine)
 
-            # Layout miniatura + cestino
             container = QWidget()
             h_layout = QHBoxLayout()
             h_layout.setContentsMargins(0, 0, 0, 0)
@@ -281,6 +286,11 @@ class GenAIClient(QWidget):
         self.image_container = None
         self.image_preview_label = None
         self.delete_button = None
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        for bubble in self.bubbles:
+            bubble.setMaximumWidth(int(self.width() * 0.6))
 
 
 if __name__ == '__main__':
