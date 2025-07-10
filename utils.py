@@ -153,18 +153,25 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
             blender_docs = "Documentazione non disponibile."
             print("[ERRORE] Recupero documentazione:", str(e))
 
-        if image_path and ("immagine" in user_question.lower() or "image" in user_question.lower()):
+        if image_path and os.path.exists(image_path):
             prompt = (
-                f"You are a vision assistant.\n"
-                f"The user uploaded an image and asked: '{user_question}'\n"
-                f"Analyze the image carefully and respond with a clear, structured and technical description."
+                f"You are a visual assistant integrated into Blender.\n"
+                f"The user uploaded an image of the 3D scene and asked: '{user_question}'.\n\n"
+                "You must analyze the image attentively and respond accordingly.\n"
+                "- If the image contains objects, describe their shape, position, lighting, and materials.\n"
+                "- If the question refers to a specific object or detail in the image, focus on that.\n"
+                "- If no meaningful visual information is found, say: 'The image does not contain enough information.'\n\n"
+                "Respond in the same language used in the user's question. Be clear, technical, and structured."
             )
         else:
             prompt = (
-                "You are a helpful assistant for Blender 4.4.\n\n"
-                "You must answer the user's question strictly and exclusively based on the official Blender 4.4 documentation **and** the description of the selected objects in the scene.\n"
-                "Do not use external knowledge, online forums, prior Blender versions, or generic reasoning.\n"
-                "If the answer is not explicitly supported by the documentation, respond with: 'not present in the documentation'.\n\n"
+                "You are a helpful assistant for Blender 4.4 integrated in a modeling environment.\n"
+                "You must analyze each question and act accordingly:\n\n"
+                "1. If the question is related to Blender's functionality (modeling, shading, scripting, etc.), "
+                "you must answer strictly and exclusively using the official Blender 4.4 documentation and the current scene context.\n"
+                "2. If the question is casual, conversational or not technical (e.g., greetings like 'hello', or informal messages), "
+                "respond in a friendly and brief way, without using any documentation.\n"
+                "3. If the answer is not explicitly supported by the documentation, and the question is technical, respond with: 'not present in the documentation'.\n\n"
                 "=== Scene Model Context ===\n"
                 f"{model_context}\n\n"
                 "=== Blender 4.4 Official Documentation ===\n"
@@ -173,7 +180,8 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
                 f"{chat_history}\n\n"
                 "=== User Question ===\n"
                 f"{user_question}\n\n"
-                "Respond using the same language as the user's question, with a clear and technical tone."
+                "Respond using the same language as the user's question. Keep a clear and technical tone when the question is technical. "
+                "Otherwise, be concise and friendly."
             )
 
         risposta = send_vision_prompt_to_ollama(prompt, image_path)
