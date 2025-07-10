@@ -1,4 +1,5 @@
 import sys
+print("INTERPRETER IN USO DALLA GUI:", sys.executable)
 import os
 import requests
 import socket
@@ -16,19 +17,6 @@ ICON_LOAD = os.path.join(BASE_DIR, "icons", "load.svg")
 ICON_TRASH = os.path.join(BASE_DIR, "icons", "trash.svg")
 LOADING_GIF = os.path.join(BASE_DIR, "icons", "loading.gif")
 
-class MessageBubble(QLabel):
-    def __init__(self, text, sender='user', parent=None):
-        super().__init__(text, parent)
-        self.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        self.setWordWrap(True)
-        self.setMargin(10)
-        self.setStyleSheet(
-            f"QLabel {{ background-color: {'#2d2d2d' if sender == 'user' else '#444'}; color: white; padding: 10px; font-size: 14px; border-radius: 10px; }}"
-        )
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
-
-
-
 class ChatTextBox(QTextEdit):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -40,7 +28,6 @@ class ChatTextBox(QTextEdit):
                 self.parent.invia_domanda()
         else:
             super().keyPressEvent(event)
-
 
 class GenAIClient(QWidget):
     def __init__(self):
@@ -158,57 +145,104 @@ class GenAIClient(QWidget):
         except OSError:
             print("[DEBUG] Porta già in uso — GUI probabilmente già attiva")
 
-    #def closeEvent(self, event):
-    #    self.hide()
-    #    event.ignore()
-
-    def add_message(self, text, sender='user'):
+    '''
+    def add_message(self, text, sender='user', image_path=None):
         container = QWidget()
         layout = QVBoxLayout()
         layout.setContentsMargins(10, 5, 10, 5)
+        layout.setSpacing(5)
 
-        if sender == 'user' and self.image_path:
-            img_label = QLabel()
-            img_label.setPixmap(QPixmap(self.image_path).scaledToWidth(150, Qt.SmoothTransformation))
-            img_wrapper = QHBoxLayout()
-            img_wrapper.addStretch()
-            img_wrapper.addWidget(img_label)
-            layout.addLayout(img_wrapper)
+        if image_path:
+            image_label = QLabel()
+            pixmap = QPixmap(image_path).scaledToWidth(250, Qt.SmoothTransformation)
+            image_label.setPixmap(pixmap)
+            image_label.setAlignment(Qt.AlignLeft if sender == 'bot' else Qt.AlignRight)
+            layout.addWidget(image_label)
 
-        bubble = MessageBubble(text, sender, self)
-        bubble.setMaximumWidth(int(self.width() * 0.85))
-        if sender == 'user':
-            bubble.setMinimumWidth(150)
-            bubble.setAlignment(Qt.AlignRight)
-        else:
-            bubble.setAlignment(Qt.AlignLeft)
-        self.bubbles.append(bubble)
+        label = QLabel(text)
+        label.setWordWrap(True)
+        label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        label.setStyleSheet("font-size: 14px; padding: 6px;")
+        label.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Minimum)
+        label.setMaximumWidth(int(self.width() * 0.7))
+
+
+        #label.setWordWrap(True)
+        label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        label.setStyleSheet("font-size: 14px;")
+        #label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
 
         wrapper = QHBoxLayout()
         wrapper.setContentsMargins(0, 0, 0, 0)
+
         if sender == 'user':
             wrapper.addStretch()
-            wrapper.addWidget(bubble)
+            wrapper.addWidget(label, 0, Qt.AlignRight)
         else:
-            wrapper.addWidget(bubble)
+            wrapper.addWidget(label, 0, Qt.AlignLeft)
             wrapper.addStretch()
 
-        bubble_wrap = QWidget()
-        bubble_wrap.setLayout(wrapper)
-        layout.addWidget(bubble_wrap)
+        wrapper_widget = QWidget()
+        wrapper_widget.setLayout(wrapper)
 
+        layout.addWidget(wrapper_widget)
         container.setLayout(layout)
+
         self.chat_layout.addWidget(container)
 
         QTimer.singleShot(100, lambda: self.scroll_area.verticalScrollBar().setValue(
             self.scroll_area.verticalScrollBar().maximum()))
+    '''
 
-        if sender == 'user' and self.image_container:
-            self.image_container.deleteLater()
-            self.image_container = None
-            self.image_preview_label = None
-            self.delete_button = None
-            self.image_path = None
+    def add_message(self, text, sender='user', image_path=None):
+        container = QWidget()
+        container_layout = QVBoxLayout()
+        container_layout.setContentsMargins(10, 5, 10, 5)
+        container_layout.setSpacing(5)
+
+        # Se presente, aggiungi immagine
+        if image_path:
+            image_label = QLabel()
+            pixmap = QPixmap(image_path).scaledToWidth(250, Qt.SmoothTransformation)
+            image_label.setPixmap(pixmap)
+            image_label.setAlignment(Qt.AlignLeft if sender == 'bot' else Qt.AlignRight)
+            image_label.setContentsMargins(0, 0, 0, 10)
+            container_layout.addWidget(image_label)
+
+        label = QLabel(text)
+        label.setWordWrap(True)
+        label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        label.setStyleSheet("font-size: 14px;")
+        label.setFixedWidth(390)
+        label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Minimum)
+        label.setAlignment(Qt.AlignRight if sender == 'user' else Qt.AlignLeft)
+
+
+        label.setFixedWidth(390)  # Larghezza fissa scelta in base alla tua finestra
+        label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Minimum)
+
+        # Contenitore orizzontale per allineare a destra/sinistra
+        wrapper_layout = QHBoxLayout()
+        wrapper_layout.setContentsMargins(0, 0, 0, 0)
+        if sender == 'user':
+            wrapper_layout.addStretch()
+            wrapper_layout.addWidget(label, 0, Qt.AlignRight)
+        else:
+            wrapper_layout.addWidget(label, 0, Qt.AlignLeft)
+            wrapper_layout.addStretch()
+
+        wrapper_widget = QWidget()
+        wrapper_widget.setLayout(wrapper_layout)
+
+        container_layout.addWidget(wrapper_widget)
+        container.setLayout(container_layout)
+
+        self.chat_layout.addWidget(container)
+
+        # Scroll automatico alla fine
+        QTimer.singleShot(100, lambda: self.scroll_area.verticalScrollBar().setValue(
+            self.scroll_area.verticalScrollBar().maximum()))
+
 
     def invia_domanda(self):
         domanda = self.textbox.toPlainText().strip()
@@ -217,8 +251,9 @@ class GenAIClient(QWidget):
 
         self.attesa_risposta = True
         self.send_button.setEnabled(False)
-        self.add_message(domanda, 'user')
+        self.add_message(domanda, 'user', image_path=self.image_path)
         self.textbox.clear()
+        self.rimuovi_immagine()
 
         self.loading_label = QLabel()
         movie = QMovie(LOADING_GIF)
@@ -230,6 +265,15 @@ class GenAIClient(QWidget):
             payload = {"question": domanda}
             if self.image_path:
                 payload["image_path"] = self.image_path
+                print(f"[DEBUG] self.image_path = {self.image_path}")
+                print(f"[DEBUG] os.path.exists(self.image_path): {os.path.exists(self.image_path)}")
+
+
+            print(f"[DEBUG] Domanda: {domanda}")
+            if "image_path" in payload:
+                print(f"[DEBUG] Inviando immagine: {payload['image_path']}")
+            else:
+                print("[DEBUG] Nessuna immagine inclusa")
 
             r = requests.post("http://127.0.0.1:5000/ask", json=payload)
             if r.status_code == 200:
@@ -266,17 +310,80 @@ class GenAIClient(QWidget):
             self.add_message(f"Errore: {str(e)}", 'bot')
 
     def carica_immagine(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, "Seleziona immagine", "", "Immagini (*.png *.jpg *.jpeg *.bmp)")
-        if file_path:
-            self.image_path = file_path
+        import datetime
+        import subprocess
+        from AppKit import NSWorkspace
+        from Quartz import (
+            CGWindowListCopyWindowInfo,
+            kCGWindowListOptionOnScreenOnly,
+            kCGNullWindowID
+        )
 
+        def bring_blender_to_front():
+            try:
+                script = '''
+                tell application "Blender"
+                    activate
+                end tell
+                '''
+                subprocess.run(["osascript", "-e", script])
+            except Exception as e:
+                self.add_message(f"Errore attivazione Blender: {str(e)}", "bot")
+
+        def get_blender_window_bounds():
+            options = kCGWindowListOptionOnScreenOnly
+            windowList = CGWindowListCopyWindowInfo(options, kCGNullWindowID)
+            for window in windowList:
+                if "Blender" in window.get("kCGWindowOwnerName", ""):
+                    bounds = window.get("kCGWindowBounds", {})
+                    x = int(bounds.get("X", 0))
+                    y = int(bounds.get("Y", 0))
+                    w = int(bounds.get("Width", 0))
+                    h = int(bounds.get("Height", 0))
+                    screen_height = QApplication.primaryScreen().size().height()
+                    y = screen_height - y - h  # conversione da coordinate macOS a Qt
+                    return (x, y, w, h)
+            return None
+
+        try:
+            bring_blender_to_front()
+            QApplication.processEvents()
+            self.repaint()
+            QApplication.instance().thread().msleep(500)
+
+            bounds = get_blender_window_bounds()
+            screen = QApplication.primaryScreen()
+            screenshot = screen.grabWindow(0)
+
+            if bounds:
+                screen = QApplication.primaryScreen()
+                device_pixel_ratio = screen.devicePixelRatio()
+
+                x, y, w, h = bounds
+                x *= device_pixel_ratio
+                y *= device_pixel_ratio
+                w *= device_pixel_ratio
+                h *= device_pixel_ratio
+
+                cropped = screenshot.copy(int(x), int(y), int(w), int(h))
+            else:
+                self.add_message("Finestra di Blender non trovata, uso schermo intero", "bot")
+                cropped = screenshot
+
+            now = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            path = f"/tmp/blender_screenshot_{now}.png"
+            cropped.save(path)
+            self.image_path = path
+
+            # Pulisci preview precedente
             for i in reversed(range(self.preview_layout.count())):
                 widget = self.preview_layout.itemAt(i).widget()
                 if widget:
                     widget.setParent(None)
 
+            # Anteprima + bottone elimina
             self.image_preview_label = QLabel()
-            pixmap = QPixmap(file_path).scaledToWidth(100, Qt.SmoothTransformation)
+            pixmap = QPixmap(path).scaledToWidth(100, Qt.SmoothTransformation)
             self.image_preview_label.setPixmap(pixmap)
 
             self.delete_button = QPushButton()
@@ -306,6 +413,10 @@ class GenAIClient(QWidget):
             self.image_container = container
             self.preview_layout.addWidget(container)
 
+        except Exception as e:
+            self.add_message(f"Errore durante la cattura della finestra: {str(e)}", "bot")
+
+
     def rimuovi_immagine(self):
         self.image_path = None
         if self.image_container:
@@ -313,12 +424,6 @@ class GenAIClient(QWidget):
         self.image_container = None
         self.image_preview_label = None
         self.delete_button = None
-
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-        for bubble in self.bubbles:
-            bubble.setMaximumWidth(int(self.width() * 0.6))
-
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

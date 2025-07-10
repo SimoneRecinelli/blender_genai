@@ -153,12 +153,17 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
             blender_docs = "Documentazione non disponibile."
             print("[ERRORE] Recupero documentazione:", str(e))
 
-        if image_path and ("immagine" in user_question.lower() or "image" in user_question.lower()):
+        if image_path and os.path.exists(image_path):
             prompt = (
-                f"You are a vision assistant.\n"
-                f"The user uploaded an image and asked: '{user_question}'\n"
-                f"Analyze the image carefully and respond with a clear, structured and technical description."
+                f"You are a visual assistant integrated into Blender.\n"
+                f"The user uploaded an image of the 3D scene and asked: '{user_question}'.\n\n"
+                "You must analyze the image attentively and respond accordingly.\n"
+                "- If the image contains objects, describe their shape, position, lighting, and materials.\n"
+                "- If the question refers to a specific object or detail in the image, focus on that.\n"
+                "- If no meaningful visual information is found, say: 'The image does not contain enough information.'\n\n"
+                "Respond in the same language used in the user's question. Be clear, technical, and structured."
             )
+
         else:
             prompt = (
                 "You are a helpful assistant for Blender 4.4.\n\n"
