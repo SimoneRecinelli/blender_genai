@@ -4,7 +4,7 @@ from . import genai_operator, panel, install_operator
 
 bl_info = {
     "name": "Blender GenAI Assistant",
-    "author": "Simone",
+    "author": "Simone, Diego, Andrea",
     "version": (0, 1),
     "blender": (3, 0, 0),
     "location": "View3D > Sidebar > GenAI",
@@ -19,6 +19,7 @@ def register():
     panel.register()
     install_operator.register()
 
+    # ✅ Avvia il server Flask
     try:
         # ✅ Avvia il server Flask se non è già avviato
         server.start_flask_server()

@@ -1,105 +1,73 @@
 import os
-import pickle
 import sys
+import pickle
 
-# Controllo dipendenze esterne
+# Aggiunge path pacchetti user
+user_site = os.path.expanduser("~/.local/lib/python3.11/site-packages")
+if user_site not in sys.path:
+    sys.path.append(user_site)
+
+# === Controllo dipendenze ===
 try:
     from sentence_transformers import SentenceTransformer
     import faiss
-    from bs4 import BeautifulSoup
-except ImportError as e:
+    import fitz  # PyMuPDF
+except ImportError:
     print("Errore: modulo mancante.")
-    print("Risoluzione: esegui questo comando per installare le dipendenze:")
-    print("   pip install faiss-cpu sentence-transformers bs4")
+    print("Risoluzione: assicurati che le dipendenze siano installate dal server Flask.")
     sys.exit(1)
 
-
-# CAMBIA QUESTO PATH in base a dove hai salvato la cartella HTML
-HTML_FOLDER = "/Users/diegosantarelli/Desktop/blender_genai/blender_manual_v440_en"
-INDEX_PATH = "blender_faiss_index.pkl"
+# === Config ===
 CHUNK_SIZE = 500
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+PDF_PATH = os.path.join(BASE_DIR, "Blender_doc.pdf")
+INDEX_PATH = os.path.join(BASE_DIR, "blender_faiss_index.pkl")
 
-model = SentenceTransformer("all-MiniLM-L6-v2")
+model = SentenceTransformer("intfloat/multilingual-e5-large")
 
-def extract_text_from_html(file_path):
+# === Estrazione e chunking ===
+def extract_chunks_from_pdf(pdf_path):
+    doc = fitz.open(pdf_path)
+    all_text = ""
+    for page in doc:
+        all_text += page.get_text()
 
-    with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
-        soup = BeautifulSoup(f, "html.parser")
+    if not all_text.strip():
+        return [], []
 
-        # Rimuovi script e roba ovvia
-        for tag in soup(["nav", "header", "footer", "script", "style", "noscript", "form", "aside"]):
-            tag.decompose()
+    words = all_text.split()
+    chunks = [" ".join(words[i:i + CHUNK_SIZE]) for i in range(0, len(words), CHUNK_SIZE)]
+    metadatas = [{"source": f"page_range_{i}"} for i in range(len(chunks))]
+    return chunks, metadatas
 
-        # Trova il div centrale, di solito è il primo <div class="section"> significativo
-        section_divs = soup.find_all("div", class_="section")
+# === Avvio ===
+if not os.path.isfile(PDF_PATH):
+    print(f"ERRORE: PDF non trovato in {PDF_PATH}")
+    sys.exit(1)
 
-        all_text = ""
-        for div in section_divs:
-            text = div.get_text(separator=" ", strip=True)
-            # ignora blocchi tipo "Contents Menu Expand Light mode..."
-            if "Contents Menu Expand" in text or "Toggle Light" in text:
-                continue
-            all_text += text + "\n"
-
-        if all_text.strip():
-            return all_text.strip()
-
-        # Fallback finale sul body, ma attenzione: con filtro extra
-        body = soup.find("body")
-        if body:
-            body_text = body.get_text(separator=" ", strip=True)
-            if "Contents Menu Expand" in body_text:
-                lines = body_text.splitlines()
-                lines = [l for l in lines if not l.startswith("Contents Menu")]
-                return "\n".join(lines)
-            return body_text
-
-        return ""
-
-def chunk_text(text, size=CHUNK_SIZE):
-    words = text.split()
-    return [" ".join(words[i:i+size]) for i in range(0, len(words), size)]
-
-texts = []
-metadatas = []
-
-html_file_count = 0
-
-# 🔍 Estrai e chunkizza
-for root, dirs, files in os.walk(HTML_FOLDER):
-    # ignora i file della root
-    if root == HTML_FOLDER:
-        continue
-    for file in files:
-        if file.endswith(".html"):
-            html_file_count += 1
-            path = os.path.join(root, file)
-            text = extract_text_from_html(path)
-            if len(text.strip()) == 0:
-                continue
-            chunks = chunk_text(text)
-            for chunk in chunks:
-                texts.append(chunk)
-                metadatas.append({"source": path})
-
-print(f"File HTML letti: {html_file_count}")
-print(f"Chunk generati: {len(texts)}")
+print(f"[INFO] Parsing PDF da: {PDF_PATH}")
+texts, metadatas = extract_chunks_from_pdf(PDF_PATH)
 
 if not texts:
-    print("ERRORE: Nessun testo trovato. Controlla il path in HTML_FOLDER.")
-    exit(1)
+    print("ERRORE: Nessun testo estratto.")
+    sys.exit(1)
 
-# Calcolo embedding
-print("Calcolo degli embeddings...")
+print(f"[INFO] Chunk generati: {len(texts)}")
+print("[INFO] Calcolo degli embeddings...")
+
 embeddings = model.encode(texts, show_progress_bar=True)
 
-# Costruzione indice FAISS
+print("[INFO] Costruzione indice FAISS...")
 dim = embeddings.shape[1]
 index = faiss.IndexFlatL2(dim)
 index.add(embeddings)
 
-# Salvataggio
-with open(INDEX_PATH, "wb") as f:
-    pickle.dump({"index": index, "texts": texts, "metadatas": metadatas}, f)
+print(f"[DEBUG] Salvataggio in: {INDEX_PATH}")
 
-print(f"Indice FAISS salvato in {INDEX_PATH}")
+
+try:
+    with open(INDEX_PATH, "wb") as f:
+        pickle.dump({"index": index, "texts": texts, "metadatas": metadatas}, f)
+    print(f"Indice FAISS salvato in: {INDEX_PATH}")
+except Exception as e:
+    print(f"ERRORE durante il salvataggio del file: {e}")

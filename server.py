@@ -1,7 +1,50 @@
 from flask import Flask, request, jsonify
 import threading
+import socket
+import sys
+import os
+import subprocess
+import threading
+import socket
+
+# === 1. Aggiungi ~/.local/lib/... a sys.path (pacchetti --user) ===
+user_site = os.path.expanduser("~/.local/lib/python3.11/site-packages")
+if user_site not in sys.path:
+    sys.path.append(user_site)
+
+# === 2. Installa le dipendenze se mancanti ===
+def install_dependencies_if_needed():
+    required = [
+        "faiss-cpu",
+        "sentence-transformers",
+        "flask",
+        "requests",
+        "PyQt5",
+        "psutil",
+        "PyMuPDF",
+        "langchain",
+        "langchain-community"
+    ]
+
+    for package in required:
+        try:
+            # Tentativo intelligente di import
+            mod = package.replace("-", "_").split(".")[0]
+            if mod == "faiss_cpu":
+                __import__("faiss")
+            else:
+                __import__(mod)
+        except ImportError:
+            print(f"[SETUP] Installazione mancante: {package}")
+            subprocess.call([sys.executable, "-m", "pip", "install", "--user", package])
+
+install_dependencies_if_needed()
+
+# === 3. Ora che le dipendenze sono sicure, importa Flask e gli altri ===
+from flask import Flask, request, jsonify
 import bpy
 from .utils import query_ollama_with_docs_async
+
 
 app = Flask(__name__)
 
@@ -65,3 +108,4 @@ def start_flask_server():
         _flask_server_started = True
     else:
         print("[DEBUG] Server Flask già attivo, non viene riavviato.")
+

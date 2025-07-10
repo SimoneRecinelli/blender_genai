@@ -1,5 +1,6 @@
 import bpy
 from .utils import query_ollama_with_docs_async
+from . import server
 import os
 
 
@@ -76,7 +77,7 @@ class GENAI_OT_LoadImage(bpy.types.Operator):
 
         bpy.app.timers.register(clear_status, first_interval=10.0)
 
-        self.report({'INFO'}, "✅ Immagine caricata correttamente.")
+        self.report({'INFO'}, "Immagine caricata correttamente.")
         return {'FINISHED'}
 
 
