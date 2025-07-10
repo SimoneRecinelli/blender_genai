@@ -1,15 +1,48 @@
 import sys
 import os
-
-from flask import Flask, request, jsonify
-import threading
 import subprocess
+import threading
+import socket
+
+# === 1. Aggiungi ~/.local/lib/... a sys.path (pacchetti --user) ===
+user_site = os.path.expanduser("~/.local/lib/python3.11/site-packages")
+if user_site not in sys.path:
+    sys.path.append(user_site)
+
+# === 2. Installa le dipendenze se mancanti ===
+def install_dependencies_if_needed():
+    required = [
+        "faiss-cpu",
+        "sentence-transformers",
+        "flask",
+        "requests",
+        "PyQt5",
+        "psutil",
+        "PyMuPDF",
+        "langchain",
+        "langchain-community"
+    ]
+
+    for package in required:
+        try:
+            # Tentativo intelligente di import
+            mod = package.replace("-", "_").split(".")[0]
+            if mod == "faiss_cpu":
+                __import__("faiss")
+            else:
+                __import__(mod)
+        except ImportError:
+            print(f"[SETUP] Installazione mancante: {package}")
+            subprocess.call([sys.executable, "-m", "pip", "install", "--user", package])
+
+install_dependencies_if_needed()
+
+# === 3. Ora che le dipendenze sono sicure, importa Flask e gli altri ===
+from flask import Flask, request, jsonify
 import bpy
 from .utils import query_ollama_with_docs_async
 
 app = Flask(__name__)
-
-# Variabile globale per la risposta generata
 last_response = {"text": "", "ready": False}
 
 @app.route('/ask', methods=['POST'])
@@ -22,12 +55,11 @@ def ask_question():
     props.genai_question = domanda
     props.genai_image_path = image_path
 
-    # Reset risposta
     last_response["text"] = ""
     last_response["ready"] = False
 
     def update_callback():
-        print("[Flask] ✅ Risposta generata da Ollama!")
+        print("[Flask] Risposta generata da Ollama!")
         last_response["text"] = props.genai_response_text
         last_response["ready"] = True
 
@@ -81,7 +113,6 @@ def start_gui():
         print("[ERRORE] Avvio GUI PyQt5:", e)
 
 def try_bring_gui_to_front():
-    import socket
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect(("localhost", 5055))

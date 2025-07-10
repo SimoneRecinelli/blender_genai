@@ -48,9 +48,9 @@ class GENAI_OT_BuildIndex(bpy.types.Operator):
 
     def execute(self, context):
         try:
-            script_path = os.path.join(os.path.dirname(__file__), "build_blender_index.py")
+            script_path = os.path.join(os.path.dirname(__file__), "langchain_rag_blender_pdf.py")
             if not os.path.exists(script_path):
-                self.report({'ERROR'}, "File 'build_blender_index.py' non trovato.")
+                self.report({'ERROR'}, "File non trovato.")
                 return {'CANCELLED'}
 
             subprocess.check_call([sys.executable, script_path])
