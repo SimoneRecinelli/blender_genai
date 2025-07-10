@@ -13,23 +13,23 @@ bl_info = {
 }
 
 def register():
+    from . import server
+
     genai_operator.register()
     panel.register()
     install_operator.register()
 
-    # Avvia il server Flask
+    # ✅ Avvia il server Flask
     try:
-        from . import server
+        # ✅ Avvia il server Flask se non è già avviato
         server.start_flask_server()
-        # server.start_gui()
-        print("[DEBUG] Server Flask avviato")
+        print("[INFO] Server Flask avviato da __init__.py")
     except Exception as e:
-        print("[ERRORE] Avvio server:", e)
+        print("[ERRORE] Avvio server Flask:", e)
+
+
 
 def unregister():
     install_operator.unregister()
     panel.unregister()
     genai_operator.unregister()
-
-if __name__ == "__main__":
-    register()

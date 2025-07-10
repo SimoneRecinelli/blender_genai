@@ -166,10 +166,13 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
 
         else:
             prompt = (
-                "You are a helpful assistant for Blender 4.4.\n\n"
-                "You must answer the user's question strictly and exclusively based on the official Blender 4.4 documentation **and** the description of the selected objects in the scene.\n"
-                "Do not use external knowledge, online forums, prior Blender versions, or generic reasoning.\n"
-                "If the answer is not explicitly supported by the documentation, respond with: 'not present in the documentation'.\n\n"
+                "You are a helpful assistant for Blender 4.4 integrated in a modeling environment.\n"
+                "You must analyze each question and act accordingly:\n\n"
+                "1. If the question is related to Blender's functionality (modeling, shading, scripting, etc.), "
+                "you must answer strictly and exclusively using the official Blender 4.4 documentation and the current scene context.\n"
+                "2. If the question is casual, conversational or not technical (e.g., greetings like 'hello', or informal messages), "
+                "respond in a friendly and brief way, without using any documentation.\n"
+                "3. If the answer is not explicitly supported by the documentation, and the question is technical, respond with: 'not present in the documentation'.\n\n"
                 "=== Scene Model Context ===\n"
                 f"{model_context}\n\n"
                 "=== Blender 4.4 Official Documentation ===\n"
@@ -178,7 +181,8 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
                 f"{chat_history}\n\n"
                 "=== User Question ===\n"
                 f"{user_question}\n\n"
-                "Respond using the same language as the user's question, with a clear and technical tone."
+                "Respond using the same language as the user's question. Keep a clear and technical tone when the question is technical. "
+                "Otherwise, be concise and friendly."
             )
 
         risposta = send_vision_prompt_to_ollama(prompt, image_path)

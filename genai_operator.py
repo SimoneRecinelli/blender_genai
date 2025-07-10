@@ -105,19 +105,29 @@ class GENAI_OT_ShowFullResponse(bpy.types.Operator):
 
 
 class GENAI_OT_ShowExternalChat(bpy.types.Operator):
-    bl_idname = "genai.show_external_chat"
+    bl_idname = "genai.show_chat"
     bl_label = "Mostra Chat Esterna"
 
     def execute(self, context):
+        import subprocess
+        import os
+
+        addon_dir = os.path.dirname(__file__)
+        script_path = os.path.join(addon_dir, "gui_launcher.py")
+
         try:
-            from . import server
-            server.start_gui()
-            self.report({'INFO'}, "Chat avviata o portata in primo piano.")
+            subprocess.Popen(["python3", script_path])
+            self.report({'INFO'}, "✅ Chat avviata.")
         except Exception as e:
-            self.report({'ERROR'}, f"Errore: {e}")
+            self.report({'ERROR'}, f"Errore avvio chat: {e}")
         return {'FINISHED'}
 
-classes = [GENAI_OT_AskOperator, GENAI_OT_LoadImage, GENAI_OT_ShowFullResponse, GENAI_OT_ShowExternalChat]
+classes = [
+    GENAI_OT_AskOperator,
+    GENAI_OT_LoadImage,
+    GENAI_OT_ShowFullResponse,
+    GENAI_OT_ShowExternalChat
+]
 
 def register():
     for cls in classes:
