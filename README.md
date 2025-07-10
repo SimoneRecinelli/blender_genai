@@ -29,7 +29,7 @@ git lfs install
 
 ### 2. Clonare la repository
 ```bash
-git clone https://github.com/tuo-utente/blender_genai.git
+git clone https://github.com/SimoneRecinelli/blender_genai
 ```
 
 ### 3. Per chi ha già clonato senza LFS
