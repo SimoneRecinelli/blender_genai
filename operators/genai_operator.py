@@ -1,5 +1,5 @@
 import bpy
-from .utils import query_ollama_with_docs_async
+from utils import query_ollama_with_docs_async
 from . import server
 import os
 

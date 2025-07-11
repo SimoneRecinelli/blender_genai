@@ -1,6 +1,8 @@
 import bpy
 # Import dei file interni all'addon
-from . import genai_operator, panel, install_operator, gui_launcher
+from . import panel
+from gui import gui_launcher
+from operators import genai_operator, install_operator
 
 bl_info = {
     "name": "Blender GenAI Assistant",

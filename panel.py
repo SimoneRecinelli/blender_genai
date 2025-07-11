@@ -1,7 +1,5 @@
 import bpy
-import importlib
-import os
-from .install_operator import GENAI_OT_InstallDeps
+
 
 # ✅ Proprietà necessarie per la comunicazione
 class GenAIChatEntry(bpy.types.PropertyGroup):
