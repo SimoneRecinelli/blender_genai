@@ -4,12 +4,24 @@ import os
 import requests
 import socket
 import threading
+import platform
+from ctypes import c_void_p
+
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
-    QTextEdit, QLabel, QScrollArea, QFileDialog, QSizePolicy
+    QTextEdit, QLabel, QScrollArea, QFileDialog, QSizePolicy, QDialog
 )
 from PyQt5.QtGui import QIcon, QPixmap, QMovie
 from PyQt5.QtCore import Qt, QTimer, QSize
+
+# PyObjC per macOS (aggiunta al sys.path se necessario)
+if platform.system() == "Darwin":
+    user_site = os.path.expanduser("~/.local/lib/python3.11/site-packages")
+    if user_site not in sys.path:
+        sys.path.append(user_site)
+    import objc
+    from objc import pyobjc_id
+    from AppKit import NSApplication, NSWindow, NSPopUpMenuWindowLevel
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ICON_SEND = os.path.join(BASE_DIR, "icons", "send.svg")
@@ -29,59 +41,58 @@ class ChatTextBox(QTextEdit):
         else:
             super().keyPressEvent(event)
 
+from PyQt5.QtWidgets import QDesktopWidget
+
+class ImageViewer(QDialog):
+    def __init__(self, image_path):
+        super().__init__()
+        self.setWindowTitle("Immagine Ingrandita")
+        self.setWindowState(Qt.WindowFullScreen)
+        self.setStyleSheet("background-color: black;")
+
+        layout = QVBoxLayout()
+        label = QLabel()
+        screen_size = QApplication.primaryScreen().availableGeometry().size()
+
+        pixmap = QPixmap(image_path).scaled(
+            screen_size, Qt.KeepAspectRatio, Qt.SmoothTransformation
+        )
+        label.setPixmap(pixmap)
+        label.setAlignment(Qt.AlignCenter)
+
+        layout.addWidget(label)
+        self.setLayout(layout)
+        self.show()
+
+    def mousePressEvent(self, event):
+        self.close()
+
 class GenAIClient(QWidget):
     def __init__(self):
         super().__init__()
+        self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
+        self.setAttribute(Qt.WA_DeleteOnClose)
         self.setWindowTitle("GenAI Assistant Chat")
         threading.Thread(target=self.listen_for_front_request, daemon=True).start()
         self.setGeometry(100, 100, 600, 500)
         self.attesa_risposta = False
+        self._mouse_pos = None
 
         self.setStyleSheet("""
-            QWidget {
-                background-color: #1e1e1e;
-                color: white;
-                font-family: Arial;
-                font-size: 13px;
-            }
-            QTextEdit {
-                background-color: #2e2e2e;
-                color: white;
-                border: 1px solid #444;
-                border-radius: 10px;
-                padding: 8px;
-            }
-            QPushButton {
-                background-color: #444;
-                color: white;
-                border: none;
-            }
-            QPushButton:hover {
-                background-color: #666;
-            }
-            QScrollBar:vertical {
-                background: transparent;
-                width: 8px;
-            }
-            QScrollBar::handle:vertical {
-                background: white;
-                border-radius: 4px;
-                min-height: 20px;
-            }
-            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
-                height: 0px;
-            }
-            QScrollArea {
-                border: none;
-            }
+            QWidget { background-color: #1e1e1e; color: white; font-family: Arial; font-size: 13px; }
+            QTextEdit { background-color: #2e2e2e; color: white; border: 1px solid #444; border-radius: 10px; padding: 8px; }
+            QPushButton { background-color: #444; color: white; border: none; }
+            QPushButton:hover { background-color: #666; }
+            QScrollBar:vertical { background: transparent; width: 8px; }
+            QScrollBar::handle:vertical { background: white; border-radius: 4px; min-height: 20px; }
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0px; }
+            QScrollArea { border: none; }
         """)
 
         self.chat_layout = QVBoxLayout()
         self.chat_layout.setAlignment(Qt.AlignTop)
-
         self.scroll_content = QWidget()
         self.scroll_content.setLayout(self.chat_layout)
-
         self.scroll_area = QScrollArea()
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setWidget(self.scroll_content)
@@ -91,17 +102,34 @@ class GenAIClient(QWidget):
         self.textbox.setPlaceholderText("Scrivi una domanda...")
 
         self.add_image_button = QPushButton()
+        icon_1 = QIcon(ICON_LOAD)
+        pixmap_1 = icon_1.pixmap(QSize(24, 24) * self.devicePixelRatioF())
+        self.add_image_button.setIcon(QIcon(pixmap_1))
         self.add_image_button.setIcon(QIcon(ICON_LOAD))
         self.add_image_button.setIconSize(QSize(24, 24))
         self.add_image_button.setFixedSize(40, 40)
-        self.add_image_button.setStyleSheet("QPushButton { border-radius: 20px; background-color: white; }")
+        self.add_image_button.setCursor(Qt.PointingHandCursor)
+        self.add_image_button.setStyleSheet("""
+            QPushButton {
+                border-radius: 20px;
+                background-color: white;
+            }
+        """)
         self.add_image_button.clicked.connect(self.carica_immagine)
 
         self.send_button = QPushButton()
-        self.send_button.setIcon(QIcon(ICON_SEND))
+        icon = QIcon(ICON_SEND)
+        pixmap = icon.pixmap(QSize(24, 24) * self.devicePixelRatioF())
+        self.send_button.setIcon(QIcon(pixmap))
         self.send_button.setIconSize(QSize(24, 24))
         self.send_button.setFixedSize(40, 40)
-        self.send_button.setStyleSheet("QPushButton { border-radius: 20px; background-color: white; }")
+        self.send_button.setCursor(Qt.PointingHandCursor)
+        self.send_button.setStyleSheet("""
+            QPushButton {
+                border-radius: 20px;
+                background-color: white;
+            }
+        """)
         self.send_button.clicked.connect(self.invia_domanda)
 
         self.preview_widget = QWidget()
@@ -129,6 +157,23 @@ class GenAIClient(QWidget):
         self.timer = QTimer()
         self.timer.timeout.connect(self.check_response)
 
+        self.show()
+        self.raise_mac_window()
+
+    def mostra_immagine_intera(self, event):
+        if self.image_path and os.path.exists(self.image_path):
+            # 🔽 Rimuove temporaneamente "always on top"
+            self.setWindowFlags(self.windowFlags() & ~Qt.WindowStaysOnTopHint)
+            self.show()
+
+            viewer = ImageViewer(self.image_path)
+            viewer.exec_()
+
+            # 🔼 Ripristina always on top dopo la chiusura
+            self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
+            self.show()
+            self.raise_mac_window()
+
     def listen_for_front_request(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
@@ -145,7 +190,46 @@ class GenAIClient(QWidget):
         except OSError:
             print("[DEBUG] Porta già in uso — GUI probabilmente già attiva")
 
-    '''
+    def raise_mac_window(self):
+        try:
+            win_id = int(self.winId())
+            if win_id == 0:
+                return
+            raw_obj = pyobjc_id(win_id)
+            if not raw_obj:
+                return
+            ns_window = objc.objc_object(c_void_p=raw_obj)
+            if ns_window is None:
+                return
+            ns_window.setLevel_(NSPopUpMenuWindowLevel)
+            ns_window.orderFrontRegardless()
+            NSApplication.sharedApplication().activateIgnoringOtherApps_(True)
+        except Exception:
+            pass
+
+    def focusInEvent(self, event):
+        super().focusInEvent(event)
+        if platform.system() == "Darwin":
+            QTimer.singleShot(50, self.raise_mac_window)
+
+    def focusOutEvent(self, event):
+        super().focusOutEvent(event)
+        if platform.system() == "Darwin":
+            QTimer.singleShot(50, self.raise_mac_window)
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self._mouse_pos = event.globalPos() - self.frameGeometry().topLeft()
+            event.accept()
+
+    def mouseMoveEvent(self, event):
+        if event.buttons() == Qt.LeftButton and self._mouse_pos is not None:
+            self.move(event.globalPos() - self._mouse_pos)
+            event.accept()
+
+    def closeEvent(self, event):
+        event.accept()
+
     def add_message(self, text, sender='user', image_path=None):
         container = QWidget()
         layout = QVBoxLayout()
@@ -162,66 +246,11 @@ class GenAIClient(QWidget):
         label = QLabel(text)
         label.setWordWrap(True)
         label.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        label.setStyleSheet("font-size: 14px; padding: 6px;")
-        label.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Minimum)
-        label.setMaximumWidth(int(self.width() * 0.7))
-
-
-        #label.setWordWrap(True)
-        label.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        label.setStyleSheet("font-size: 14px;")
-        #label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
-
-        wrapper = QHBoxLayout()
-        wrapper.setContentsMargins(0, 0, 0, 0)
-
-        if sender == 'user':
-            wrapper.addStretch()
-            wrapper.addWidget(label, 0, Qt.AlignRight)
-        else:
-            wrapper.addWidget(label, 0, Qt.AlignLeft)
-            wrapper.addStretch()
-
-        wrapper_widget = QWidget()
-        wrapper_widget.setLayout(wrapper)
-
-        layout.addWidget(wrapper_widget)
-        container.setLayout(layout)
-
-        self.chat_layout.addWidget(container)
-
-        QTimer.singleShot(100, lambda: self.scroll_area.verticalScrollBar().setValue(
-            self.scroll_area.verticalScrollBar().maximum()))
-    '''
-
-    def add_message(self, text, sender='user', image_path=None):
-        container = QWidget()
-        container_layout = QVBoxLayout()
-        container_layout.setContentsMargins(10, 5, 10, 5)
-        container_layout.setSpacing(5)
-
-        # Se presente, aggiungi immagine
-        if image_path:
-            image_label = QLabel()
-            pixmap = QPixmap(image_path).scaledToWidth(250, Qt.SmoothTransformation)
-            image_label.setPixmap(pixmap)
-            image_label.setAlignment(Qt.AlignLeft if sender == 'bot' else Qt.AlignRight)
-            image_label.setContentsMargins(0, 0, 0, 10)
-            container_layout.addWidget(image_label)
-
-        label = QLabel(text)
-        label.setWordWrap(True)
-        label.setTextInteractionFlags(Qt.TextSelectableByMouse)
         label.setStyleSheet("font-size: 14px;")
         label.setFixedWidth(390)
         label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Minimum)
         label.setAlignment(Qt.AlignRight if sender == 'user' else Qt.AlignLeft)
 
-
-        label.setFixedWidth(390)  # Larghezza fissa scelta in base alla tua finestra
-        label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Minimum)
-
-        # Contenitore orizzontale per allineare a destra/sinistra
         wrapper_layout = QHBoxLayout()
         wrapper_layout.setContentsMargins(0, 0, 0, 0)
         if sender == 'user':
@@ -233,16 +262,12 @@ class GenAIClient(QWidget):
 
         wrapper_widget = QWidget()
         wrapper_widget.setLayout(wrapper_layout)
-
-        container_layout.addWidget(wrapper_widget)
-        container.setLayout(container_layout)
-
+        layout.addWidget(wrapper_widget)
+        container.setLayout(layout)
         self.chat_layout.addWidget(container)
 
-        # Scroll automatico alla fine
         QTimer.singleShot(100, lambda: self.scroll_area.verticalScrollBar().setValue(
             self.scroll_area.verticalScrollBar().maximum()))
-
 
     def invia_domanda(self):
         domanda = self.textbox.toPlainText().strip()
@@ -265,15 +290,6 @@ class GenAIClient(QWidget):
             payload = {"question": domanda}
             if self.image_path:
                 payload["image_path"] = self.image_path
-                print(f"[DEBUG] self.image_path = {self.image_path}")
-                print(f"[DEBUG] os.path.exists(self.image_path): {os.path.exists(self.image_path)}")
-
-
-            print(f"[DEBUG] Domanda: {domanda}")
-            if "image_path" in payload:
-                print(f"[DEBUG] Inviando immagine: {payload['image_path']}")
-            else:
-                print("[DEBUG] Nessuna immagine inclusa")
 
             r = requests.post("http://127.0.0.1:5000/ask", json=payload)
             if r.status_code == 200:
@@ -310,6 +326,11 @@ class GenAIClient(QWidget):
             self.add_message(f"Errore: {str(e)}", 'bot')
 
     def carica_immagine(self):
+        self.hide()  # Nasconde la finestra della chat prima dello screenshot
+        QApplication.processEvents()
+        QTimer.singleShot(500, self._esegui_screenshot)
+
+    def _esegui_screenshot(self):
         import datetime
         import subprocess
         from AppKit import NSWorkspace
@@ -321,12 +342,7 @@ class GenAIClient(QWidget):
 
         def bring_blender_to_front():
             try:
-                script = '''
-                tell application "Blender"
-                    activate
-                end tell
-                '''
-                subprocess.run(["osascript", "-e", script])
+                subprocess.run(["osascript", "-e", 'tell application "Blender" to activate'])
             except Exception as e:
                 self.add_message(f"Errore attivazione Blender: {str(e)}", "bot")
 
@@ -336,38 +352,36 @@ class GenAIClient(QWidget):
             for window in windowList:
                 if "Blender" in window.get("kCGWindowOwnerName", ""):
                     bounds = window.get("kCGWindowBounds", {})
-                    x = int(bounds.get("X", 0))
-                    y = int(bounds.get("Y", 0))
-                    w = int(bounds.get("Width", 0))
-                    h = int(bounds.get("Height", 0))
-                    screen_height = QApplication.primaryScreen().size().height()
-                    y = screen_height - y - h  # conversione da coordinate macOS a Qt
-                    return (x, y, w, h)
+                    return (
+                        int(bounds.get("X", 0)),
+                        int(bounds.get("Y", 0)),
+                        int(bounds.get("Width", 0)),
+                        int(bounds.get("Height", 0))
+                    )
             return None
 
         try:
             bring_blender_to_front()
             QApplication.processEvents()
-            self.repaint()
-            QApplication.instance().thread().msleep(500)
+            QApplication.instance().thread().msleep(300)
 
             bounds = get_blender_window_bounds()
             screen = QApplication.primaryScreen()
             screenshot = screen.grabWindow(0)
 
             if bounds:
-                screen = QApplication.primaryScreen()
-                device_pixel_ratio = screen.devicePixelRatio()
+                dpr = screen.devicePixelRatio()
+                screen_height = screen.size().height() * dpr
 
                 x, y, w, h = bounds
-                x *= device_pixel_ratio
-                y *= device_pixel_ratio
-                w *= device_pixel_ratio
-                h *= device_pixel_ratio
+                x = int(x * dpr)
+                y = int((screen_height - y - h) * dpr)
+                w = int(w * dpr)
+                h = int(h * dpr)
 
-                cropped = screenshot.copy(int(x), int(y), int(w), int(h))
+                cropped = screenshot.copy(x, y, w, h)
             else:
-                self.add_message("Finestra di Blender non trovata, uso schermo intero", "bot")
+                self.add_message("Finestra di Blender non trovata, screenshot dell'intero schermo.", "bot")
                 cropped = screenshot
 
             now = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -375,7 +389,7 @@ class GenAIClient(QWidget):
             cropped.save(path)
             self.image_path = path
 
-            # Pulisci preview precedente
+            # Pulisce preview precedente
             for i in reversed(range(self.preview_layout.count())):
                 widget = self.preview_layout.itemAt(i).widget()
                 if widget:
@@ -385,11 +399,14 @@ class GenAIClient(QWidget):
             self.image_preview_label = QLabel()
             pixmap = QPixmap(path).scaledToWidth(100, Qt.SmoothTransformation)
             self.image_preview_label.setPixmap(pixmap)
+            self.image_preview_label.setCursor(Qt.PointingHandCursor)
+            self.image_preview_label.mousePressEvent = self.mostra_immagine_intera
 
             self.delete_button = QPushButton()
             self.delete_button.setIcon(QIcon(ICON_TRASH))
             self.delete_button.setIconSize(QSize(20, 20))
             self.delete_button.setFixedSize(28, 28)
+            self.send_button.setCursor(Qt.PointingHandCursor)
             self.delete_button.setStyleSheet("""
                 QPushButton {
                     background-color: #444;
@@ -414,8 +431,10 @@ class GenAIClient(QWidget):
             self.preview_layout.addWidget(container)
 
         except Exception as e:
-            self.add_message(f"Errore durante la cattura della finestra: {str(e)}", "bot")
-
+            self.add_message(f"Errore durante la cattura: {str(e)}", "bot")
+        finally:
+            self.show()
+            self.raise_mac_window()
 
     def rimuovi_immagine(self):
         self.image_path = None
@@ -425,8 +444,7 @@ class GenAIClient(QWidget):
         self.image_preview_label = None
         self.delete_button = None
 
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    win = GenAIClient()
-    win.show()
-    sys.exit(app.exec_())
+if __name__ == "__main__":
+    app = QApplication.instance() or QApplication(sys.argv)
+    window = GenAIClient()
+    app.exec_()

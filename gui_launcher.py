@@ -1,10 +1,25 @@
-import sys
 import os
+import subprocess
+import sys
+import bpy
 
-# Aggiunge il path del modulo Blender GenAI
-sys.path.append(os.path.dirname(__file__))
+class GENAI_OT_ShowExternalChat(bpy.types.Operator):
+    bl_idname = "genai.show_external_chat"
+    bl_label = "Apri Chat Esterna"
 
-from esterna_gui import avvia_gui_esternamente
+    def execute(self, context):
+        blender_python = sys.executable
+        gui_path = os.path.join(os.path.dirname(__file__), "extern_gui.py")
 
-if __name__ == "__main__":
-    avvia_gui_esternamente()
+        try:
+            subprocess.Popen([blender_python, gui_path])
+            self.report({'INFO'}, "✅ Chat esterna avviata.")
+        except Exception as e:
+            self.report({'ERROR'}, f"Errore GUI: {str(e)}")
+        return {'FINISHED'}
+
+def register():
+    bpy.utils.register_class(GENAI_OT_ShowExternalChat)
+
+def unregister():
+    bpy.utils.unregister_class(GENAI_OT_ShowExternalChat)
