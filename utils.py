@@ -1,11 +1,100 @@
-import bpy
-import bmesh
 import os
 import pickle
 import threading
 import base64
 import requests
 import json
+
+# === Import condizionato per Blender ===
+try:
+    import bpy
+    import bmesh
+    BLENDER_ENV = True
+except ImportError:
+    bpy = None
+    bmesh = None
+    BLENDER_ENV = False
+
+# === CRONOLOGIA CHAT IN MEMORIA E SU DISCO ===
+
+global_chat_history = []
+
+def get_chat_history_path():
+    return os.path.join(os.path.dirname(__file__), "chat_history.json")
+
+def add_to_chat_history(sender, message):
+    global_chat_history.append({"sender": sender, "message": message})
+    save_chat_to_file()
+
+def build_conversational_context_from_json(history_list):
+    lines = []
+    for entry in history_list:
+        prefix = "Utente" if entry["sender"] == 'USER' else "GenAI"
+        lines.append(f"{prefix}: {entry['message']}")
+    return "\n".join(lines)
+
+def save_chat_to_file(path=None):
+    if path is None:
+        path = get_chat_history_path()
+    try:
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(global_chat_history, f, ensure_ascii=False, indent=2)
+        print(f"[DEBUG] Chat salvata in: {path}")
+    except Exception as e:
+        print(f"[ERRORE] Salvataggio chat: {e}")
+
+def load_chat_from_file(path=None):
+    global global_chat_history
+    if path is None:
+        path = get_chat_history_path()
+    if os.path.exists(path):
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                global_chat_history = json.load(f)
+            print(f"[DEBUG] Chat caricata da: {path}")
+        except Exception as e:
+            print(f"[ERRORE] Caricamento chat: {e}")
+
+'''
+def reset_chat_history():
+    global global_chat_history
+    global_chat_history = []
+    path = get_chat_history_path()
+
+    # Sicurezza extra: elimina solo file .json previsti
+    if not path.endswith("chat_history.json"):
+        print(f"[ERRORE] Tentativo di eliminare un file non valido: {path}")
+        return
+
+    try:
+        if os.path.exists(path):
+            os.remove(path)
+            print(f"[DEBUG] Chat history rimossa: {path}")
+    except Exception as e:
+        print(f"[ERRORE] Impossibile rimuovere la chat history: {e}")
+    
+    save_chat_to_file()  # forza il salvataggio del JSON vuoto
+'''
+
+def reset_chat_history():
+    global global_chat_history
+
+    print("[DEBUG] Reset chat history in memoria e su disco")
+
+    # 1. Azzeramento effettivo
+    global_chat_history.clear()
+
+    # 2. Sovrascrivi il file con una lista vuota
+    try:
+        with open(get_chat_history_path(), "w", encoding="utf-8") as f:
+            json.dump([], f, ensure_ascii=False, indent=2)
+        print(f"[DEBUG] Chat JSON sovrascritto vuoto: {get_chat_history_path()}")
+    except Exception as e:
+        print(f"[ERRORE] Sovrascrittura chat vuota fallita: {e}")
+
+
+# Carica la chat appena si importa il modulo
+load_chat_from_file()
 
 # === QUERY RAG (senza import globali) ===
 
@@ -45,18 +134,12 @@ def recupera_chunk_simili_faiss(domanda, k=5):
         [f"[Fonte: {r['source']}]\n{r['text']}" for r in risultati]
     )
 
-# === CONTESTO CHAT ===
-
-def build_conversational_context(props):
-    history_lines = []
-    for entry in props.chat_history:
-        prefix = "Utente" if entry.sender == 'USER' else "GenAI"
-        history_lines.append(f"{prefix}: {entry.message}")
-    return "\n".join(history_lines)
-
 # === CONTESTO MESH BLENDER ===
 
 def get_model_context(selected_objs):
+    if not BLENDER_ENV:
+        return "Context not available outside Blender."
+
     if not selected_objs:
         return "Nessun oggetto mesh selezionato nella scena."
 
@@ -106,7 +189,6 @@ def get_model_context(selected_objs):
     header = f"Hai selezionato {len(selected_objs)} oggetto/i. Ecco i dettagli:\n"
     return header + "\n\n".join(context_list)
 
-
 # === INVIO HTTP A OLLAMA VISION ===
 
 def send_vision_prompt_to_ollama(prompt: str, image_path: str = None, model: str = "llama3.2-vision") -> str:
@@ -144,7 +226,7 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
 
         image_path = props.genai_image_path if props and props.genai_image_path else None
         model_context = get_model_context(selected_objects)
-        chat_history = build_conversational_context(props) if props else ""
+        chat_history = build_conversational_context_from_json(global_chat_history)
 
         try:
             blender_docs = recupera_chunk_simili_faiss(user_question)
@@ -189,10 +271,14 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
 
         def update():
             props.genai_response_text = risposta
+            add_to_chat_history("GenAI", risposta)
             if update_callback:
                 update_callback()
 
-        bpy.app.timers.register(update)
+        if BLENDER_ENV:
+            bpy.app.timers.register(update)
+        else:
+            update()
 
+    add_to_chat_history("USER", user_question)
     threading.Thread(target=worker).start()
-
