@@ -9,10 +9,12 @@ from ctypes import c_void_p
 
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
-    QTextEdit, QLabel, QScrollArea, QFileDialog, QSizePolicy, QDialog
+    QTextEdit, QLabel, QScrollArea, QFileDialog, QSizePolicy, QDialog,
+    QCheckBox, QFrame
 )
 from PyQt5.QtGui import QIcon, QPixmap, QMovie
-from PyQt5.QtCore import Qt, QTimer, QSize
+from PyQt5.QtCore import QCoreApplication, Qt, QTimer, QSize, QPropertyAnimation, QRect
+from PyQt5.QtSvg import QSvgWidget
 
 # PyObjC per macOS (aggiunta al sys.path se necessario)
 if platform.system() == "Darwin":
@@ -41,8 +43,6 @@ class ChatTextBox(QTextEdit):
         else:
             super().keyPressEvent(event)
 
-from PyQt5.QtWidgets import QDesktopWidget
-
 class ImageViewer(QDialog):
     def __init__(self, image_path):
         super().__init__()
@@ -67,9 +67,77 @@ class ImageViewer(QDialog):
     def mousePressEvent(self, event):
         self.close()
 
+class ThemeSwitch(QWidget):
+    def __init__(self, on_toggle):
+        super().__init__()
+        self.setFixedSize(70, 36)
+        self.on_toggle = on_toggle
+        self.state = False  # dark mode iniziale
+
+        # === Contenitore grigio fisso ===
+        self.track = QFrame(self)
+        self.track.setGeometry(0, 0, 70, 36)
+        self.track.setStyleSheet("background-color: #ddd; border-radius: 18px;")
+        self.track.setAttribute(Qt.WA_StyledBackground, True)
+
+        # === Icone SVG
+        self.icon_moon = QSvgWidget(os.path.join(BASE_DIR, "icons/moon.svg"), self.track)
+        self.icon_moon.setFixedSize(16, 16)
+        self.icon_moon.move(8, 10)
+
+        self.icon_sun = QSvgWidget(os.path.join(BASE_DIR, "icons/sun.svg"), self.track)
+        self.icon_sun.setFixedSize(16, 16)
+        self.icon_sun.move(46, 10)
+
+        # === Pallina bianca
+        self.thumb = QFrame(self)
+        self.thumb.setGeometry(2, 2, 32, 32)
+        self.thumb.setStyleSheet("background-color: white; border-radius: 16px;")
+        self.thumb.setAttribute(Qt.WA_StyledBackground, True)
+
+        # === Animazione
+        self.anim = QPropertyAnimation(self.thumb, b"geometry")
+        self.anim.setDuration(200)
+
+        # === Attiva toggle al click
+        self.track.mousePressEvent = self.toggle_theme
+        self.thumb.mousePressEvent = self.toggle_theme
+
+    def toggle_theme(self, event=None):
+        self.state = not self.state
+
+        # Pallina destra/sinistra
+        new_geom = QRect(36, 2, 32, 32) if self.state else QRect(2, 2, 32, 32)
+        self.anim.setEndValue(new_geom)
+        self.anim.start()
+
+        # Callback al programma principale
+        self.on_toggle(self.state)
+
 class GenAIClient(QWidget):
     def __init__(self):
         super().__init__()
+
+        self.dark_stylesheet = """
+            QWidget { background-color: #1e1e1e; color: white; font-family: Arial; font-size: 13px; }
+            QTextEdit { background-color: #2e2e2e; color: white; border: 1px solid #444; border-radius: 10px; padding: 8px; }
+            QPushButton { background-color: #444; color: white; border: none; }
+            QPushButton:hover { background-color: #666; }
+            QScrollBar:vertical { background: transparent; width: 8px; }
+            QScrollBar::handle:vertical { background: white; border-radius: 4px; min-height: 20px; }
+            QScrollArea { border: none; }
+        """
+
+        self.light_stylesheet = """
+            QWidget { background-color: #f4f4f4; color: black; font-family: Arial; font-size: 13px; }
+            QTextEdit { background-color: #ffffff; color: black; border: 1px solid #ccc; border-radius: 10px; padding: 8px; }
+            QPushButton { background-color: #ddd; color: black; border: none; }
+            QPushButton:hover { background-color: #bbb; }
+            QScrollBar:vertical { background: transparent; width: 8px; }
+            QScrollBar::handle:vertical { background: #999; border-radius: 4px; min-height: 20px; }
+            QScrollArea { border: none; }
+        """
+
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setWindowTitle("GenAI Assistant Chat")
@@ -77,17 +145,6 @@ class GenAIClient(QWidget):
         self.setGeometry(100, 100, 600, 500)
         self.attesa_risposta = False
         self._mouse_pos = None
-
-        self.setStyleSheet("""
-            QWidget { background-color: #1e1e1e; color: white; font-family: Arial; font-size: 13px; }
-            QTextEdit { background-color: #2e2e2e; color: white; border: 1px solid #444; border-radius: 10px; padding: 8px; }
-            QPushButton { background-color: #444; color: white; border: none; }
-            QPushButton:hover { background-color: #666; }
-            QScrollBar:vertical { background: transparent; width: 8px; }
-            QScrollBar::handle:vertical { background: white; border-radius: 4px; min-height: 20px; }
-            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0px; }
-            QScrollArea { border: none; }
-        """)
 
         self.chat_layout = QVBoxLayout()
         self.chat_layout.setAlignment(Qt.AlignTop)
@@ -102,9 +159,6 @@ class GenAIClient(QWidget):
         self.textbox.setPlaceholderText("Scrivi una domanda...")
 
         self.add_image_button = QPushButton()
-        icon_1 = QIcon(ICON_LOAD)
-        pixmap_1 = icon_1.pixmap(QSize(24, 24) * self.devicePixelRatioF())
-        self.add_image_button.setIcon(QIcon(pixmap_1))
         self.add_image_button.setIcon(QIcon(ICON_LOAD))
         self.add_image_button.setIconSize(QSize(24, 24))
         self.add_image_button.setFixedSize(40, 40)
@@ -112,22 +166,21 @@ class GenAIClient(QWidget):
         self.add_image_button.setStyleSheet("""
             QPushButton {
                 border-radius: 20px;
-                background-color: white;
+                background-color: #ddd;
             }
         """)
+
         self.add_image_button.clicked.connect(self.carica_immagine)
 
         self.send_button = QPushButton()
-        icon = QIcon(ICON_SEND)
-        pixmap = icon.pixmap(QSize(24, 24) * self.devicePixelRatioF())
-        self.send_button.setIcon(QIcon(pixmap))
+        self.send_button.setIcon(QIcon(ICON_SEND))
         self.send_button.setIconSize(QSize(24, 24))
         self.send_button.setFixedSize(40, 40)
         self.send_button.setCursor(Qt.PointingHandCursor)
         self.send_button.setStyleSheet("""
             QPushButton {
                 border-radius: 20px;
-                background-color: white;
+                background-color: #ddd;
             }
         """)
         self.send_button.clicked.connect(self.invia_domanda)
@@ -147,6 +200,16 @@ class GenAIClient(QWidget):
         self.main_layout.addWidget(self.scroll_area)
         self.main_layout.addWidget(self.preview_widget)
         self.main_layout.addLayout(self.input_layout)
+
+        # === Switch moderno centrato ===
+        self.theme_switch = ThemeSwitch(self.toggle_tema)
+        switch_row = QHBoxLayout()
+        switch_row.addStretch()
+        switch_row.addWidget(self.theme_switch)
+        switch_row.addStretch()
+        self.main_layout.addLayout(switch_row)
+
+        self.setStyleSheet(self.dark_stylesheet)
         self.setLayout(self.main_layout)
 
         self.image_path = None
@@ -159,6 +222,12 @@ class GenAIClient(QWidget):
 
         self.show()
         self.raise_mac_window()
+
+    def toggle_tema(self, enabled: bool):
+        if enabled:
+            self.setStyleSheet(self.light_stylesheet)
+        else:
+            self.setStyleSheet(self.dark_stylesheet)
 
     def mostra_immagine_intera(self, event):
         if self.image_path and os.path.exists(self.image_path):
@@ -397,21 +466,23 @@ class GenAIClient(QWidget):
                 if widget:
                     widget.setParent(None)
 
-            # Anteprima + bottone elimina
+            # Anteprima immagine
             self.image_preview_label = QLabel()
             pixmap = QPixmap(path).scaledToWidth(100, Qt.SmoothTransformation)
             self.image_preview_label.setPixmap(pixmap)
+            self.image_preview_label.setFixedSize(pixmap.size())
             self.image_preview_label.setCursor(Qt.PointingHandCursor)
             self.image_preview_label.mousePressEvent = self.mostra_immagine_intera
 
+            # Bottone elimina
             self.delete_button = QPushButton()
             self.delete_button.setIcon(QIcon(ICON_TRASH))
             self.delete_button.setIconSize(QSize(20, 20))
             self.delete_button.setFixedSize(28, 28)
-            self.send_button.setCursor(Qt.PointingHandCursor)
+            self.delete_button.setCursor(Qt.PointingHandCursor)
             self.delete_button.setStyleSheet("""
                 QPushButton {
-                    background-color: #444;
+                    background-color: #ddd;
                     color: white;
                     border-radius: 14px;
                 }
@@ -421,16 +492,34 @@ class GenAIClient(QWidget):
             """)
             self.delete_button.clicked.connect(self.rimuovi_immagine)
 
+            # Layout con immagine a sinistra e bottone a destra
             container = QWidget()
-            h_layout = QHBoxLayout()
-            h_layout.setContentsMargins(0, 0, 0, 0)
-            h_layout.setSpacing(6)
-            h_layout.addWidget(self.image_preview_label)
-            h_layout.addWidget(self.delete_button)
-            container.setLayout(h_layout)
+            outer_layout = QHBoxLayout()
+            outer_layout.setContentsMargins(0, 0, 0, 0)
+            outer_layout.setSpacing(0)
+
+            img_container = QWidget()
+            img_layout = QHBoxLayout()
+            img_layout.setContentsMargins(10, 0, 0, 0)
+            img_layout.setSpacing(0)
+            img_layout.addWidget(self.image_preview_label)
+            img_container.setLayout(img_layout)
+
+            btn_container = QWidget()
+            btn_layout = QHBoxLayout()
+            btn_layout.setContentsMargins(0, 0, 10, 0)
+            btn_layout.addStretch()
+            btn_layout.addWidget(self.delete_button)
+            btn_container.setLayout(btn_layout)
+
+            outer_layout.addWidget(img_container)
+            outer_layout.addStretch()
+            outer_layout.addWidget(btn_container)
+            container.setLayout(outer_layout)
 
             self.image_container = container
             self.preview_layout.addWidget(container)
+
 
         except Exception as e:
             self.add_message(f"Errore durante la cattura: {str(e)}", "bot")
@@ -447,6 +536,7 @@ class GenAIClient(QWidget):
         self.delete_button = None
 
 if __name__ == "__main__":
+    QCoreApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
     app = QApplication.instance() or QApplication(sys.argv)
     window = GenAIClient()
     app.exec_()
