@@ -118,6 +118,18 @@ class GenAIClient(QWidget):
     def __init__(self):
         super().__init__()
 
+        # Imposta icona del Dock su macOS
+        if platform.system() == "Darwin":
+            from AppKit import NSApplication, NSImage
+            from Foundation import NSURL
+
+            icon_path = os.path.join(BASE_DIR, "icons", "genai_icon.icns")
+            nsimage = NSImage.alloc().initWithContentsOfFile_(icon_path)
+            if nsimage:
+                NSApplication.sharedApplication().setApplicationIconImage_(nsimage)
+
+        self.setWindowIcon(QIcon(os.path.join(BASE_DIR, "icons", "genai_icon.icns")))
+
         self.dark_stylesheet = """
             QWidget { background-color: #1e1e1e; color: white; font-family: Arial; font-size: 13px; }
             QTextEdit { background-color: #2e2e2e; color: white; border: 1px solid #444; border-radius: 10px; padding: 8px; }
@@ -224,10 +236,14 @@ class GenAIClient(QWidget):
         self.raise_mac_window()
 
     def toggle_tema(self, enabled: bool):
+        current_pos = self.pos()  # Salva posizione prima del cambio tema
+
         if enabled:
             self.setStyleSheet(self.light_stylesheet)
         else:
             self.setStyleSheet(self.dark_stylesheet)
+
+        self.move(current_pos)  # Ripristina posizione identica
 
     def mostra_immagine_intera(self, event):
         if self.image_path and os.path.exists(self.image_path):
