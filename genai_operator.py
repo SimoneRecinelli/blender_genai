@@ -2,7 +2,9 @@ import bpy
 from .utils import query_ollama_with_docs_async
 from . import server
 import os
-
+import sys
+import subprocess
+import platform
 
 class GENAI_OT_AskOperator(bpy.types.Operator):
     bl_idname = "genai.ask_operator"
@@ -105,22 +107,41 @@ class GENAI_OT_ShowFullResponse(bpy.types.Operator):
 
 
 class GENAI_OT_ShowExternalChat(bpy.types.Operator):
-    bl_idname = "genai.show_chat"
-    bl_label = "Mostra Chat Esterna"
+    bl_idname = "genai.show_external_chat"
+    bl_label = "Apri Chat Esterna"
 
     def execute(self, context):
-        import subprocess
-        import os
-
-        addon_dir = os.path.dirname(__file__)
-        script_path = os.path.join(addon_dir, "gui_launcher.py")
-
         try:
-            subprocess.Popen(["python3", script_path])
-            self.report({'INFO'}, "✅ Chat avviata.")
+            from . import gui_launcher
+
+            # Se la GUI è già attiva, mandale un messaggio per portarsi in primo piano
+            if gui_launcher.bring_window_to_front():
+                self.report({'INFO'}, "🔁 Chat già attiva — riportata in primo piano.")
+                return {'FINISHED'}
+
+            # Altrimenti lanciamo la GUI come processo separato e indipendente
+            script_path = os.path.join(os.path.dirname(__file__), "extern_gui.py")
+            python_exe = sys.executable
+
+            kwargs = {
+                "args": [python_exe, script_path],
+                "stdout": subprocess.DEVNULL,
+                "stderr": subprocess.DEVNULL,
+            }
+
+            system = platform.system()
+            if system == "Windows":
+                kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+            else:  # macOS e Linux
+                kwargs["start_new_session"] = True
+
+            subprocess.Popen(**kwargs)
+
+            self.report({'INFO'}, "✅ Chat esterna avviata.")
         except Exception as e:
-            self.report({'ERROR'}, f"Errore avvio chat: {e}")
+            self.report({'ERROR'}, f"Errore apertura chat: {str(e)}")
         return {'FINISHED'}
+
 
 classes = [
     GENAI_OT_AskOperator,

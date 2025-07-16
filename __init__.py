@@ -1,6 +1,6 @@
 import bpy
 # Import dei file interni all'addon
-from . import genai_operator, panel, gui_launcher
+from . import genai_operator, panel
 
 bl_info = {
     "name": "Blender GenAI Assistant",
@@ -17,7 +17,7 @@ def register():
 
     genai_operator.register()
     panel.register()
-    gui_launcher.register()
+    # gui_launcher.register()
 
     # ✅ Avvia il server Flask
     try:
@@ -30,6 +30,6 @@ def register():
 
 
 def unregister():
-    gui_launcher.unregister()
+    # gui_launcher.unregister()
     panel.unregister()
     genai_operator.unregister()

@@ -1,25 +1,34 @@
 import os
-import subprocess
 import sys
-import bpy
+import socket
+import subprocess
+import platform
 
-class GENAI_OT_ShowExternalChat(bpy.types.Operator):
-    bl_idname = "genai.show_external_chat"
-    bl_label = "Apri Chat Esterna"
+def bring_window_to_front():
+    try:
+        with socket.create_connection(("localhost", 5055), timeout=1) as s:
+            s.sendall(b"bring-to-front")
+        return True
+    except (ConnectionRefusedError, socket.timeout, OSError):
+        return False
 
-    def execute(self, context):
-        blender_python = sys.executable
-        gui_path = os.path.join(os.path.dirname(__file__), "extern_gui.py")
+def launch_gui_if_not_running():
+    if bring_window_to_front():
+        return  # Già attiva, non rilancio
 
-        try:
-            subprocess.Popen([blender_python, gui_path])
-            self.report({'INFO'}, "✅ Chat esterna avviata.")
-        except Exception as e:
-            self.report({'ERROR'}, f"Errore GUI: {str(e)}")
-        return {'FINISHED'}
+    # Lancia GUI solo se non attiva
+    gui_path = os.path.join(os.path.dirname(__file__), "extern_gui.py")
+    python_exe = sys.executable
 
-def register():
-    bpy.utils.register_class(GENAI_OT_ShowExternalChat)
+    kwargs = {
+        "args": [python_exe, gui_path],
+        "stdout": subprocess.DEVNULL,
+        "stderr": subprocess.DEVNULL,
+    }
 
-def unregister():
-    bpy.utils.unregister_class(GENAI_OT_ShowExternalChat)
+    if platform.system() == "Windows":
+        kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+    else:
+        kwargs["start_new_session"] = True
+
+    subprocess.Popen(**kwargs)

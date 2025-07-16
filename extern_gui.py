@@ -15,6 +15,7 @@ from PyQt5.QtGui import QIcon, QPixmap, QMovie
 from PyQt5.QtCore import QCoreApplication, Qt, QTimer, QSize, QPropertyAnimation, QRect
 from PyQt5.QtSvg import QSvgWidget
 
+
 # PyObjC per macOS (aggiunta al sys.path se necessario)
 if platform.system() == "Darwin":
     user_site = os.path.expanduser("~/.local/lib/python3.11/site-packages")
@@ -159,7 +160,7 @@ class GenAIClient(QWidget):
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setWindowTitle("GenAI Assistant Chat")
-        threading.Thread(target=self.listen_for_front_request, daemon=True).start()
+        # threading.Thread(target=self.listen_for_front_request, daemon=True).start()
         self.setGeometry(100, 100, 600, 500)
         self.attesa_risposta = False
         self._mouse_pos = None
@@ -287,7 +288,8 @@ class GenAIClient(QWidget):
                     self.activateWindow()
                 conn.close()
         except OSError:
-            print("[DEBUG] Porta già in uso — GUI probabilmente già attiva")
+            print("[DEBUG] Socket già in uso — GUI probabilmente attiva")
+
 
     def raise_mac_window(self):
         try:
@@ -576,8 +578,56 @@ class GenAIClient(QWidget):
         self.image_preview_label = None
         self.delete_button = None
 
+'''
+def bring_window_to_front():
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect(("localhost", 5055))
+        s.sendall(b"bring-to-front")
+        s.close()
+        return True
+    except ConnectionRefusedError:
+        return False
+'''        
+
+# 🔁 1. Prova a bindare: se fallisce, esci (GUI già aperta)
+import socket
+
+def start_singleton_socket():
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        s.bind(("localhost", 5055))  # socket unico
+        s.listen(1)
+
+        def handle_connections():
+            while True:
+                conn, _ = s.accept()
+                data = conn.recv(1024)
+                if b"bring-to-front" in data:
+                    QTimer.singleShot(0, bring_gui_to_front)
+                conn.close()
+
+        threading.Thread(target=handle_connections, daemon=True).start()
+        return True
+    except OSError:
+        return False  # socket già usato: GUI aperta
+
+def bring_gui_to_front():
+    win = QApplication.activeWindow()
+    if win:
+        win.showNormal()
+        win.raise_()
+        win.activateWindow()
+
 if __name__ == "__main__":
     QCoreApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
+
+    if not start_singleton_socket():
+        print("[INFO] GUI già in esecuzione, non ne apro un'altra.")
+        sys.exit(0)
+
     app = QApplication.instance() or QApplication(sys.argv)
     window = GenAIClient()
     app.exec_()
+
+
