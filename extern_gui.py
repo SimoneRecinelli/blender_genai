@@ -118,17 +118,23 @@ class GenAIClient(QWidget):
     def __init__(self):
         super().__init__()
 
-        # Imposta icona del Dock su macOS
+        # === Imposta l'icona della finestra in base al sistema operativo ===
         if platform.system() == "Darwin":
             from AppKit import NSApplication, NSImage
-            from Foundation import NSURL
-
             icon_path = os.path.join(BASE_DIR, "icons", "genai_icon.icns")
             nsimage = NSImage.alloc().initWithContentsOfFile_(icon_path)
             if nsimage:
                 NSApplication.sharedApplication().setApplicationIconImage_(nsimage)
+        elif platform.system() == "Windows":
+            icon_path = os.path.join(BASE_DIR, "icons", "genai_icon.ico")
+        else:
+            icon_path = os.path.join(BASE_DIR, "icons", "genai_icon.png")
 
-        self.setWindowIcon(QIcon(os.path.join(BASE_DIR, "icons", "genai_icon.icns")))
+        # Usa QIcon cross-platform
+        if os.path.exists(icon_path):
+            self.setWindowIcon(QIcon(icon_path))
+        else:
+            print(f"[AVVISO] Icona non trovata: {icon_path}")
 
         self.dark_stylesheet = """
             QWidget { background-color: #1e1e1e; color: white; font-family: Arial; font-size: 13px; }
