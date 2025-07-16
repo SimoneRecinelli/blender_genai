@@ -1,5 +1,4 @@
 import sys
-print("INTERPRETER IN USO DALLA GUI:", sys.executable)
 import os
 import requests
 import socket
@@ -237,14 +236,22 @@ class GenAIClient(QWidget):
         self.raise_mac_window()
 
     def toggle_tema(self, enabled: bool):
-        current_pos = self.pos()  # Salva posizione prima del cambio tema
+        # 1. Disattiva aggiornamenti
+        self.setUpdatesEnabled(False)
 
-        if enabled:
-            self.setStyleSheet(self.light_stylesheet)
-        else:
-            self.setStyleSheet(self.dark_stylesheet)
+        # 2. Salva geometria attuale
+        geom = self.geometry()
 
-        self.move(current_pos)  # Ripristina posizione identica
+        # 3. Applica stylesheet
+        self.setStyleSheet(self.light_stylesheet if enabled else self.dark_stylesheet)
+
+        # 4. Ripristina geometria
+        self.setGeometry(geom)
+
+        # 5. Re-enable updates and repaint
+        self.setUpdatesEnabled(True)
+        self.repaint()
+        self.update()
 
     def mostra_immagine_intera(self, event):
         if self.image_path and os.path.exists(self.image_path):

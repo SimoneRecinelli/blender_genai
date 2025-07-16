@@ -10,7 +10,7 @@ texts = data["texts"]
 metadatas = data["metadatas"]
 
 # Parametri da personalizzare
-start = 1000  # chunk di partenza (0-based)
+start = 8430  # chunk di partenza (0-based)
 count = 3   # quanti chunk successivi mostrare
 
 for i in range(start, start + count):

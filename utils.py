@@ -15,6 +15,16 @@ except ImportError:
     bmesh = None
     BLENDER_ENV = False
 
+def is_question_technical(question: str) -> bool:
+    question = question.strip().lower()
+    banal = {"ciao", "hello", "hey", "salve", "grazie", "ok", "come va", "how are you", "buongiorno", "good morning",
+             "buonasera", "good evening"}
+    if question in banal:
+        return False
+    if len(question.split()) < 3:
+        return False
+    return True
+
 # === CRONOLOGIA CHAT IN MEMORIA E SU DISCO ===
 
 global_chat_history = []
@@ -109,10 +119,36 @@ def query_rag(question, top_k=5):
     return results
 
 def recupera_chunk_simili_faiss(domanda, k=5):
-    risultati = query_rag(domanda, top_k=k)
-    return "\n\n".join(
-        [f"[Fonte: {r['source']}]\n{r['text']}" for r in risultati]
-    )
+    try:
+        import faiss
+        from sentence_transformers import SentenceTransformer
+    except ImportError:
+        return "[ERRORE] Moduli mancanti."
+
+    INDEX_PATH = os.path.join(os.path.dirname(__file__), "blender_faiss_index.pkl")
+    if not os.path.exists(INDEX_PATH):
+        return "[ERRORE] Indice FAISS non trovato."
+
+    model = SentenceTransformer("intfloat/multilingual-e5-large")
+    with open(INDEX_PATH, "rb") as f:
+        data = pickle.load(f)
+        index = data["index"]
+        texts = data["texts"]
+        metadatas = data["metadatas"]
+
+    query_embedding = model.encode([domanda])
+    distances, faiss_indices = index.search(query_embedding, k)
+
+    print(f"\n[DEBUG] Chunk simili per la domanda: \"{domanda}\"")
+    risultati = []
+    for idx in faiss_indices[0]:
+        testo = texts[idx]
+        fonte = metadatas[idx]["source"]
+        preview = testo.strip().replace("\n", " ")[:150]
+        print(f" → Chunk FAISS #{idx} [Fonte: {fonte}]: {preview}...")
+        risultati.append(f"[Fonte: {fonte}]\n{testo}")
+
+    return "\n\n".join(risultati)
 
 # === CONTESTO MESH BLENDER ===
 
@@ -208,12 +244,16 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
         model_context = get_model_context(selected_objects)
         chat_history = build_conversational_context_from_json(global_chat_history)
 
-        try:
-            blender_docs = recupera_chunk_simili_faiss(user_question)
-            print("[DEBUG] Chunk documentazione recuperati.")
-        except Exception as e:
-            blender_docs = "Documentazione non disponibile."
-            print("[ERRORE] Recupero documentazione:", str(e))
+        if is_question_technical(user_question):
+            try:
+                blender_docs = recupera_chunk_simili_faiss(user_question)
+                print("[DEBUG] Chunk documentazione recuperati.")
+            except Exception as e:
+                blender_docs = "Documentazione non disponibile."
+                print("[ERRORE] Recupero documentazione:", str(e))
+        else:
+            blender_docs = ""
+            print("[DEBUG] RAG disattivato per domanda non tecnica.")
 
         if image_path and os.path.exists(image_path):
             prompt = (
