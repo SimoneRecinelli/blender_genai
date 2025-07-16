@@ -327,8 +327,8 @@ class GenAIClient(QWidget):
             event.accept()
 
     def closeEvent(self, event):
-        from utils import reset_chat_history
-        reset_chat_history()
+        from utils import ChatHistoryManager
+        ChatHistoryManager().reset()
         event.accept()
 
     def add_message(self, text, sender='user', image_path=None):

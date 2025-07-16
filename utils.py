@@ -41,64 +41,54 @@ def is_question_technical(question: str) -> bool:
 
 # === CRONOLOGIA CHAT IN MEMORIA E SU DISCO ===
 
-global_chat_history = []
+# === GESTIONE CRONOLOGIA CHAT CON CLASSE ===
 
 def get_chat_history_path():
     return os.path.join(os.path.dirname(__file__), "chat_history.json")
 
-def add_to_chat_history(sender, message):
-    global_chat_history.append({"sender": sender, "message": message})
-    save_chat_to_file()
 
-def build_conversational_context_from_json(history_list):
-    lines = []
-    for entry in history_list:
-        prefix = "Utente" if entry["sender"] == 'USER' else "GenAI"
-        lines.append(f"{prefix}: {entry['message']}")
-    return "\n".join(lines)
+class ChatHistoryManager:
+    def __init__(self, path=None):
+        self._path = path or get_chat_history_path()
+        self._history = []
 
-def save_chat_to_file(path=None):
-    if path is None:
-        path = get_chat_history_path()
-    try:
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(global_chat_history, f, ensure_ascii=False, indent=2)
-        print(f"[DEBUG] Chat salvata in: {path}")
-    except Exception as e:
-        print(f"[ERRORE] Salvataggio chat: {e}")
+    def load(self):
+        if os.path.exists(self._path):
+            try:
+                with open(self._path, "r", encoding="utf-8") as f:
+                    self._history = json.load(f)
+                    print(f"[DEBUG] Chat caricata da: {self._path}")
+            except Exception as e:
+                print(f"[ERRORE] Caricamento chat: {e}")
+        else:
+            self._history = []
 
-def load_chat_from_file(path=None):
-    global global_chat_history
-    if path is None:
-        path = get_chat_history_path()
-    if os.path.exists(path):
+    def save(self):
         try:
-            with open(path, "r", encoding="utf-8") as f:
-                global_chat_history = json.load(f)
-            print(f"[DEBUG] Chat caricata da: {path}")
+            with open(self._path, "w", encoding="utf-8") as f:
+                json.dump(self._history, f, ensure_ascii=False, indent=2)
+            print(f"[DEBUG] Chat salvata in: {self._path}")
         except Exception as e:
-            print(f"[ERRORE] Caricamento chat: {e}")
+            print(f"[ERRORE] Salvataggio chat: {e}")
 
+    def add(self, sender, message):
+        self._history.append({"sender": sender, "message": message})
+        self.save()
 
-def reset_chat_history():
-    global global_chat_history
+    def reset(self):
+        self._history = []
+        self.save()
+        print(f"[DEBUG] Chat JSON svuotato: {self._path}")
 
-    print("[DEBUG] Reset chat history in memoria e su disco")
+    def get_conversational_context(self):
+        lines = []
+        for entry in self._history:
+            prefix = "Utente" if entry["sender"] == 'USER' else "GenAI"
+            lines.append(f"{prefix}: {entry['message']}")
+        return "\n".join(lines)
 
-    # 1. Azzeramento effettivo
-    global_chat_history.clear()
-
-    # 2. Sovrascrivi il file con una lista vuota
-    try:
-        with open(get_chat_history_path(), "w", encoding="utf-8") as f:
-            json.dump([], f, ensure_ascii=False, indent=2)
-        print(f"[DEBUG] Chat JSON sovrascritto vuoto: {get_chat_history_path()}")
-    except Exception as e:
-        print(f"[ERRORE] Sovrascrittura chat vuota fallita: {e}")
-
-
-# Carica la chat appena si importa il modulo
-load_chat_from_file()
+    def get_history_list(self):
+        return self._history[:]
 
 # === QUERY RAG (senza import globali) ===
 
@@ -261,9 +251,13 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
         image_path = props.genai_image_path if props and props.genai_image_path else None
         model_context = get_model_context(selected_objects)
 
+        history_manager = ChatHistoryManager()
+        history_manager.load()
+
         chat_history = ""
         if user_question.strip():
-            chat_history = build_conversational_context_from_json(global_chat_history)
+            chat_history = history_manager.get_conversational_context()
+
 
         if is_question_technical(user_question):
             try:
@@ -312,12 +306,12 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
 
         def update():
             props.genai_response_text = risposta
-            add_to_chat_history("GenAI", risposta)
+            history_manager.add("GenAI", risposta)
             if update_callback:
                 update_callback()
 
         if user_question.strip():
-            add_to_chat_history("USER", user_question)
+            history_manager.add("USER", user_question)
 
         if BLENDER_ENV:
             bpy.app.timers.register(update)
