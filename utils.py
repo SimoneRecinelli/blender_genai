@@ -15,6 +15,20 @@ except ImportError:
     bmesh = None
     BLENDER_ENV = False
 
+# === GPU Detection (Apple Silicon) ===
+def is_gpu_available():
+    import platform
+    from torch import backends
+    return platform.system() == "Darwin" and backends.mps.is_available()
+
+def get_device_for_transformer():
+    if is_gpu_available():
+        print("[INFO] Uso della GPU Apple MPS abilitato.")
+        return "mps"
+    print("[INFO] Uso della CPU per sentence-transformers.")
+    return "cpu"
+
+
 def is_question_technical(question: str) -> bool:
     question = question.strip().lower()
     banal = {"ciao", "hello", "hey", "salve", "grazie", "ok", "come va", "how are you", "buongiorno", "good morning",
@@ -100,7 +114,8 @@ def query_rag(question, top_k=5):
     if not os.path.exists(INDEX_PATH):
         return [{"text": "Indice documentazione non trovato.", "source": "Sistema"}]
 
-    model = SentenceTransformer("intfloat/multilingual-e5-large")
+    model = SentenceTransformer("intfloat/multilingual-e5-large", device=get_device_for_transformer())
+
 
     with open(INDEX_PATH, "rb") as f:
         data = pickle.load(f)
@@ -129,7 +144,10 @@ def recupera_chunk_simili_faiss(domanda, k=5):
     if not os.path.exists(INDEX_PATH):
         return "[ERRORE] Indice FAISS non trovato."
 
-    model = SentenceTransformer("intfloat/multilingual-e5-large")
+    # model = SentenceTransformer("intfloat/multilingual-e5-large")
+
+    model = SentenceTransformer("intfloat/multilingual-e5-large", device=get_device_for_transformer())
+
     with open(INDEX_PATH, "rb") as f:
         data = pickle.load(f)
         index = data["index"]
