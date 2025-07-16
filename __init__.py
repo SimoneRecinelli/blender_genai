@@ -1,6 +1,6 @@
 import bpy
 # Import dei file interni all'addon
-from . import genai_operator, panel, install_operator, gui_launcher
+from . import genai_operator, panel, install_operator, gui_launcher, utils
 
 bl_info = {
     "name": "Blender GenAI Assistant",
@@ -31,6 +31,7 @@ def register():
 
 
 def unregister():
+    utils.reset_chat_history()
     gui_launcher.unregister()
     install_operator.unregister()
     panel.unregister()

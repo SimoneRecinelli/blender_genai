@@ -55,26 +55,6 @@ def load_chat_from_file(path=None):
         except Exception as e:
             print(f"[ERRORE] Caricamento chat: {e}")
 
-'''
-def reset_chat_history():
-    global global_chat_history
-    global_chat_history = []
-    path = get_chat_history_path()
-
-    # Sicurezza extra: elimina solo file .json previsti
-    if not path.endswith("chat_history.json"):
-        print(f"[ERRORE] Tentativo di eliminare un file non valido: {path}")
-        return
-
-    try:
-        if os.path.exists(path):
-            os.remove(path)
-            print(f"[DEBUG] Chat history rimossa: {path}")
-    except Exception as e:
-        print(f"[ERRORE] Impossibile rimuovere la chat history: {e}")
-    
-    save_chat_to_file()  # forza il salvataggio del JSON vuoto
-'''
 
 def reset_chat_history():
     global global_chat_history
