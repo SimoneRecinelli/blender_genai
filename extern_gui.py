@@ -366,15 +366,25 @@ class GenAIClient(QWidget):
 
     def invia_domanda(self):
         domanda = self.textbox.toPlainText().strip()
-        if not domanda or self.attesa_risposta:
+
+        # Blocco se non c'è né testo né immagine
+        if not domanda and not self.image_path:
+            self.add_message("Inserisci un messaggio o carica un'immagine.", 'bot')
             return
 
         self.attesa_risposta = True
         self.send_button.setEnabled(False)
-        self.add_message(domanda, 'user', image_path=self.image_path)
+
+        # Mostra il messaggio utente con immagine e/o testo
+        if domanda:
+            self.add_message(domanda, 'user', image_path=self.image_path)
+        else:
+            self.add_message("", 'user', image_path=self.image_path)
+
         self.textbox.clear()
         self.rimuovi_immagine()
 
+        # Spinner di caricamento
         self.loading_label = QLabel()
         movie = QMovie(LOADING_GIF)
         self.loading_label.setMovie(movie)
@@ -382,6 +392,7 @@ class GenAIClient(QWidget):
         self.chat_layout.addWidget(self.loading_label)
 
         try:
+            # Non forzare una domanda se manca il testo
             payload = {"question": domanda}
             if self.image_path:
                 payload["image_path"] = self.image_path

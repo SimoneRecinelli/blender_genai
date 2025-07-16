@@ -242,7 +242,10 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
 
         image_path = props.genai_image_path if props and props.genai_image_path else None
         model_context = get_model_context(selected_objects)
-        chat_history = build_conversational_context_from_json(global_chat_history)
+
+        chat_history = ""
+        if user_question.strip():
+            chat_history = build_conversational_context_from_json(global_chat_history)
 
         if is_question_technical(user_question):
             try:
@@ -253,19 +256,19 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
                 print("[ERRORE] Recupero documentazione:", str(e))
         else:
             blender_docs = ""
-            print("[DEBUG] RAG disattivato per domanda non tecnica.")
+            if user_question.strip():
+                print("[DEBUG] RAG disattivato per domanda non tecnica.")
 
+        # === PROMPT VISION o RAG ===
         if image_path and os.path.exists(image_path):
             prompt = (
-                f"You are a visual assistant integrated into Blender.\n"
-                f"The user uploaded an image of the 3D scene and asked: '{user_question}'.\n\n"
-                "You must analyze the image attentively and respond accordingly.\n"
-                "- If the image contains objects, describe their shape, position, lighting, and materials.\n"
-                "- If the question refers to a specific object or detail in the image, focus on that.\n"
-                "- If no meaningful visual information is found, say: 'The image does not contain enough information.'\n\n"
-                "Respond in the same language used in the user's question. Be clear, technical, and structured."
+                "You are a visual assistant integrated into Blender.\n"
+                "You are given a screenshot of the 3D scene in Blender.\n"
+                "If a question is provided, respond using both the image and question.\n"
+                "If no question is provided, just describe what is visible in the image.\n\n"
             )
-
+            if user_question.strip():
+                prompt += f"=== User Question ===\n{user_question}\n"
         else:
             prompt = (
                 "You are a helpful assistant for Blender 4.4 integrated in a modeling environment.\n"
@@ -295,10 +298,12 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
             if update_callback:
                 update_callback()
 
+        if user_question.strip():
+            add_to_chat_history("USER", user_question)
+
         if BLENDER_ENV:
             bpy.app.timers.register(update)
         else:
             update()
 
-    add_to_chat_history("USER", user_question)
     threading.Thread(target=worker).start()
