@@ -73,6 +73,7 @@ class ThemeSwitch(QWidget):
         self.setFixedSize(70, 36)
         self.on_toggle = on_toggle
         self.state = False  # dark mode iniziale
+        self.setCursor(Qt.PointingHandCursor)
 
         # === Contenitore grigio fisso ===
         self.track = QFrame(self)

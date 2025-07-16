@@ -90,7 +90,7 @@ def query_rag(question, top_k=5):
     if not os.path.exists(INDEX_PATH):
         return [{"text": "Indice documentazione non trovato.", "source": "Sistema"}]
 
-    model = SentenceTransformer("all-MiniLM-L6-v2")
+    model = SentenceTransformer("intfloat/multilingual-e5-large")
 
     with open(INDEX_PATH, "rb") as f:
         data = pickle.load(f)
