@@ -1,7 +1,6 @@
 <div align="center">
   <img src="icons/logo.png" alt="Blender GenAI Logo" width="240"/>
 
-------
   <p>
     <img src="https://forthebadge.com/images/badges/built-with-love.svg"/>
     <img src="https://forthebadge.com/images/badges/works-on-my-machine.svg"/>
@@ -19,7 +18,6 @@
   </p>
 </div>
 
----
 
 Questo progetto propone un sistema di supporto intelligente per Blender, basato su modelli GenAI per assistere nella modellazione 3D in modo contestuale e multimodale.
 Sviluppato per il corso di **Computer Graphics & Multimedia** (A.A. 2024/2025) presso l’**Università Politecnica delle Marche**, tenuto dal **Prof. Primo Zingaretti**, coadiuvato dai tutor **Emanuele Balloni** e **Lorenzo Stacchio**.
