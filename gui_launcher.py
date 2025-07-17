@@ -32,3 +32,12 @@ def launch_gui_if_not_running():
         kwargs["start_new_session"] = True
 
     subprocess.Popen(**kwargs)
+
+def shutdown_gui():
+    try:
+        with socket.create_connection(("localhost", 5055), timeout=1) as s:
+            s.sendall(b"shutdown")
+        return True
+    except (ConnectionRefusedError, socket.timeout, OSError):
+        return False
+

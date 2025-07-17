@@ -605,6 +605,8 @@ def start_singleton_socket():
                 data = conn.recv(1024)
                 if b"bring-to-front" in data:
                     QTimer.singleShot(0, bring_gui_to_front)
+                elif b"shutdown" in data:
+                    QTimer.singleShot(0, QApplication.instance().quit)
                 conn.close()
 
         threading.Thread(target=handle_connections, daemon=True).start()

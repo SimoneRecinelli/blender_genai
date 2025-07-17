@@ -30,6 +30,7 @@ def register():
 
 
 def unregister():
-    # gui_launcher.unregister()
+    from . import gui_launcher
+    gui_launcher.shutdown_gui()
     panel.unregister()
     genai_operator.unregister()
