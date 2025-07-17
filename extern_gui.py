@@ -216,6 +216,9 @@ class GenAIClient(QWidget):
         self.input_layout.addWidget(self.send_button)
 
         self.main_layout = QVBoxLayout()
+        self.main_layout.setContentsMargins(12, 10, 12, 10)  # sinistra, sopra, destra, sotto
+        self.main_layout.setSpacing(10)
+
         self.main_layout.addWidget(self.scroll_area)
         self.main_layout.addWidget(self.preview_widget)
         self.main_layout.addLayout(self.input_layout)
@@ -228,8 +231,18 @@ class GenAIClient(QWidget):
         switch_row.addStretch()
         self.main_layout.addLayout(switch_row)
 
-        self.setStyleSheet(self.dark_stylesheet)
-        self.setLayout(self.main_layout)
+        # self.setStyleSheet(self.dark_stylesheet)
+        # self.setLayout(self.main_layout)
+
+        self.content = QWidget()
+        self.content.setLayout(self.main_layout)
+        self.setLayout(QVBoxLayout())  # wrapper
+        self.layout().setContentsMargins(0, 0, 0, 0)
+        self.layout().setSpacing(0)
+        self.layout().addWidget(self.content)
+
+        # Applica dark mode solo al contenuto, non alla finestra
+        self.content.setStyleSheet(self.dark_stylesheet)
 
         self.image_path = None
         self.image_preview_label = None
@@ -243,22 +256,28 @@ class GenAIClient(QWidget):
         self.raise_mac_window()
 
     def toggle_tema(self, enabled: bool):
-        # 1. Disattiva aggiornamenti
-        self.setUpdatesEnabled(False)
+        # # 1. Disattiva aggiornamenti
+        # self.setUpdatesEnabled(False)
+        #
+        # # 2. Salva geometria attuale
+        # geom = self.geometry()
+        #
+        # # 3. Applica stylesheet
+        # self.setStyleSheet(self.light_stylesheet if enabled else self.dark_stylesheet)
+        #
+        # # 4. Ripristina geometria
+        # self.setGeometry(geom)
+        #
+        # # 5. Re-enable updates and repaint
+        # self.setUpdatesEnabled(True)
+        # self.repaint()
+        # self.update()
 
-        # 2. Salva geometria attuale
-        geom = self.geometry()
+        theme = self.light_stylesheet if enabled else self.dark_stylesheet
+        self.content.setStyleSheet(theme)
 
-        # 3. Applica stylesheet
-        self.setStyleSheet(self.light_stylesheet if enabled else self.dark_stylesheet)
-
-        # 4. Ripristina geometria
-        self.setGeometry(geom)
-
-        # 5. Re-enable updates and repaint
-        self.setUpdatesEnabled(True)
-        self.repaint()
-        self.update()
+        if platform.system() == "Darwin":
+            QTimer.singleShot(100, self.raise_mac_window)
 
     def mostra_immagine_intera(self, event):
         if self.image_path and os.path.exists(self.image_path):
