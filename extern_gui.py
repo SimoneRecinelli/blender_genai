@@ -277,7 +277,14 @@ class GenAIClient(QWidget):
         self.content.setStyleSheet(theme)
 
         if platform.system() == "Darwin":
-            QTimer.singleShot(100, self.raise_mac_window)
+            def raise_fix():
+                self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
+                self.show()
+                self.raise_mac_window()
+                self.activateWindow()
+                self.repaint()
+
+            QTimer.singleShot(300, raise_fix)  # ✅ delay essenziale per evitare salto
 
     def mostra_immagine_intera(self, event):
         if self.image_path and os.path.exists(self.image_path):

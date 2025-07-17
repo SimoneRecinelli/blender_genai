@@ -254,10 +254,10 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
         history_manager = ChatHistoryManager()
         history_manager.load()
 
-        chat_history = ""
         if user_question.strip():
-            chat_history = history_manager.get_conversational_context()
-
+            history_manager.add("USER", user_question)
+        # history_manager.save()
+        chat_history = history_manager.get_conversational_context()
 
         if is_question_technical(user_question):
             try:
@@ -290,6 +290,7 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
                 "2. If the question is casual, conversational or not technical (e.g., greetings like 'hello', or informal messages), "
                 "respond in a friendly and brief way, without using any documentation.\n"
                 "3. If the answer is not explicitly supported by the documentation, and the question is technical, respond with: 'not present in the documentation'.\n\n"
+                
                 "=== Scene Model Context ===\n"
                 f"{model_context}\n\n"
                 "=== Blender 4.4 Official Documentation ===\n"
@@ -309,9 +310,6 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
             history_manager.add("GenAI", risposta)
             if update_callback:
                 update_callback()
-
-        if user_question.strip():
-            history_manager.add("USER", user_question)
 
         if BLENDER_ENV:
             bpy.app.timers.register(update)
