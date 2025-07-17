@@ -24,9 +24,18 @@ Realizzato da **Simone Recinelli**, **Diego Santarelli** e **Andrea Marini**.
 
 ---
 
-## 🇮🇹 Versione italiana (Italian version)
 
-Questo repository contiene un addon per Blender che integra un assistente AI basato su LLM, capace di rispondere a domande tecniche e contestuali grazie a un sistema RAG (Retrieval-Augmented Generation).
+## 👆🏼 Indice
+
+  - [📌 Funzionalità principali](#-funzionalità-principali)
+  - [🧹 Struttura del progetto](#-struttura-del-progetto)
+  - [🛠️ Tecnologie utilizzate](#️-tecnologie-utilizzate)
+  - [⚖️ Documentazione Blender (PDF)](#️-documentazione-blender-pdf)
+  - [⚙️ Requisiti & Setup](#️-requisiti--setup)
+  - [📊 Demo](#-demo)
+  - [🔍 Esempi d'uso](#-esempi-duso)
+  - [👨‍💼 Autori](#-autori)
+  - [📄 Licenza](#-licenza)
 
 ---
 
@@ -103,15 +112,16 @@ le dipendenze vengono installate **automaticamente all’avvio dell’addon** tr
 ```
 
 Dipendenze incluse:
-- Flask
-- FAISS
-- sentence-transformers
-- langchain-core + langchain-community
-- PyMuPDF
-- PyQt5
-- psutil
-- requests
-- pyobjc (solo macOS)
+- [Flask](https://flask.palletsprojects.com/)
+- [FAISS](https://github.com/facebookresearch/faiss)
+- [sentence-transformers](https://www.sbert.net/)
+- [langchain-core](https://docs.langchain.com/docs/components/langchain-core) + [langchain-community](https://github.com/langchain-ai/langchain)
+- [PyMuPDF](https://pymupdf.readthedocs.io/)
+- [PyQt5](https://riverbankcomputing.com/software/pyqt/)
+- [psutil](https://psutil.readthedocs.io/)
+- [requests](https://requests.readthedocs.io/)
+- [pyobjc](https://pyobjc.readthedocs.io/en/latest/) *(macOS only)*
+
 
 ### 📦 Clonare il repository
 
@@ -147,14 +157,10 @@ https://user-images.githubusercontent.com/123456789/xyz/demo_video.mp4
 
 ## 👨‍💼 Autori
 
-- Simone Recinelli  
-- Diego Santarelli  
-- Andrea Marini  
+- [Simone Recinelli](https://github.com/SimoneRecinelli) (Matricola S1118757)
+- [Diego Santarelli](https://github.com/diegosantarelli) (Matricola S1118746)
+- [Andrea Marini](https://github.com/AndreaMarini01) (Matricola S1118778)
 
-Progetto universitario per il corso **Computer Graphics & Multimedia** (A.A. 2024/25)  
-Università Politecnica delle Marche  
-Prof. Primo Zingaretti  
-Tutor: Emanuele Balloni, Lorenzo Stacchio
 
 ---
 
@@ -163,17 +169,3 @@ Tutor: Emanuele Balloni, Lorenzo Stacchio
 Questo progetto è distribuito sotto licenza MIT.
 
 ---
-
-## 🇬🇧 English version
-
-> ✨ This repository contains a Blender addon that integrates an AI assistant based on large language and vision models (LLM/MLLM). It can provide technical and contextual support to users during the 3D modeling process, thanks to a RAG (Retrieval-Augmented Generation) system over the official Blender documentation.
-
-**Main Features:**
-- Ask Blender-related questions in natural language
-- Send a screenshot of the viewport to get visual feedback
-- Get modeling tips, Python automation help, and usage explanations
-- RAG system for contextual responses from the Blender manual
-- External GUI (PyQt5) with light/dark theme and history
-- Automatic Python dependency installer via `server.py`
-
-Built with ❤️ by Simone Recinelli, Diego Santarelli, and Andrea Marini.
