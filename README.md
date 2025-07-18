@@ -27,15 +27,21 @@ Realizzato da **Simone Recinelli**, **Diego Santarelli** e **Andrea Marini**.
 
 ## 👆🏼 Indice
 
-  - [📌 Funzionalità principali](#-funzionalità-principali)
-  - [🧹 Struttura del progetto](#-struttura-del-progetto)
-  - [🛠️ Tecnologie utilizzate](#️-tecnologie-utilizzate)
-  - [⚖️ Documentazione Blender (PDF)](#️-documentazione-blender-pdf)
-  - [⚙️ Requisiti & Setup](#️-requisiti--setup)
-  - [📊 Demo](#-demo)
-  - [🔍 Esempi d'uso](#-esempi-duso)
-  - [👨‍💼 Autori](#-autori)
-  - [📄 Licenza](#-licenza)
+- [📌 Funzionalità principali](#-funzionalità-principali)
+- [🧹 Struttura del progetto](#-struttura-del-progetto)
+- [🛠️ Tecnologie utilizzate](#️-tecnologie-utilizzate)
+- [⚖️ Documentazione Blender (PDF)](#️-documentazione-blender-pdf)
+- [⚙️ Requisiti & Setup](#️-requisiti--setup)
+  - [✅ Dipendenze Python: installazione automatica](#-dipendenze-python-installazione-automatica)
+  - [📦 Clonare il repository](#-clonare-il-repository)
+  - [📥 Installare laddon su Blender](#-installare-laddon-su-blender)
+  - [🚀 Avviare l'interfaccia](#-avviare-linterfaccia)
+- [🪟 Interfaccia Esterna del Chatbot](#-interfaccia-esterna-del-chatbot)
+  - [✨ Caratteristiche principali della GUI](#-caratteristiche-principali-della-gui)
+- [📊 Demo](#-demo)
+- [👨‍💼 Autori](#-autori)
+- [📄 Licenza](#-licenza)
+
 
 ---
 
@@ -136,22 +142,64 @@ git lfs install
 git lfs pull
 ```
 
+### 📥 Installare l'addon su Blender
+Per installare il progetto come addon Blender:
+
+1. Comprimi la cartella blender_genai in un file ".zip".
+2. Apri Blender.
+3. Vai su Modifica > Preferenze > Add-ons.
+4. Clicca sull’icona a freccia in alto a destra e scegli “Install from Disk”.
+5. Seleziona lo .zip appena creato e conferma.
+6. Spunta la casella per attivare l’addon.
+
+### 🚀 Avviare l’interfaccia
+Una volta installato l’addon:
+
+1. Premi N per aprire la sidebar a destra nella 3D View.
+2. Vai nella sezione GenAI.
+3. Clicca sul bottone “Apri Chat Esterna” per lanciare l’interfaccia PyQt5.
+
+Da qui potrai:
+
+- 💬 Chattare con l’assistente in tempo reale
+- 🖼️ Inviare screenshot della scena Blender
+- 🤖 Ottenere risposte intelligenti, documentate e multimodali
+
 ---
 
+## 🪟 Interfaccia Esterna del Chatbot
+
+L’addon include una interfaccia grafica personalizzata esterna sviluppata in PyQt5, progettata per offrire un'esperienza utente fluida e moderna, ispirata alle applicazioni di messaggistica.È completamente multi-piattaforma (macOS Apple Silicon e Windows), supporta la cronologia delle conversazioni, invio di immagini della scena Blender, e la modalità dark/light con switch dinamico.
+
+#### ✨ Caratteristiche principali della GUI:
+
+- ✅ Interfaccia separata da Blender, con comunicazione socket asincrona
+
+- 💬 Area di chat con storico persistente e salvataggio automatico
+
+- 🖼️ Supporto per l’invio di screenshot dalla scena Blender
+
+- 🌗 Tema chiaro/scuro attivabile con uno switch animato
+
+- ⌨️ Invio con Enter e a capo con Shift+Enter
+
+- 🔁 Integrazione con il sistema RAG per risposte documentate
+
+- 📁 Il file dell’interfaccia è extern_gui.py, e si avvia automaticamente cliccando il bottone 'Apri Chat' all’interno del pannello Blender.
+
+Una volta catturata la schermata in Blender, l'immagine compare in anteprima nella GUI: può essere cliccata per visualizzarla a schermo intero ed è accompagnata da un'icona del cestino per eliminarla e caricarne una nuova, se desiderato.
+
+Di seguito si allega uno screen dell'interfaccia del chatbot realizzato:
+
+
+<p align="center">
+  <img src="icons/gui_screenshot.png" alt="Interfaccia PyQt5 del chatbot GenAI Assistant" width="700"/>
+</p>
 
 ## 📊 Demo
 
 https://user-images.githubusercontent.com/123456789/xyz/demo_video.mp4  
 *(Inserire video reale o GIF dimostrativa)*
-
----
-
-
-## 🔍 Esempi d'uso
-
-- "Come si fa un bevel su un oggetto selezionato?"
-- "Analizza questo modello: è troppo poligonale?"
-- "Che materiali posso usare in Cycles per il vetro?"
 
 ---
 
