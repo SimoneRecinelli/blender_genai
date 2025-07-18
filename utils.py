@@ -67,6 +67,7 @@ class ChatHistoryManager:
         try:
             with open(self._path, "w", encoding="utf-8") as f:
                 json.dump(self._history, f, ensure_ascii=False, indent=2)
+            os.chmod(self._path, 0o644)  # ✅ Assicura lettura/scrittura
             print(f"[DEBUG] Chat salvata in: {self._path}")
         except Exception as e:
             print(f"[ERRORE] Salvataggio chat: {e}")

@@ -255,6 +255,26 @@ class GenAIClient(QWidget):
         self.show()
         self.raise_mac_window()
 
+        import psutil
+
+        def monitor_blender_process():
+            try:
+                parent = psutil.Process(os.getppid())
+                if "blender" not in parent.name().lower():
+                    print("[INFO] Blender è stato chiuso → chiudo GUI e resetto.")
+                    from utils import ChatHistoryManager
+                    ChatHistoryManager().reset()
+                    QApplication.instance().quit()
+                    return
+            except Exception as e:
+                print(f"[ERRORE] monitor_blender_process: {e}")
+                QApplication.instance().quit()
+                return
+
+            QTimer.singleShot(1000, monitor_blender_process)  # ricontrolla ogni secondo
+
+        QTimer.singleShot(1000, monitor_blender_process)
+
     def toggle_tema(self, enabled: bool):
         # # 1. Disattiva aggiornamenti
         # self.setUpdatesEnabled(False)
@@ -632,7 +652,13 @@ def start_singleton_socket():
                 if b"bring-to-front" in data:
                     QTimer.singleShot(0, bring_gui_to_front)
                 elif b"shutdown" in data:
-                    QTimer.singleShot(0, QApplication.instance().quit)
+                    from utils import ChatHistoryManager
+                    def reset_and_quit():
+                        ChatHistoryManager().reset()
+                        QApplication.instance().quit()
+
+                    QTimer.singleShot(0, reset_and_quit)
+
                 conn.close()
 
         threading.Thread(target=handle_connections, daemon=True).start()
