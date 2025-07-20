@@ -61,6 +61,7 @@ Realizzato da **Simone Recinelli**, **Diego Santarelli** e **Andrea Marini**.
 
 ```
 blender_genai/
+├── icons/                     # Icone SVG/Pixmap
 ├── __init__.py                # Entry point per l'addon
 ├── panel.py                   # UI in Blender (chat, immagine, toggle)
 ├── genai_operator.py          # Operatore per interazione con AI
@@ -68,7 +69,6 @@ blender_genai/
 ├── server.py                  # Server Flask + auto install dipendenze
 ├── extern_gui.py              # Interfaccia esterna PyQt5
 ├── langchain_rag_blender.py   # Logica RAG e indexing
-├── icons/                     # Icone SVG/Pixmap
 └── README.md                  # Questo file
 ```
 
