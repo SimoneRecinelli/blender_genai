@@ -45,6 +45,7 @@ def install_dependencies_if_needed():
         ("langchain", "langchain"),
         ("langchain-core", "langchain_core"),
         ("langchain-community", "langchain_community"),
+        ("pyttsx3", "pyttsx3")
     ]
 
     if platform.system() == "Darwin":
