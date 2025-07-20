@@ -161,7 +161,11 @@ class GenAIClient(QWidget):
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setWindowTitle("GenAI Assistant Chat")
         # threading.Thread(target=self.listen_for_front_request, daemon=True).start()
-        self.setGeometry(100, 100, 600, 500)
+        self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint | Qt.MSWindowsFixedSizeDialogHint)
+        self.setAttribute(Qt.WA_DeleteOnClose)
+        self.setWindowTitle("GenAI Assistant Chat")
+        self.setFixedSize(600, 500)
+
         self.attesa_risposta = False
         self._mouse_pos = None
 
@@ -395,11 +399,11 @@ class GenAIClient(QWidget):
         label = QLabel(text)
         label.setWordWrap(True)
         label.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        label.setStyleSheet("font-size: 14px;")
-        label.setFixedWidth(390)
-        label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Minimum)
-        label.setAlignment(Qt.AlignRight if sender == 'user' else Qt.AlignLeft)
-
+        label.setStyleSheet("font-size: 14px;") 
+        label.setAlignment(Qt.AlignLeft if sender == 'bot' else Qt.AlignRight)
+        label.setMaximumWidth(int(self.scroll_area.viewport().width() * 0.75))
+        label.setMinimumWidth(int(self.scroll_area.viewport().width() * 0.6))
+        label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         wrapper_layout = QHBoxLayout()
         wrapper_layout.setContentsMargins(0, 0, 0, 0)
         if sender == 'user':
