@@ -399,19 +399,46 @@ class GenAIClient(QWidget):
         label = QLabel(text)
         label.setWordWrap(True)
         label.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        label.setStyleSheet("font-size: 14px;") 
+        label.setStyleSheet("font-size: 14px; padding: 8px;")
         label.setAlignment(Qt.AlignLeft if sender == 'bot' else Qt.AlignRight)
         label.setMaximumWidth(int(self.scroll_area.viewport().width() * 0.75))
         label.setMinimumWidth(int(self.scroll_area.viewport().width() * 0.6))
-        label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+
         wrapper_layout = QHBoxLayout()
         wrapper_layout.setContentsMargins(0, 0, 0, 0)
-        if sender == 'user':
+
+        # === Pulsante lettura vocale ===
+        if sender == 'bot':
+            speak_button = QPushButton()
+            speak_button.setIcon(QIcon(os.path.join(BASE_DIR, "icons", "speak.svg")))
+            speak_button.setFixedSize(30, 30)
+            speak_button.setIconSize(QSize(18, 18))
+            speak_button.setCursor(Qt.PointingHandCursor)
+            speak_button.setStyleSheet("""
+                QPushButton {
+                    background-color: #ddd;
+                    border: none;
+                    border-radius: 15px;
+                }
+                QPushButton:hover {
+                    background-color: #bbb;
+                }
+            """)
+
+            def leggi_testo():
+                threading.Thread(target=os.system, args=(f'say "{text}"',), daemon=True).start()
+            speak_button.clicked.connect(leggi_testo)
+
+            wrapper_layout.addWidget(label, 1)
+            wrapper_layout.addSpacing(8)
+            wrapper_layout.addWidget(speak_button, 0, Qt.AlignVCenter | Qt.AlignRight)
+        
+        else:
             wrapper_layout.addStretch()
             wrapper_layout.addWidget(label, 0, Qt.AlignRight)
-        else:
-            wrapper_layout.addWidget(label, 0, Qt.AlignLeft)
-            wrapper_layout.addStretch()
+
+
 
         wrapper_widget = QWidget()
         wrapper_widget.setLayout(wrapper_layout)
@@ -421,6 +448,7 @@ class GenAIClient(QWidget):
 
         QTimer.singleShot(100, lambda: self.scroll_area.verticalScrollBar().setValue(
             self.scroll_area.verticalScrollBar().maximum()))
+
 
     def invia_domanda(self):
         domanda = self.textbox.toPlainText().strip()
