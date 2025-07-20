@@ -119,6 +119,9 @@ class GenAIClient(QWidget):
     def __init__(self):
         super().__init__()
 
+        self.voice_process = None
+
+
         # === Imposta l'icona della finestra in base al sistema operativo ===
         if platform.system() == "Darwin":
             from AppKit import NSApplication, NSImage
@@ -381,7 +384,10 @@ class GenAIClient(QWidget):
     def closeEvent(self, event):
         from utils import ChatHistoryManager
         ChatHistoryManager().reset()
+        if hasattr(self, "voice_process") and self.voice_process and self.voice_process.poll() is None:
+            self.voice_process.terminate()
         event.accept()
+
 
     def add_message(self, text, sender='user', image_path=None):
         container = QWidget()
@@ -427,7 +433,11 @@ class GenAIClient(QWidget):
             """)
 
             def leggi_testo():
-                threading.Thread(target=os.system, args=(f'say "{text}"',), daemon=True).start()
+                import subprocess
+                if self.voice_process and self.voice_process.poll() is None:
+                    self.voice_process.terminate()
+                self.voice_process = subprocess.Popen(["say", text])
+
             speak_button.clicked.connect(leggi_testo)
 
             wrapper_layout.addWidget(label, 1)
