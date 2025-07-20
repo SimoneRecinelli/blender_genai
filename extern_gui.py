@@ -271,6 +271,10 @@ class GenAIClient(QWidget):
                     print("[INFO] Blender è stato chiuso → chiudo GUI e resetto.")
                     from utils import ChatHistoryManager
                     ChatHistoryManager().reset()
+
+                    if hasattr(self, "voice_process") and self.voice_process and self.voice_process.poll() is None:
+                        self.voice_process.terminate()
+
                     QApplication.instance().quit()
                     return
             except Exception as e:
