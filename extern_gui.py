@@ -29,6 +29,8 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ICON_SEND = os.path.join(BASE_DIR, "icons", "send.svg")
 ICON_LOAD = os.path.join(BASE_DIR, "icons", "load.svg")
 ICON_TRASH = os.path.join(BASE_DIR, "icons", "trash.svg")
+ICON_MIC = os.path.join(BASE_DIR, "icons", "mic.svg")
+
 LOADING_GIF = os.path.join(BASE_DIR, "icons", "loading.gif")
 
 class ChatTextBox(QTextEdit):
@@ -70,6 +72,10 @@ class ImageViewer(QDialog):
 class ThemeSwitch(QWidget):
     def __init__(self, on_toggle):
         super().__init__()
+
+        self.listening_thread = None
+        self.stop_listening_flag = threading.Event()
+
         self.setFixedSize(70, 36)
         self.on_toggle = on_toggle
         self.state = False  # dark mode iniziale
@@ -170,6 +176,7 @@ class GenAIClient(QWidget):
         self.setFixedSize(600, 500)
 
         self.attesa_risposta = False
+        self.dettatura_in_corso = False
         self._mouse_pos = None
 
         self.chat_layout = QVBoxLayout()
@@ -198,6 +205,7 @@ class GenAIClient(QWidget):
 
         self.add_image_button.clicked.connect(self.carica_immagine)
 
+        # BOTTONE INVIO DOMANDA
         self.send_button = QPushButton()
         self.send_button.setIcon(QIcon(ICON_SEND))
         self.send_button.setIconSize(QSize(24, 24))
@@ -211,6 +219,20 @@ class GenAIClient(QWidget):
         """)
         self.send_button.clicked.connect(self.invia_domanda)
 
+        # BOTTONE DETTATURA
+        self.mic_button = QPushButton()
+        self.mic_button.setIcon(QIcon(ICON_MIC))
+        self.mic_button.setIconSize(QSize(24, 24))
+        self.mic_button.setFixedSize(40, 40)
+        self.mic_button.setCursor(Qt.PointingHandCursor)
+        self.mic_button.setStyleSheet("""
+            QPushButton {
+                border-radius: 20px;
+                background-color: #ddd;
+            }
+        """)
+        self.mic_button.clicked.connect(self.avvia_dettatura)
+
         self.preview_widget = QWidget()
         self.preview_layout = QHBoxLayout()
         self.preview_layout.setContentsMargins(10, 5, 10, 5)
@@ -220,6 +242,7 @@ class GenAIClient(QWidget):
         self.input_layout.setSpacing(10)
         self.input_layout.addWidget(self.add_image_button)
         self.input_layout.addWidget(self.textbox)
+        self.input_layout.addWidget(self.mic_button)
         self.input_layout.addWidget(self.send_button)
 
         self.main_layout = QVBoxLayout()
@@ -261,6 +284,9 @@ class GenAIClient(QWidget):
 
         self.show()
         self.raise_mac_window()
+
+        self.speech_server_process = None
+        self.avvia_speech_server()
 
         import psutil
 
@@ -391,7 +417,8 @@ class GenAIClient(QWidget):
         if hasattr(self, "voice_process") and self.voice_process and self.voice_process.poll() is None:
             self.voice_process.terminate()
         event.accept()
-
+        if self.speech_server_process:
+            self.speech_server_process.terminate()
 
     def add_message(self, text, sender='user', image_path=None):
         container = QWidget()
@@ -700,17 +727,79 @@ class GenAIClient(QWidget):
         self.image_preview_label = None
         self.delete_button = None
 
-'''
-def bring_window_to_front():
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect(("localhost", 5055))
-        s.sendall(b"bring-to-front")
-        s.close()
-        return True
-    except ConnectionRefusedError:
-        return False
-'''        
+    def avvia_speech_server(self):
+        import subprocess
+        import socket
+        import time
+        import sys
+        import os
+
+        def is_speech_server_online():
+            try:
+                with socket.create_connection(("localhost", 5056), timeout=1):
+                    return True
+            except Exception:
+                return False
+
+        if is_speech_server_online():
+            print("[INFO] Speech server già attivo.")
+            return
+
+        try:
+            # 🔽 Recupera dinamicamente il path dell’interprete Python di Blender
+            blender_python = sys.executable
+
+            # 🔽 Aggiunge 'scripts/modules' al PYTHONPATH in modo che il server lo erediti
+            env = os.environ.copy()
+            modules_dir = None
+
+            try:
+                import bpy
+                modules_dir = bpy.utils.user_resource('SCRIPTS', path='modules', create=True)
+            except Exception as e:
+                print(f"[AVVISO] bpy non disponibile: {e}")
+
+            if modules_dir:
+                existing_path = env.get("PYTHONPATH", "")
+                if modules_dir not in existing_path:
+                    env["PYTHONPATH"] = f"{modules_dir}:{existing_path}"
+
+            script_path = os.path.join(BASE_DIR, "speech_server.py")
+            self.speech_server_process = subprocess.Popen(
+                [blender_python, script_path],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                env=env  # ✅ passa le variabili di ambiente aggiornate
+            )
+            print("[INFO] Speech server avviato.")
+            time.sleep(2)
+        except Exception as e:
+            print(f"[ERRORE] Avvio speech server fallito: {e}")
+
+    def avvia_dettatura(self):
+        import requests
+
+        if self.dettatura_in_corso:
+            print("[DEBUG] Dettatura già in corso.")
+            return  # 🛑 evita doppio trigger
+
+        self.dettatura_in_corso = True
+
+        try:
+            self.add_message("🎤 In ascolto... (5s)", "bot")
+            r = requests.get("http://127.0.0.1:5056/speech", timeout=15)
+            data = r.json()
+            if data.get("status") == "ok":
+                testo = data["text"]
+                self.textbox.setPlainText(testo)
+                self.add_message(f"✍️ Testo riconosciuto: {testo}", "bot")
+            else:
+                self.add_message(f"❌ Errore dettatura: {data.get('error')}", "bot")
+        except Exception as e:
+            self.add_message(f"❌ Server dettatura non raggiungibile: {e}", "bot")
+        finally:
+            self.dettatura_in_corso = False
+
 
 # 🔁 1. Prova a bindare: se fallisce, esci (GUI già aperta)
 import socket

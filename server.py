@@ -45,7 +45,10 @@ def install_dependencies_if_needed():
         ("langchain", "langchain"),
         ("langchain-core", "langchain_core"),
         ("langchain-community", "langchain_community"),
-        ("pyttsx3", "pyttsx3")
+        ("pyttsx3", "pyttsx3"),
+        ("SpeechRecognition", "speech_recognition"),
+        ("sounddevice", "sounddevice"),
+        ("scipy", "scipy"),
     ]
 
     if platform.system() == "Darwin":
