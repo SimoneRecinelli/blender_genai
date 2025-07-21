@@ -436,17 +436,47 @@ class GenAIClient(QWidget):
                 }
             """)
 
+            # Pulsante "Ferma"
+            stop_button = QPushButton()
+            stop_button.setIcon(QIcon(os.path.join(BASE_DIR, "icons", "cross.svg")))
+            stop_button.setFixedSize(30, 30)
+            stop_button.setIconSize(QSize(18, 18))
+            stop_button.setCursor(Qt.PointingHandCursor)
+            stop_button.setStyleSheet("""
+                   QPushButton {
+                       background-color: #f66;
+                       border: none;
+                       border-radius: 15px;
+                   }
+                   QPushButton:hover {
+                       background-color: #d44;
+                   }
+               """)
+
             def leggi_testo():
                 import subprocess
                 if self.voice_process and self.voice_process.poll() is None:
                     self.voice_process.terminate()
                 self.voice_process = subprocess.Popen(["say", text])
 
+            def ferma_dettatura():
+                if self.voice_process and self.voice_process.poll() is None:
+                    self.voice_process.terminate()
+
             speak_button.clicked.connect(leggi_testo)
+            stop_button.clicked.connect(ferma_dettatura)
+
+            btns_layout = QVBoxLayout()
+            btns_layout.setSpacing(4)
+            btns_layout.addWidget(speak_button, alignment=Qt.AlignRight)
+            btns_layout.addWidget(stop_button, alignment=Qt.AlignRight)
+
+            btns_widget = QWidget()
+            btns_widget.setLayout(btns_layout)
 
             wrapper_layout.addWidget(label, 1)
             wrapper_layout.addSpacing(8)
-            wrapper_layout.addWidget(speak_button, 0, Qt.AlignVCenter | Qt.AlignRight)
+            wrapper_layout.addWidget(btns_widget, 0, Qt.AlignVCenter | Qt.AlignRight)
         
         else:
             wrapper_layout.addStretch()

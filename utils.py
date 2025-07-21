@@ -221,7 +221,7 @@ def send_vision_prompt_to_ollama(prompt: str, image_path: str = None, model: str
         "model": model,
         "prompt": prompt,
         "options": {
-            "num_predict": 300
+            "num_predict": 2048
         }
     }
 
