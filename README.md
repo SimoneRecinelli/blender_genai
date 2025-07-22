@@ -54,6 +54,9 @@ Realizzato da **Simone Recinelli**, **Diego Santarelli** e **Andrea Marini**.
 - 💬 **Interfaccia esterna PyQt5** con cronologia e tema dark/light
 - ⚙️ **Compatibilità multi-piattaforma**: macOS Apple Silicon & Windows
 - 🎛️ **Prompt dinamico** in base a testo o immagine inviata
+- 🎙️ **Dettatura vocale** per inviare domande senza digitare
+- 🔊 **Lettura vocale** delle risposte generate dal chatbot
+
 
 ---
 
@@ -184,6 +187,10 @@ L’addon include una interfaccia grafica personalizzata esterna sviluppata in P
 - ⌨️ Invio con Enter e a capo con Shift+Enter
 
 - 🔁 Integrazione con il sistema RAG per risposte documentate
+
+- 🎙️ Pulsante microfono per **dettatura vocale** delle domande
+
+- 🔊 Pulsante audio per **lettura vocale** delle risposte del chatbot
 
 - 📁 Il file dell’interfaccia è extern_gui.py, e si avvia automaticamente cliccando il bottone 'Apri Chat' all’interno del pannello Blender.
 
