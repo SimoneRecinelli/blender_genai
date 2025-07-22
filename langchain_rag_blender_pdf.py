@@ -22,10 +22,10 @@ except ImportError as e:
 
 # === Config ===
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-PDF_PATH = os.path.join(BASE_DIR, "Blender_doc.pdf")
+PDF_PATH = os.path.join(BASE_DIR, "book_sliced.pdf")
 INDEX_PATH = os.path.join(BASE_DIR, "blender_faiss_index.pkl")
-EMBEDDING_MODEL = "intfloat/multilingual-e5-large"
-QUERY = "come si usa il nodo geometry proximity in Blender?"
+EMBEDDING_MODEL = "intfloat/e5-large-v2"
+QUERY = "How can you use the geometry proximity node in Blender?"
 
 # === 1. Caricamento PDF ===
 print("[INFO] Caricamento PDF...")
@@ -34,7 +34,7 @@ docs = loader.load()
 
 # === 2. Suddivisione in chunk ===
 print("[INFO] Suddivisione in chunk...")
-splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
+splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=100)
 chunks = splitter.split_documents(docs)
 
 # === 3. Embedding model ===
@@ -44,7 +44,7 @@ embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
 # === 4. Costruzione FAISS retriever ===
 print("[INFO] Indicizzazione FAISS...")
 db = FAISS.from_documents(chunks, embeddings)
-retriever = db.as_retriever(search_kwargs={"k": 4})
+retriever = db.as_retriever(search_kwargs={"k": 6})
 
 # === 💾 5. Salvataggio su disco ===
 print(f"[INFO] Salvataggio indice in: {INDEX_PATH}")
@@ -61,7 +61,7 @@ except Exception as e:
 
 # === 6. LLM ===
 print("[INFO] Avvio LLM...")
-llm = Ollama(model="llama3", temperature=0)
+llm = Ollama(model="llama3:instruct", temperature=0)
 
 # === 7. Catena RAG ===
 qa_chain = RetrievalQA.from_chain_type(llm=llm, retriever=retriever, return_source_documents=True)

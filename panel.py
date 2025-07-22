@@ -1,4 +1,7 @@
 import bpy
+import subprocess
+import os
+import sys
 
 # ✅ Proprietà necessarie per la comunicazione
 class GenAIChatEntry(bpy.types.PropertyGroup):
@@ -30,12 +33,30 @@ class GENAI_PT_Panel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         layout.operator("genai.show_external_chat", text="Apri Chat Esterna 🖥️", icon="PLUGIN")
+        layout.separator()
+        layout.operator("genai.run_rag", text="Esegui RAG 📄", icon="FILE_SCRIPT")
+
+class GENAI_OT_RunRAG(bpy.types.Operator):
+    bl_idname = "genai.run_rag"
+    bl_label = "Esegui RAG"
+    bl_description = "Esegui il sistema RAG per interrogare la documentazione di Blender"
+
+    def execute(self, context):
+        script_path = os.path.join(os.path.dirname(__file__), "langchain_rag_blender_pdf.py")
+        try:
+            subprocess.run([sys.executable, script_path], check=True)
+            self.report({'INFO'}, "RAG eseguito con successo.")
+        except Exception as e:
+            self.report({'ERROR'}, f"Errore durante l'esecuzione RAG: {e}")
+        return {'FINISHED'}
+
 
 # ✅ Registrazione di tutte le classi
 classes = [
     GenAIChatEntry,
     GenAIProperties,
     GENAI_PT_Panel,
+    GENAI_OT_RunRAG,
 ]
 
 def register():
