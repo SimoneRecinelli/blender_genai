@@ -539,6 +539,7 @@ class GenAIClient(QWidget):
             self.add_message("", 'user', image_path=self.image_path)
 
         self.textbox.clear()
+        image_path = self.image_path
         self.rimuovi_immagine()
 
         # Spinner di caricamento
@@ -551,8 +552,8 @@ class GenAIClient(QWidget):
         try:
             # Non forzare una domanda se manca il testo
             payload = {"question": domanda}
-            if self.image_path:
-                payload["image_path"] = self.image_path
+            if image_path:
+                payload["image_path"] = image_path
 
             r = requests.post("http://127.0.0.1:5000/ask", json=payload)
             if r.status_code == 200:
@@ -647,8 +648,22 @@ class GenAIClient(QWidget):
                 self.add_message("Finestra di Blender non trovata, screenshot dell'intero schermo.", "bot")
                 cropped = screenshot
 
+            # now = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            # path = os.path.join(BASE_DIR, f"blender_screenshot_{now}.png")
+            # cropped.save(path)
+            # self.image_path = path
             now = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-            path = f"/tmp/blender_screenshot_{now}.png"
+
+            # 🔁 Rimuove screenshot precedenti nella stessa cartella
+            for f in os.listdir(BASE_DIR):
+                if f.startswith("blender_screenshot_") and f.endswith(".png"):
+                    try:
+                        os.remove(os.path.join(BASE_DIR, f))
+                    except Exception:
+                        pass
+
+            # ✅ Salva nella directory di progetto (accessibile da Blender)
+            path = os.path.join(BASE_DIR, f"blender_screenshot_{now}.png")
             cropped.save(path)
             self.image_path = path
 

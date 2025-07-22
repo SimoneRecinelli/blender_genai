@@ -304,6 +304,13 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
                 "Otherwise, be concise and friendly."
             )
 
+        if image_path:
+            print("[DEBUG] ⬆️ Invio immagine a Ollama")
+            print(f"         Path: {image_path}")
+            print(f"         Esiste? {'✅' if os.path.exists(image_path) else '❌'}")
+        else:
+            print("[DEBUG] 🚫 Nessuna immagine fornita (image_path=None)")
+
         risposta = send_vision_prompt_to_ollama(prompt, image_path)
 
         def update():
