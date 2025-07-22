@@ -189,7 +189,7 @@ class GenAIClient(QWidget):
 
         self.textbox = ChatTextBox(self)
         self.textbox.setFixedHeight(60)
-        self.textbox.setPlaceholderText("Scrivi una domanda...")
+        self.textbox.setPlaceholderText("Ask a question...")
 
         self.add_image_button = QPushButton()
         self.add_image_button.setIcon(QIcon(ICON_LOAD))

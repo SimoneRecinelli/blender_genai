@@ -300,7 +300,7 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
                 f"{chat_history}\n\n"
                 "=== User Question ===\n"
                 f"{user_question}\n\n"
-                "Respond using the same language as the user's question. Keep a clear and technical tone when the question is technical. "
+                "Respond **exclusively** in English, regardless of the user's question language. Use a clear and technical tone when the question is technical. Otherwise, be concise and friendly."
                 "Otherwise, be concise and friendly."
             )
 
