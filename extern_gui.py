@@ -125,6 +125,8 @@ class GenAIClient(QWidget):
     def __init__(self):
         super().__init__()
 
+        print("[DEBUG] GenAIClient inizializzato")
+
         self.voice_process = None
 
 
@@ -287,6 +289,9 @@ class GenAIClient(QWidget):
 
         self.speech_server_process = None
         self.avvia_speech_server()
+        print("[DEBUG] Metodo avvia_speech_server() chiamato")
+
+        self.registrazione_attiva = False  # stato toggle microfono
 
         import psutil
 
@@ -780,12 +785,22 @@ class GenAIClient(QWidget):
                     env["PYTHONPATH"] = f"{modules_dir}:{existing_path}"
 
             script_path = os.path.join(BASE_DIR, "speech_server.py")
+            # self.speech_server_process = subprocess.Popen(
+            #     [blender_python, script_path],
+            #     stdout=subprocess.DEVNULL,
+            #     stderr=subprocess.DEVNULL,
+            #     env=env  # ✅ passa le variabili di ambiente aggiornate
+            # )
+
+            print("[DEBUG] Avvio script:", script_path)
+            print("[DEBUG] Esiste lo script?", os.path.exists(script_path))
+            print("[DEBUG] Interprete Blender:", blender_python)
+
             self.speech_server_process = subprocess.Popen(
                 [blender_python, script_path],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                env=env  # ✅ passa le variabili di ambiente aggiornate
+                env=env
             )
+
             print("[INFO] Speech server avviato.")
             time.sleep(2)
         except Exception as e:
@@ -794,26 +809,77 @@ class GenAIClient(QWidget):
     def avvia_dettatura(self):
         import requests
 
-        if self.dettatura_in_corso:
-            print("[DEBUG] Dettatura già in corso.")
-            return  # 🛑 evita doppio trigger
+        if self.registrazione_attiva:
+            # 👉 Secondo click: CANCELLA la dettatura in corso
+            try:
+                requests.get("http://127.0.0.1:5056/cancel", timeout=3)
+            except Exception as e:
+                print("[DEBUG] Fallita chiamata a /cancel:", e)
+            self.ripristina_bottone_microfono()
+            return
 
+        # Primo click → Avvia dettatura
+        self.registrazione_attiva = True
         self.dettatura_in_corso = True
+        self.mic_button.setEnabled(False)
 
-        try:
-            self.add_message("🎤 In ascolto... (5s)", "bot")
-            r = requests.get("http://127.0.0.1:5056/speech", timeout=15)
-            data = r.json()
-            if data.get("status") == "ok":
-                testo = data["text"]
-                self.textbox.setPlainText(testo)
-                self.add_message(f"✍️ Testo riconosciuto: {testo}", "bot")
-            else:
-                self.add_message(f"❌ Errore dettatura: {data.get('error')}", "bot")
-        except Exception as e:
-            self.add_message(f"❌ Server dettatura non raggiungibile: {e}", "bot")
-        finally:
-            self.dettatura_in_corso = False
+        # Rende il microfono rosso
+        self.mic_button.setStyleSheet("""
+            QPushButton {
+                border-radius: 20px;
+                background-color: #e74c3c;
+            }
+            QPushButton:hover {
+                background-color: #c0392b;
+            }
+        """)
+        self.mic_button.setEnabled(True)
+
+        def run_dettatura():
+            try:
+                r = requests.get("http://127.0.0.1:5056/speech", timeout=15)
+                data = r.json()
+                if data.get("status") == "ok":
+                    text = data.get("text", "")
+
+                    def mostra_risultato():
+                        print("[DEBUG] Imposto testo in textbox:", repr(text))
+                        self.textbox.setPlainText(text)
+                        self.add_message(f"🎙️ {text}", "bot")
+
+                    from PyQt5.QtCore import QMetaObject, Q_ARG, Qt
+
+                    QMetaObject.invokeMethod(self.textbox, "setPlainText",
+                                             Qt.QueuedConnection, Q_ARG(str, text))
+
+                else:
+                    errore = data.get("error", "Errore sconosciuto.")
+                    if not errore.strip():
+                        errore = "Voce non riconosciuta o silenzio prolungato."
+                    QTimer.singleShot(0, lambda: self.add_message(f"❌ Errore dettatura: {errore}", "bot"))
+
+            except Exception as e:
+                QTimer.singleShot(0, lambda: self.add_message(f"❌ Errore: {e}", "bot"))
+            finally:
+
+                QTimer.singleShot(0, self.ripristina_bottone_microfono)
+
+        # Avvia in background
+        threading.Thread(target=run_dettatura, daemon=True).start()
+
+    def ripristina_bottone_microfono(self):
+        self.dettatura_in_corso = False
+        self.registrazione_attiva = False
+        self.mic_button.setEnabled(True)
+        self.mic_button.setStyleSheet("""
+            QPushButton {
+                border-radius: 20px;
+                background-color: #ddd;
+            }
+            QPushButton:hover {
+                background-color: #bbb;
+            }
+        """)
 
 
 # 🔁 1. Prova a bindare: se fallisce, esci (GUI già aperta)
