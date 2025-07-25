@@ -40,7 +40,7 @@ class ChatTextBox(QTextEdit):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Return and not (event.modifiers() & Qt.ShiftModifier):
-            if not self.parent.attesa_risposta:
+            if not self.parent.attesa_risposta and not self.parent.dettatura_in_corso:
                 self.parent.invia_domanda()
         else:
             super().keyPressEvent(event)
@@ -821,6 +821,8 @@ class GenAIClient(QWidget):
         # Primo click → Avvia dettatura
         self.registrazione_attiva = True
         self.dettatura_in_corso = True
+        self.send_button.setEnabled(False)
+        self.add_image_button.setEnabled(False)
         self.mic_button.setEnabled(False)
 
         # Rende il microfono rosso
@@ -870,6 +872,8 @@ class GenAIClient(QWidget):
     def ripristina_bottone_microfono(self):
         self.dettatura_in_corso = False
         self.registrazione_attiva = False
+        self.send_button.setEnabled(True)
+        self.add_image_button.setEnabled(True)
         self.mic_button.setEnabled(True)
         self.mic_button.setStyleSheet("""
             QPushButton {
