@@ -489,7 +489,7 @@ class GenAIClient(QWidget):
                 import subprocess
                 if self.voice_process and self.voice_process.poll() is None:
                     self.voice_process.terminate()
-                self.voice_process = subprocess.Popen(["say", text])
+                self.voice_process = subprocess.Popen(["say", "-v", "Samantha", text])
 
             def ferma_dettatura():
                 if self.voice_process and self.voice_process.poll() is None:

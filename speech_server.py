@@ -193,7 +193,7 @@ def background_listen(recognizer=None, mic=None, max_duration=120):
 
         print("[DEBUG] 🤖 Trascrizione con Whisper in corso...")
         model = whisper.load_model("base")
-        result = model.transcribe(tmp_path, language="it")
+        result = model.transcribe(tmp_path, language="en")
         text = result.get("text", "").strip()
 
         if text:
