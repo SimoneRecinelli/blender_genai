@@ -49,6 +49,8 @@ def install_dependencies_if_needed():
         ("SpeechRecognition", "speech_recognition"),
         ("sounddevice", "sounddevice"),
         ("scipy", "scipy"),
+        ("openai-whisper", "whisper"),
+        ("torch", "torch")
     ]
 
     if platform.system() == "Darwin":
@@ -112,8 +114,23 @@ def start_flask_server():
                 props = bpy.context.scene.genai_props
                 props.genai_question = domanda
                 props.genai_image_path = image_path
-                selected_objects = [obj for obj in bpy.context.view_layer.objects if obj.select_get()]
+                # selection_now = [obj for obj in bpy.context.view_layer.objects if obj.select_get()]
+                # selected_objects = selection_now.copy()
+                # query_ollama_with_docs_async(domanda, props, selected_objects, lambda: update_callback(props))
+                selection_now = [obj for obj in bpy.context.view_layer.objects if obj.select_get()]
+                selected_objects = selection_now.copy()
+
+                # Selezione vuota e nessuna immagine → mostra messaggio e NON manda la query
+                if not selected_objects and not image_path:
+                    props.genai_response_text = "No object is currently selected in the scene. Please select one or more objects or upload an image."
+                    last_response["text"] = props.genai_response_text
+                    last_response["ready"] = True
+                    return
+
+                # ✅ Procedi: passiamo anche selected_objects vuoto, se c'è immagine
                 query_ollama_with_docs_async(domanda, props, selected_objects, lambda: update_callback(props))
+
+
             except Exception as e:
                 print("[ERRORE] Nel thread principale:", str(e))
 

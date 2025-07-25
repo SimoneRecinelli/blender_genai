@@ -166,10 +166,28 @@ def get_model_context(selected_objs):
         return "Context not available outside Blender."
 
     if not selected_objs:
-        return "Nessun oggetto mesh selezionato nella scena."
+        return "Nessun oggetto selezionato nella scena."
 
     context_list = []
+    type_counts = {}
+    names_by_type = {}
+
     for obj in selected_objs:
+        # Conta oggetti per tipo
+        obj_type = obj.type
+        type_counts[obj_type] = type_counts.get(obj_type, 0) + 1
+        names_by_type.setdefault(obj_type, []).append(obj.name)
+
+        if obj_type != 'MESH':
+            context = {
+                "Nome oggetto": obj.name,
+                "Tipo": obj_type,
+                "Nota": "Questo tipo di oggetto non è supportato per l'analisi geometrica. Seleziona una Mesh per analisi dettagliata."
+            }
+            summary = "\n".join([f"{k}: {v}" for k, v in context.items()])
+            context_list.append(summary)
+            continue
+
         mesh = obj.data
         dimensions = obj.dimensions
         materials = [slot.material.name if slot.material else "Nessuno" for slot in obj.material_slots]
@@ -211,8 +229,17 @@ def get_model_context(selected_objs):
         summary = "\n".join([f"{k}: {v}" for k, v in context.items()])
         context_list.append(summary)
 
-    header = f"Hai selezionato {len(selected_objs)} oggetto/i. Ecco i dettagli:\n"
+    # Riepilogo iniziale
+    type_summary = []
+    for obj_type, count in type_counts.items():
+        names = ", ".join(names_by_type[obj_type])
+        type_summary.append(f"{count} {obj_type}{'s' if count > 1 else ''} ({names})")
+
+    header = f"The scene you have selected contains {len(selected_objs)} object(s): " + " – ".join(type_summary) + ".\n\n"
+
     return header + "\n\n".join(context_list)
+
+
 
 # === INVIO HTTP A OLLAMA VISION ===
 
@@ -250,7 +277,12 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
         print("[DEBUG] Esecuzione async query_ollama_with_docs")
 
         image_path = props.genai_image_path if props and props.genai_image_path else None
-        model_context = get_model_context(selected_objects)
+        # model_context = get_model_context(selected_objects)
+
+        # ✅ SELEZIONE È GIÀ PASSATA DAL THREAD PRINCIPALE
+        current_selection = selected_objects
+
+        model_context = get_model_context(current_selection)
 
         history_manager = ChatHistoryManager()
         history_manager.load()

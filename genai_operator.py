@@ -22,7 +22,7 @@ class GENAI_OT_AskOperator(bpy.types.Operator):
         user_msg.sender = 'USER'
         user_msg.message = question
 
-        selected_objects = list(bpy.context.selected_objects)
+        selected_objects = bpy.context.selected_objects.copy()
 
         def callback():
             response = props.genai_response_text
