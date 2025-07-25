@@ -27,7 +27,7 @@ Realizzato da **Simone Recinelli**, **Diego Santarelli** e **Andrea Marini**.
 
 ## 👆🏼 Indice
 
-- [📌 Funzionalità principali](#-funzionalità-principali)
+- [📌 Funzionalità del sistema](#-funzionalità-del-sistema)
 - [🧹 Struttura del progetto](#-struttura-del-progetto)
 - [🛠️ Tecnologie utilizzate](#️-tecnologie-utilizzate)
 - [⚖️ Documentazione Blender (PDF)](#️-documentazione-blender-pdf)
@@ -45,18 +45,31 @@ Realizzato da **Simone Recinelli**, **Diego Santarelli** e **Andrea Marini**.
 
 ---
 
-## 📌 Funzionalità principali
+## 📌 Funzionalità del sistema
 
-- 🔍 **Assistenza contestuale** sulle operazioni di modellazione
-- 📷 **Comprensione visuale** della scena con input immagine
-- 🧠 **Suggerimenti intelligenti** in base alla scena e selezione corrente
-- 📚 **Sistema RAG** con ricerca semantica nella documentazione Blender
-- 💬 **Interfaccia esterna PyQt5** con cronologia e tema dark/light
-- ⚙️ **Compatibilità multi-piattaforma**: macOS Apple Silicon & Windows
-- 🎛️ **Prompt dinamico** in base a testo o immagine inviata
-- 🎙️ **Dettatura vocale** per inviare domande senza digitare
-- 🔊 **Lettura vocale** delle risposte generate dal chatbot
+Il sistema Blender GenAI Assistant integra strumenti intelligenti per assistere l’utente nella modellazione 3D in modo contestuale, multimodale e interattivo. Le funzionalità sono accessibili sia da Blender che da un’interfaccia grafica esterna.
 
+- 🧠 **Assistenza intelligente** alla modellazione
+  - 🔍 **Suggerimenti contestuali** su operazioni, strumenti e tecniche avanzate
+  - 📚 **Sistema RAG** integrato con ricerca semantica nella documentazione Blender
+  - 🧠 **Prompt dinamico** che include automaticamente dettagli della scena, selezione attiva e stato del modello
+  - 🧪 **Analisi tecnica** del modello selezionato: vertici, UV, manifold, normali invertite, materiali, modificatori, ecc.
+- 💬 Interfaccia grafica (GUI) esterna
+  - 🪟 **GUI PyQt5 esterna** separata da Blender, in stile chat moderna
+  - 💡 **Tema scuro/chiaro dinamico** in base alle preferenze Blender
+  - 🔁 **Gestione asincrona** delle risposte AI, senza blocchi dell’interfaccia
+  - 💾 **Storico chat persistente**, con salvataggio automatico
+- 🖼️ **Multimodalità e visualizzazione**
+  - 📷 **Cattura automatica di screenshot** da Blender con anteprima in GUI
+  - 🧠 **Input visuale nel prompt**, utile per scene complesse o debugging visivo
+- 🎙️ **Interazione vocale**
+  - 🎤 **Dettatura vocale** delle domande via server Flask con Whisper (fino a 2 min, con silenzio automatico)
+  - 🔊 **Lettura vocale** delle risposte generate (TTS, es. voce "Samantha" su macOS)
+- ⚙️ **Automazioni e compatibilità**
+  - 🔄 **Installazione automatica delle dipendenze** Python in scripts/modules/ di Blender
+  - 🔒 **Avvio singleton della GUI**, riportata in primo piano se già aperta
+  - 🧹 **Reset automatico della chat** alla chiusura di Blender o dell’interfaccia
+  - 🧠 **Script dedicato per indicizzazione documentazione PDF**, integrato con LangChain e FAISS
 
 ---
 
@@ -170,7 +183,7 @@ Da qui potrai:
 
 ---
 
-## 🪟 Interfaccia Esterna del Chatbot
+## 🪟 Interfaccia del Chatbot
 
 L’addon include una interfaccia grafica personalizzata esterna sviluppata in PyQt5, progettata per offrire un'esperienza utente fluida e moderna, ispirata alle applicazioni di messaggistica.È completamente multi-piattaforma (macOS Apple Silicon e Windows), supporta la cronologia delle conversazioni, invio di immagini della scena Blender, e la modalità dark/light con switch dinamico.
 
@@ -196,12 +209,18 @@ L’addon include una interfaccia grafica personalizzata esterna sviluppata in P
 
 Una volta catturata la schermata in Blender, l'immagine compare in anteprima nella GUI: può essere cliccata per visualizzarla a schermo intero ed è accompagnata da un'icona del cestino per eliminarla e caricarne una nuova, se desiderato.
 
-Di seguito si allega uno screen dell'interfaccia del chatbot realizzato:
-
+Di seguito si allegano due screen dell'interfaccia del chatbot realizzato, rispettivamente in light mode e dark mode:
 
 <p align="center">
-  <img src="icons/gui_screenshot.png" alt="Interfaccia PyQt5 del chatbot GenAI Assistant" width="700"/>
+  <img src="icons/light_mode.png" alt="Interfaccia PyQt5 del chatbot GenAI Assistant" width="700"/>
 </p>
+
+<p align="center">
+  <img src="icons/dark_mode.png" alt="Interfaccia PyQt5 del chatbot GenAI Assistant" width="700"/>
+</p>
+
+
+---
 
 ## 📊 Demo
 
