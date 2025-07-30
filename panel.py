@@ -42,7 +42,8 @@ class GENAI_OT_RunRAG(bpy.types.Operator):
     bl_description = "Esegui il sistema RAG per interrogare la documentazione di Blender"
 
     def execute(self, context):
-        script_path = os.path.join(os.path.dirname(__file__), "langchain_rag_blender_pdf.py")
+        # script_path = os.path.join(os.path.dirname(__file__), "langchain_rag_blender_pdf.py")
+        script_path = os.path.join(os.path.dirname(__file__), "rag_from_json.py")
         try:
             subprocess.run([sys.executable, script_path], check=True)
             self.report({'INFO'}, "RAG eseguito con successo.")
