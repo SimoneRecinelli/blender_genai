@@ -1,282 +1,288 @@
 [
   {
-    "chapter": "1. Introduzione",
-    "topic": "Cos’è Blender",
-    "content": "Blender è un software open source per la creazione di contenuti 3D. Supporta modellazione, sculpting, animazione, simulazioni, rendering, compositing, motion tracking e anche editing video. È usato in ambiti professionali e amatoriali per creare film, giochi, effetti visivi e arte 3D."
+    "chapter": "1. Introduction",
+    "topic": "What is Blender",
+    "content": "Blender is an open-source software for creating 3D content. It supports modeling, sculpting, animation, simulations, rendering, compositing, motion tracking, and even video editing. It is used professionally and by hobbyists to create films, games, visual effects, and 3D art."
   },
   {
-    "chapter": "1. Introduzione",
-    "topic": "Interfaccia utente (viewport, header, sidebar)",
-    "content": "L’interfaccia di Blender è composta da aree modulari. La viewport 3D consente di visualizzare e interagire con la scena, l’header contiene i menu contestuali e la sidebar offre pannelli laterali (attivabili con 'N') per proprietà e strumenti. Tutto è personalizzabile tramite layout."
+    "chapter": "1. Introduction",
+    "topic": "User Interface (viewport, header, sidebar)",
+    "content": "Blender's interface consists of modular areas. The 3D viewport allows viewing and interacting with the scene, the header contains contextual menus, and the sidebar offers side panels (activated with 'N') for properties and tools. Everything is customizable through layouts."
   },
   {
-    "chapter": "1. Introduzione",
-    "topic": "Navigazione nello spazio 3D",
-    "content": "La navigazione in Blender avviene tramite mouse e tastiera: rotazione con MMB, zoom con rotellina o Ctrl+MMB, pan con Shift+MMB. È possibile anche usare i tasti del tastierino numerico per viste predefinite (es. 1=fronte, 3=destra, 7=alto)."
+    "chapter": "1. Introduction",
+    "topic": "3D Space Navigation",
+    "content": "Navigation in Blender is done using mouse and keyboard: rotate with MMB, zoom with the scroll wheel or Ctrl+MMB, pan with Shift+MMB. You can also use the numeric keypad keys for predefined views (e.g., 1=front, 3=right, 7=top)."
   },
   {
-    "chapter": "1. Introduzione",
-    "topic": "Preferenze e personalizzazione",
-    "content": "Le preferenze si trovano in Edit > Preferences. Da qui si possono gestire temi, input, add-on, sistema e viewport. Blender supporta scorciatoie personalizzate, salvataggio del layout e configurazioni multiple per diversi workflow."
+    "chapter": "1. Introduction",
+    "topic": "Preferences and Customization",
+    "content": "Preferences are found in Edit > Preferences. From here you can manage themes, input, add-ons, system, and viewport. Blender supports custom shortcuts, saving layouts, and multiple configurations for different workflows."
   },
   {
-    "chapter": "2. Modellazione",
-    "topic": "Oggetti mesh, curve, testo, metaball",
-    "content": "Blender supporta vari tipi di oggetti: mesh (geometria poligonale), curve (Bezier, NURBS), testo (convertibile in mesh), e metaball (forme fluide che si fondono tra loro). Ogni tipo ha proprietà e modalità di editing differenti."
+    "chapter": "2. Modeling",
+    "topic": "Mesh objects, curves, text, metaballs",
+    "content": "Blender supports various object types: mesh (polygonal geometry), curves (Bezier, NURBS), text (convertible to mesh), and metaballs (fluid shapes that merge). Each type has different properties and editing modes."
   },
   {
-    "chapter": "2. Modellazione",
+    "chapter": "2. Modeling",
     "topic": "Edit Mode",
-    "content": "L'Edit Mode permette di modificare la geometria di un oggetto (solo mesh, curve, testo, ecc.). Si accede con Tab e consente la selezione e trasformazione di vertici, spigoli, facce. È distinta dall’Object Mode, che agisce sull’oggetto intero."
+    "content": "Edit Mode allows modifying an object's geometry (only mesh, curves, text, etc.). It is accessed with Tab and allows selection and transformation of vertices, edges, and faces. It is distinct from Object Mode, which acts on the entire object."
   },
   {
-    "chapter": "2. Modellazione",
-    "topic": "Strumenti di modellazione (estrusione, bevel, loop cut, knife, etc.)",
-    "content": "Gli strumenti principali includono: Estrusione (E), Bevel (Ctrl+B), Loop Cut (Ctrl+R), Knife (K), Merge, Slide, Inset (I). Sono accessibili via shortcut o menu contestuali (tasto destro o 'Mesh' menu)."
+    "chapter": "2. Modeling",
+    "topic": "Modeling Tools (extrude, bevel, loop cut, knife, etc.)",
+    "content": "Main tools include: Extrude (E), Bevel (Ctrl+B), Loop Cut (Ctrl+R), Knife (K), Merge, Slide, Inset (I). They are accessible via shortcuts or context menus (right-click or 'Mesh' menu)."
   },
   {
-    "chapter": "2. Modellazione",
-    "topic": "Modificatori (Mirror, Subdivision Surface, Boolean, etc.)",
-    "content": "I modificatori sono effetti non distruttivi applicati a oggetti. Mirror crea simmetria, Subdivision Surface ammorbidisce la mesh, Boolean consente operazioni logiche tra oggetti. Si trovano nel pannello dei modificatori (icona chiave inglese)."
+    "chapter": "2. Modeling",
+    "topic": "Modifiers (Mirror, Subdivision Surface, Boolean, etc.)",
+    "content": "Modifiers are non-destructive effects applied to objects. Mirror creates symmetry, Subdivision Surface smooths the mesh, Boolean allows logical operations between objects. They are found in the modifiers panel (wrench icon)."
   },
   {
-    "chapter": "2. Modellazione",
+    "chapter": "2. Modeling",
     "topic": "Sculpting & Retopology",
-    "content": "Lo sculpting consente di modellare mesh in modo organico con pennelli. La retopologia è il processo di creare una mesh pulita a partire da quella scolpita, per ottimizzarne la geometria. Blender include strumenti automatici e manuali per entrambi."
+    "content": "Sculpting allows shaping meshes organically with brushes. Retopology is the process of creating a clean mesh from a sculpted one to optimize geometry. Blender includes both automatic and manual tools for these."
   },
   {
-    "chapter": "3. Materiali e Shading",
+    "chapter": "3. Materials and Shading",
     "topic": "Principled BSDF",
-    "content": "Il nodo Principled BSDF è uno shader PBR (Physically-Based Rendering) che unifica numerose proprietà in un solo nodo. È basato sul modello di Disney e consente di simulare materiali realistici, da plastica a metallo, da pelle a vetro. Parametri chiave includono: Base Color (colore o texture principale), Roughness (rugosità), Metallic (riflessione metallica), Transmission (trasparenza), Subsurface (scattering), Specular / IOR (riflessione). È il nodo predefinito in Cycles ed Eevee per materiali fisicamente plausibili."
+    "content": "The Principled BSDF node is a PBR (Physically-Based Rendering) shader that unifies many properties in one node. It is based on the Disney model and allows simulating realistic materials, from plastic to metal, skin to glass. Key parameters include: Base Color (main color or texture), Roughness, Metallic, Transmission (transparency), Subsurface (scattering), Specular / IOR (reflection). It is the default shader in Cycles and Eevee for physically plausible materials."
   },
   {
-    "chapter": "3. Materiali e Shading",
+    "chapter": "3. Materials and Shading",
     "topic": "Shader Node Editor",
-    "content": "Lo Shader Node Editor permette di costruire materiali attraverso un sistema a nodi visivi. Si lavora collegando nodi di input (texture, coordinate), nodi di elaborazione (es. mix, math), e nodi di output (es. Material Output). È possibile combinare shader, sovrapporre texture e controllare dinamicamente le proprietà. È essenziale per creare materiali avanzati e dinamici."
+    "content": "The Shader Node Editor lets you build materials using a visual node system. You connect input nodes (texture, coordinates), processing nodes (e.g., mix, math), and output nodes (e.g., Material Output). You can combine shaders, overlay textures, and dynamically control properties. It is essential for creating advanced and dynamic materials."
   },
   {
-    "chapter": "3. Materiali e Shading",
-    "topic": "Materiali trasparenti e riflettenti",
-    "content": "Per materiali trasparenti, usa Principled BSDF con Transmission = 1.0, Roughness per regolare l'opacità, e abilita Screen Space Refraction nei settings. In Eevee, attiva Refraction e Blend Mode: Alpha Hashed. Per materiali riflettenti, imposta Metallic = 1.0 e Roughness = 0.0 per un effetto specchio. Le riflessioni sono influenzate da HDRI o luci nella scena."
+    "chapter": "3. Materials and Shading",
+    "topic": "Transparent and Reflective Materials",
+    "content": "For transparent materials, use Principled BSDF with Transmission set to 1.0, adjust Roughness for opacity, and enable Screen Space Refraction in settings. In Eevee, enable Refraction and set Blend Mode to Alpha Hashed or Alpha Blend. For reflective materials, set Metallic to 1.0 and Roughness to 0.0 for a mirror effect. Reflections are influenced by HDRI or lights in the scene."
   },
   {
-    "chapter": "3. Materiali e Shading",
-    "topic": "Texture mapping",
-    "content": "Il texture mapping consente di applicare immagini su superfici 3D. Usa Image Texture + Principled BSDF per collegare l'immagine. Puoi mappare usando UV Map (da UV Editing) o coordinate automatiche (Generated, Object, ecc.) tramite Texture Coordinate + Mapping. È fondamentale per aggiungere dettagli come colori, pattern o rilievi."
+    "chapter": "3. Materials and Shading",
+    "topic": "Texture Mapping",
+    "content": "Texture mapping allows applying images on 3D surfaces. Use Image Texture + Principled BSDF to link the image. You can map using UV Map (from UV Editing) or automatic coordinates (Generated, Object, etc.) via Texture Coordinate + Mapping. It is essential to add details like colors, patterns, or relief."
   },
   {
-    "chapter": "3. Materiali e Shading",
-    "topic": "Bump e Normal map",
-    "content": "Le Bump e Normal Map simulano rilievi superficiali. Le Bump Map usano immagini in scala di grigi collegate tramite il nodo Bump. Le Normal Map usano immagini RGB (in genere viola) collegate tramite il nodo Normal Map. Entrambe si collegano all’input Normal del Principled BSDF e migliorano il dettaglio visivo senza aumentare la geometria."
+    "chapter": "3. Materials and Shading",
+    "topic": "Bump and Normal Maps",
+    "content": "Bump and Normal Maps simulate surface relief. Bump Maps use grayscale images connected via the Bump node. Normal Maps use RGB images (usually purple) connected via the Normal Map node. Both connect to the Normal input of the Principled BSDF and improve visual detail without increasing geometry."
   },
   {
-    "chapter": "4. Luci e Rendering",
-    "topic": "Tipi di luci (Point, Sun, Area, Spot)",
-    "content": "Blender offre diversi tipi di luce: Point (una sorgente puntiforme in tutte le direzioni), Sun (luce direzionale con ombre parallele, ideale per esterni), Area (luce rettangolare o quadrata per effetti morbidi), Spot (luce a cono con controllo di angolo e attenuazione). Ogni luce ha parametri come intensità, colore, distanza e ombre configurabili."
+    "chapter": "3. Materials and Shading",
+    "topic": "Bump Map",
+    "content": "To apply a bump map in Blender, follow these steps: 1. Create or select a material for your object. 2. Open the Shader Editor. 3. Add a Texture Image node and load the grayscale image to use as the bump map. 4. Add a Bump node. 5. Connect the Color output of the Texture Image node to the Height input of the Bump node. 6. Connect the Normal output of the Bump node to the Normal input of the Principled BSDF. 7. Adjust the Strength value on the Bump node to control the effect intensity. The bump map creates a relief effect on the surface without modifying the actual geometry of the object. Make sure the bump image is grayscale, where black represents the flat surface and white the raised surface."
   },
   {
-    "chapter": "4. Luci e Rendering",
+    "chapter": "4. Lights and Rendering",
+    "topic": "Light Types (Point, Sun, Area, Spot)",
+    "content": "Blender offers several light types: Point (a point source emitting light in all directions), Sun (directional light with parallel shadows, ideal for outdoor scenes), Area (rectangular or square light for soft effects), Spot (cone-shaped light with angle and attenuation control). Each light has parameters like intensity, color, distance, and shadows configurable."
+  },
+  {
+    "chapter": "4. Lights and Rendering",
     "topic": "Cycles vs Eevee",
-    "content": "Cycles è un motore di rendering path-tracing realistico che simula accuratamente la luce e le ombre, ma è più lento. Eevee è un renderer in tempo reale basato su rasterizzazione, molto veloce ma meno accurato. Cycles è preferito per qualità finale, Eevee per preview rapide e animazioni leggere."
+    "content": "Cycles is a realistic path-tracing rendering engine that accurately simulates light and shadows but is slower. Eevee is a real-time rasterization renderer, very fast but less accurate. Cycles is preferred for final quality, Eevee for quick previews and light animations."
   },
   {
-    "chapter": "4. Luci e Rendering",
-    "topic": "Impostazioni render (sample, denoise, ambient occlusion)",
-    "content": "Le impostazioni di rendering includono: Samples (numero di raggi tracciati per pixel, maggiore = migliore qualità), Denoise (riduce il rumore, disponibile sia per viewport che render finale), e Ambient Occlusion (accentua le ombre nei punti di contatto per maggior profondità visiva). Sono accessibili nel pannello Render Properties."
+    "chapter": "4. Lights and Rendering",
+    "topic": "Render Settings (samples, denoise, ambient occlusion)",
+    "content": "Render settings include: Samples (number of rays traced per pixel, higher means better quality), Denoise (reduces noise, available for viewport and final render), and Ambient Occlusion (enhances shadows in contact points for more visual depth). Accessible in the Render Properties panel."
   },
   {
-    "chapter": "4. Luci e Rendering",
-    "topic": "Motion Blur e Depth of Field",
-    "content": "Motion Blur simula l'effetto di sfocatura in movimento, utile per animazioni fluide; si attiva nel pannello Render > Motion Blur. Depth of Field sfoca gli oggetti lontani dal piano focale della camera. Si abilita nelle impostazioni della camera, regolando distanza e apertura dell'obiettivo."
+    "chapter": "4. Lights and Rendering",
+    "topic": "Motion Blur and Depth of Field",
+    "content": "Motion Blur simulates blur from movement, useful for smooth animations; enabled in Render > Motion Blur. Depth of Field blurs objects out of focus. It is enabled in camera settings, adjusting distance and aperture."
   },
   {
-    "chapter": "4. Luci e Rendering",
-    "topic": "Trasparenza e background",
-    "content": "Per rendere il background trasparente in rendering (es. per esportare in PNG), abilita 'Film > Transparent' nelle impostazioni di render. Nei materiali, la trasparenza si controlla con nodi (Transmission o Alpha) e Blend Mode nel pannello Material Settings. In Eevee, usa Alpha Blend o Alpha Hashed per vedere la trasparenza correttamente."
-  },
-    {
-    "chapter": "5. Camera e Viewport",
-    "topic": "Camera tracking",
-    "content": "Il camera tracking consente di integrare oggetti 3D in filmati reali. Blender supporta il tracking sia della camera che di oggetti specifici. Si importa il video nella sezione Movie Clip Editor, si definiscono i marker e si avvia il tracking. Poi si ricostruisce il movimento 3D con 'Solve Camera Motion'. È utilizzato in VFX per matchare virtuale e reale."
+    "chapter": "4. Lights and Rendering",
+    "topic": "Transparency and Background",
+    "content": "To make the background transparent in renders (e.g., for PNG export), enable 'Film > Transparent' in render settings. In materials, transparency is controlled with nodes (Transmission or Alpha) and Blend Mode in Material Settings. In Eevee, use Alpha Blend or Alpha Hashed for correct transparency."
   },
   {
-    "chapter": "5. Camera e Viewport",
-    "topic": "Composizione",
-    "content": "La composizione in Blender riguarda la disposizione visiva degli elementi nella scena, e viene supportata anche dal Compositor, dove si combinano e modificano output di rendering tramite nodi (es. Blur, Mix, Alpha Over). A livello visivo, si usano regole come la regola dei terzi, linee guida e il posizionamento strategico della camera per migliorare la resa visiva."
+    "chapter": "5. Camera and Viewport",
+    "topic": "Camera Tracking",
+    "content": "Camera tracking allows integrating 3D objects into real footage. Blender supports tracking both the camera and specific objects. You import the video into the Movie Clip Editor, define markers, and start tracking. Then reconstruct 3D movement with 'Solve Camera Motion'. Used in VFX to match virtual and real."
   },
   {
-    "chapter": "5. Camera e Viewport",
-    "topic": "Safe areas e focal length",
-    "content": "Le safe areas sono guide visive in camera view per assicurare che gli elementi importanti (testi, oggetti) non escano dai margini nei diversi formati di output. Si attivano nel pannello View > Safe Areas. Il focal length (lunghezza focale) controlla il campo visivo della camera: valori bassi danno effetto grandangolo, alti effetto teleobiettivo."
+    "chapter": "5. Camera and Viewport",
+    "topic": "Compositing",
+    "content": "Compositing in Blender involves visually arranging scene elements and is supported by the Compositor, where rendering outputs are combined and modified via nodes (e.g., Blur, Mix, Alpha Over). Visual rules like the rule of thirds, guidelines, and camera placement are used to improve visual output."
   },
-    {
-    "chapter": "6. Animazione",
+  {
+    "chapter": "5. Camera and Viewport",
+    "topic": "Safe Areas and Focal Length",
+    "content": "Safe areas are visual guides in camera view to ensure important elements (texts, objects) do not exit margins in different output formats. They are enabled in the View panel > Safe Areas. Focal length controls the camera's field of view: low values give wide-angle effect, high values telephoto."
+  },
+  {
+    "chapter": "6. Animation",
     "topic": "Keyframes",
-    "content": "I keyframe definiscono i valori di una proprietà in un determinato istante temporale. Blender li usa per animare posizione, rotazione, scala, materiali, visibilità e altro. Si inseriscono premendo 'I' nel 3D View o nelle proprietà, e si visualizzano nella Timeline. L’interpolazione tra keyframe crea l’animazione."
+    "content": "Keyframes define property values at specific time points. Blender uses them to animate position, rotation, scale, materials, visibility, and more. Inserted with 'I' in 3D View or properties, interpolation between keyframes creates animation."
   },
   {
-    "chapter": "6. Animazione",
-    "topic": "Timeline e Dope Sheet",
-    "content": "La Timeline mostra i keyframe nel tempo e consente di spostarli, cancellarli o duplicarli. Il Dope Sheet offre una vista più organizzata e gerarchica di tutti i keyframe presenti in una scena, utile per animazioni complesse. Entrambi permettono di sincronizzare movimenti, audio ed effetti."
+    "chapter": "6. Animation",
+    "topic": "Timeline and Dope Sheet",
+    "content": "Timeline shows keyframes over time and allows moving, deleting, or duplicating them. Dope Sheet offers a more organized and hierarchical view of all keyframes in a scene, useful for complex animations. Both allow synchronizing movements, audio, and effects."
   },
   {
-    "chapter": "6. Animazione",
+    "chapter": "6. Animation",
     "topic": "Graph Editor (F-Curves)",
-    "content": "Il Graph Editor visualizza le F-Curves (curve di interpolazione) dei keyframe. Permette di modificare i valori nel tempo con estrema precisione, controllando l’interpolazione (linear, constant, bezier) e regolando tangenti, overshoot, velocità. È indispensabile per animazioni fluide e dettagliate."
+    "content": "Graph Editor displays F-Curves (interpolation curves) of keyframes. It allows precise editing of values over time, controlling interpolation (linear, constant, bezier) and adjusting tangents, overshoot, speed. Essential for smooth and detailed animations."
   },
   {
-    "chapter": "6. Animazione",
-    "topic": "Constraints e Driver",
-    "content": "I Constraints impongono regole di movimento tra oggetti (es. 'Copy Location', 'Track To'). I Drivers controllano una proprietà usando un’espressione matematica o un’altra proprietà (es. rotazione = sin(frame)). Si usano per animazioni automatiche e sistemi complessi (es. rigging)."
+    "chapter": "6. Animation",
+    "topic": "Constraints and Drivers",
+    "content": "Constraints impose movement rules between objects (e.g., 'Copy Location', 'Track To'). Drivers control a property using a mathematical expression or another property (e.g., rotation = sin(frame)). Used for automatic animations and complex systems (e.g., rigging)."
   },
   {
-    "chapter": "6. Animazione",
+    "chapter": "6. Animation",
     "topic": "Shape Keys",
-    "content": "Le Shape Keys definiscono variazioni di forma su un oggetto mesh. Vengono usate per espressioni facciali, morphing, deformazioni locali. Ogni shape key rappresenta una modifica, che può essere animata nel tempo. Si trovano nel pannello Object Data Properties > Shape Keys."
+    "content": "Shape Keys define shape variations on a mesh object. Used for facial expressions, morphing, local deformations. Each shape key represents a modification that can be animated over time. Found in Object Data Properties panel > Shape Keys."
   },
   {
-    "chapter": "6. Animazione",
+    "chapter": "6. Animation",
     "topic": "NLA Editor",
-    "content": "Il Non-Linear Animation Editor consente di combinare e gestire più azioni animate come se fossero clip video. Puoi creare cicli, sequenze, variazioni di velocità. È utile per riutilizzare animazioni (es. camminata, salti) in contesti diversi senza ricreare keyframe da zero."
+    "content": "The Non-Linear Animation Editor allows combining and managing multiple animated actions like video clips. You can create loops, sequences, speed variations. Useful for reusing animations (e.g., walking, jumping) in different contexts without recreating keyframes."
   },
-    {
+  {
     "chapter": "7. Audio & Video Editing",
     "topic": "Video Sequencer Editor (VSE)",
-    "content": "Il Video Sequencer Editor (VSE) è il modulo di Blender dedicato al montaggio video. Permette di importare clip video, immagini, audio, effetti, e organizzarli su una timeline multi-traccia. Supporta il taglio, la sovrapposizione, il mixaggio e il rendering diretto del risultato finale. È utile per realizzare video completi senza uscire da Blender."
+    "content": "The Video Sequencer Editor (VSE) is Blender's module dedicated to video editing. It allows importing video clips, images, audio, effects, and organizing them on a multi-track timeline. Supports cutting, overlapping, mixing, and direct rendering of the final result. Useful for creating complete videos without leaving Blender."
   },
   {
     "chapter": "7. Audio & Video Editing",
-    "topic": "Inserimento audio",
-    "content": "Per aggiungere audio nel VSE si usa 'Add > Sound'. Blender supporta formati come WAV e MP3. L’audio può essere sincronizzato alla timeline, visualizzato come forma d’onda e regolato in volume. Può essere usato sia come sottofondo musicale sia come traccia parlata o effetti sonori."
+    "topic": "Audio Insertion",
+    "content": "To add audio in the VSE use 'Add > Sound'. Blender supports formats like WAV and MP3. Audio can be synchronized to the timeline, displayed as waveform, and volume adjusted. Can be used as background music or voice track or sound effects."
   },
   {
     "chapter": "7. Audio & Video Editing",
-    "topic": "Transizioni video",
-    "content": "Nel VSE si possono creare transizioni fluide tra due clip sovrapposte usando 'Add > Effect Strip > Cross', 'Gamma Cross', 'Wipe', ecc. Le transizioni controllano la dissolvenza visiva e possono essere modificate in durata e tipo. Sono essenziali per rendere il montaggio più professionale."
+    "topic": "Video Transitions",
+    "content": "In the VSE you can create smooth transitions between two overlapping clips using 'Add > Effect Strip > Cross', 'Gamma Cross', 'Wipe', etc. Transitions control visual fades and can be modified in duration and type. Essential to make editing more professional."
   },
   {
     "chapter": "7. Audio & Video Editing",
-    "topic": "Proxy e cache",
-    "content": "I proxy sono versioni a bassa risoluzione delle clip video che permettono un'anteprima più fluida durante il montaggio. Si abilitano nella sezione Strip > Proxy/Timecode. La cache (RAM o disco) memorizza fotogrammi renderizzati per migliorare la velocità di preview. Entrambe le opzioni ottimizzano le performance in progetti pesanti."
-  },
-    {
-    "chapter": "8. Strumenti di Scripting",
-    "topic": "Console Python integrata",
-    "content": "Blender include una console Python interattiva accessibile da Scripting > Python Console. Consente di esplorare e modificare la scena in tempo reale, testare comandi e interagire con l’API `bpy`. È utile per debugging, prototipazione di strumenti e automazione veloce."
+    "topic": "Proxy and Cache",
+    "content": "Proxies are low-resolution versions of video clips that allow smoother preview during editing. They are enabled in the Strip > Proxy/Timecode section. Cache (RAM or disk) stores rendered frames to improve preview speed. Both options optimize performance in heavy projects."
   },
   {
-    "chapter": "8. Strumenti di Scripting",
+    "chapter": "8. Scripting Tools",
+    "topic": "Integrated Python Console",
+    "content": "Blender includes an interactive Python console accessible from Scripting > Python Console. Allows exploring and modifying the scene in real-time, testing commands, and interacting with the `bpy` API. Useful for debugging, prototyping tools, and quick automation."
+  },
+  {
+    "chapter": "8. Scripting Tools",
     "topic": "`bpy` API",
-    "content": "`bpy` è il modulo Python che fornisce accesso all’intera struttura interna di Blender. Permette di creare oggetti, modificare mesh, gestire materiali, animazioni, UI e molto altro. È organizzata in sotto-moduli (es. `bpy.data`, `bpy.ops`, `bpy.types`) e richiede familiarità con la struttura dati di Blender."
+    "content": "`bpy` is the Python module providing access to Blender's entire internal structure. Allows creating objects, modifying meshes, managing materials, animations, UI, and more. Organized into submodules (e.g., `bpy.data`, `bpy.ops`, `bpy.types`) and requires familiarity with Blender's data structure."
   },
   {
-    "chapter": "8. Strumenti di Scripting",
-    "topic": "Creazione di Add-on",
-    "content": "Un add-on in Blender è uno script Python con struttura specifica (`bl_info`, `register`, `unregister`) che estende le funzionalità del programma. Può aggiungere operatori, pannelli, menu personalizzati. Gli add-on si salvano come file `.py` e si installano da Edit > Preferences > Add-ons > Install."
+    "chapter": "8. Scripting Tools",
+    "topic": "Add-on Creation",
+    "content": "A Blender add-on is a Python script with a specific structure (`bl_info`, `register`, `unregister`) that extends program functionalities. Can add operators, UI panels, custom menus. Add-ons are saved as `.py` files and installed from Edit > Preferences > Add-ons > Install."
   },
   {
-    "chapter": "8. Strumenti di Scripting",
-    "topic": "Automazione di operazioni (operatori, registri, pannelli)",
-    "content": "L’automazione avviene tramite la definizione di operatori personalizzati (`bpy.types.Operator`), pannelli UI (`bpy.types.Panel`) e registrazione con `bpy.utils.register_class`. Questi strumenti permettono di creare flussi di lavoro su misura, comandi custom e interfacce integrate per specifiche operazioni."
-  },
-    {
-    "chapter": "9. Import/Export & File",
-    "topic": "Formati supportati (FBX, OBJ, STL, GLTF, etc.)",
-    "content": "Blender supporta numerosi formati di scambio: FBX (animazioni, rig, mesh), OBJ (mesh statiche), STL (stampa 3D), GLTF/GLB (web, VR/AR), Alembic (animazioni cache), Collada, SVG, USD, ecc. I formati si selezionano dal menu File > Import/Export e spesso offrono impostazioni specifiche per scala, materiali, animazioni."
+    "chapter": "8. Scripting Tools",
+    "topic": "Automation of Operations (operators, registries, panels)",
+    "content": "Automation is done by defining custom operators (`bpy.types.Operator`), UI panels (`bpy.types.Panel`), and registration with `bpy.utils.register_class`. These tools allow creating custom workflows, commands, and integrated interfaces for specific operations."
   },
   {
     "chapter": "9. Import/Export & File",
-    "topic": "Salvataggio & versioning",
-    "content": "I file .blend contengono l’intera scena Blender. È possibile salvare versioni incrementali tramite File > Save As > +Number, oppure usare 'Auto Save' e 'Backup' dalle Preferenze. Blender consente anche il salvataggio compressi (.blend1, .blend2) per il versioning automatico."
+    "topic": "Supported Formats (FBX, OBJ, STL, GLTF, etc.)",
+    "content": "Blender supports many exchange formats: FBX (animations, rigs, meshes), OBJ (static meshes), STL (3D printing), GLTF/GLB (web, VR/AR), Alembic (animation caches), Collada, SVG, USD, etc. Formats are selected from File > Import/Export and often have specific settings for scale, materials, animations."
   },
   {
     "chapter": "9. Import/Export & File",
-    "topic": "Link/Append tra .blend",
-    "content": "Con Append si importa una copia locale di dati da un altro file .blend (mesh, materiali, oggetti, azioni). Con Link si mantiene un collegamento dinamico ai dati esterni: modifiche nel file originale si riflettono automaticamente. Append = copia indipendente, Link = riferimento condiviso. Utile per progetti modulari."
+    "topic": "Saving & Versioning",
+    "content": "Blend files (.blend) contain the entire Blender scene. You can save incremental versions via File > Save As > +Number, or use 'Auto Save' and 'Backup' from Preferences. Blender also allows compressed saves (.blend1, .blend2) for automatic versioning."
   },
-    {
-    "chapter": "10. Grease Pencil",
-    "topic": "Disegno 2D in 3D",
-    "content": "Grease Pencil è uno strumento unico di Blender che permette di disegnare e animare in 2D all'interno di uno spazio 3D. Le linee sono oggetti vettoriali che possono esistere nella scena 3D, seguire la prospettiva e interagire con altri oggetti. È usato per storyboard, animazione tradizionale, annotazioni e illustrazione ibrida 2D/3D."
+  {
+    "chapter": "9. Import/Export & File",
+    "topic": "Link/Append between .blend files",
+    "content": "Append imports a local copy of data from another .blend file (mesh, materials, objects, actions). Link keeps a dynamic link to external data: changes in the original file reflect automatically. Append = independent copy, Link = shared reference. Useful for modular projects."
   },
   {
     "chapter": "10. Grease Pencil",
-    "topic": "Strumenti, Layers, Animazione",
-    "content": "Gli strumenti principali includono Pen, Fill, Eraser, Cutter e Sculpt. I layers funzionano come in software di grafica: gestiscono opacità, blending, ordine di disegno. L’animazione avviene tramite keyframe sui tratti disegnati, con onion skin per il supporto al disegno frame-by-frame. Può essere combinato con effetti, modificatori e rendering."
+    "topic": "2D Drawing in 3D",
+    "content": "Grease Pencil is a unique Blender tool that allows drawing and animating in 2D inside a 3D space. Lines are vector objects that can exist in the 3D scene, follow perspective, and interact with other objects. Used for storyboarding, traditional animation, annotations, and hybrid 2D/3D illustration."
   },
-    {
-    "chapter": "11. Add-ons",
-    "topic": "Installazione e gestione",
-    "content": "Gli add-on sono estensioni Python che ampliano le funzionalità di Blender. Si gestiscono da Edit > Preferences > Add-ons. È possibile attivare/disattivare add-on preinstallati o installarne di nuovi tramite file `.py` o `.zip`. Gli add-on attivi vengono caricati all'avvio di Blender e possono aggiungere pannelli, operatori, menu personalizzati."
+  {
+    "chapter": "10. Grease Pencil",
+    "topic": "Tools, Layers, Animation",
+    "content": "Main tools include Pen, Fill, Eraser, Cutter, and Sculpt. Layers work like in graphic software: managing opacity, blending, drawing order. Animation happens via keyframes on strokes, with onion skin for frame-by-frame drawing support. Can be combined with effects, modifiers, and rendering."
   },
   {
     "chapter": "11. Add-ons",
-    "topic": "Add-on ufficiali vs personalizzati",
-    "content": "Gli add-on ufficiali sono sviluppati e mantenuti dal team di Blender o da collaboratori fidati e sono inclusi nella distribuzione base. Gli add-on personalizzati sono creati da utenti o terze parti e possono essere scaricati da GitHub, Blender Market, ecc. Entrambi si installano nello stesso modo, ma quelli personalizzati richiedono verifica di compatibilità e sicurezza."
+    "topic": "Installation and Management",
+    "content": "Add-ons are Python extensions that expand Blender's functionality. They are managed from Edit > Preferences > Add-ons. You can enable/disable pre-installed add-ons or install new ones via `.py` or `.zip` files. Active add-ons are loaded when Blender starts and can add panels, operators, and custom menus."
   },
   {
     "chapter": "11. Add-ons",
-    "topic": "Add-on utili per UV, modellazione, VR",
-    "content": "Tra gli add-on più utili: 'UV Packmaster' e 'Textools' per l’UV mapping, 'LoopTools' e 'Mesh Machine' per modellazione avanzata, 'VR Scene Inspection' per esplorare la scena in realtà virtuale. Molti add-on gratuiti sono inclusi in Blender e basta attivarli, mentre altri avanzati si trovano su marketplace esterni."
+    "topic": "Official vs Custom Add-ons",
+    "content": "Official add-ons are developed and maintained by the Blender team or trusted collaborators and are included in the base distribution. Custom add-ons are created by users or third parties and can be downloaded from GitHub, Blender Market, etc. Both are installed the same way, but custom ones require compatibility and security checks."
   },
-    {
+  {
+    "chapter": "11. Add-ons",
+    "topic": "Useful Add-ons for UV, Modeling, and VR",
+    "content": "Among the most useful add-ons: 'UV Packmaster' and 'Textools' for UV mapping, 'LoopTools' and 'Mesh Machine' for advanced modeling, 'VR Scene Inspection' to explore the scene in virtual reality. Many free add-ons are included in Blender and just need to be enabled, while more advanced ones can be found on external marketplaces."
+  },
+  {
     "chapter": "12. UV Editing & Texture Painting",
     "topic": "UV Unwrap",
-    "content": "Il UV Unwrap è il processo di appiattimento della superficie 3D di un oggetto per associarla a una texture 2D. In Blender, si esegue in Edit Mode con il comando 'U > Unwrap'. Il risultato è una mappa UV che definisce come le texture verranno applicate sull'oggetto. Esistono diversi metodi: Unwrap, Smart UV Project, Lightmap, ecc."
+    "content": "UV Unwrap is the process of flattening a 3D object's surface to map it to a 2D texture. In Blender, it is done in Edit Mode with the command 'U > Unwrap'. The result is a UV map that defines how textures will be applied to the object. There are several methods: Unwrap, Smart UV Project, Lightmap, etc."
   },
   {
     "chapter": "12. UV Editing & Texture Painting",
     "topic": "Seams",
-    "content": "I Seams sono le 'cuciture' che indicano a Blender dove tagliare la mesh durante l'Unwrap. Si marcano in Edit Mode con 'Mark Seam'. Una buona disposizione dei seams è fondamentale per evitare distorsioni e ottenere una mappa UV pulita. Si usano spesso in corrispondenza di bordi nascosti o naturali."
+    "content": "Seams are 'cuts' that tell Blender where to split the mesh during Unwrap. They are marked in Edit Mode with 'Mark Seam'. A good seam layout is essential to avoid distortions and obtain a clean UV map. They are often placed along hidden or natural edges."
   },
   {
     "chapter": "12. UV Editing & Texture Painting",
-    "topic": "Painting direttamente sull’oggetto",
-    "content": "Blender consente di dipingere direttamente sulle mesh 3D tramite Texture Paint. È possibile modificare il colore diffuso, le mappe normal, specular, roughness, ecc. Lo strumento supporta pennelli personalizzati, livelli di texture, simmetria e maschere. È utile per dettagli artistici e texture hand-painted."
+    "topic": "Painting Directly on the Object",
+    "content": "Blender allows painting directly on 3D meshes via Texture Paint. You can modify base color, normal maps, specular, roughness, etc. The tool supports custom brushes, texture layers, symmetry, and masks. It’s useful for artistic details and hand-painted textures."
   },
   {
-  "chapter": "Extra: Scene & World",
-  "topic": "World Shader e Illuminazione ambientale",
-  "content": "Il World Shader controlla il colore e la luce ambientale della scena. Si accede dal pannello World Properties e può essere personalizzato con nodi (es. Background + Environment Texture per HDRI). Influisce sull’illuminazione globale, soprattutto in Cycles."
-  },
-    {
-    "chapter": "Use Cases",
-    "topic": "Come creare un materiale vetro trasparente",
-    "content": "Usa lo shader Principled BSDF con Transmission impostato a 1.0 e Roughness basso per un vetro liscio. Attiva 'Screen Space Refraction' nelle impostazioni del materiale. In Eevee, imposta Blend Mode su 'Alpha Hashed' o 'Alpha Blend' e attiva 'Refraction'. Aggiungi eventualmente una Normal Map per maggior realismo."
+    "chapter": "Extra: Scene & World",
+    "topic": "World Shader and Ambient Lighting",
+    "content": "The World Shader controls the color and ambient light of the scene. It is accessed from the World Properties panel and can be customized with nodes (e.g., Background + Environment Texture for HDRI). It affects global lighting, especially in Cycles."
   },
   {
     "chapter": "Use Cases",
-    "topic": "Come esportare un modello in formato glTF",
-    "content": "Vai su File > Export > glTF 2.0 (.glb/.gltf). Scegli se esportare in formato binario (.glb) o JSON+bin (.gltf). Attiva 'Selected Objects' se vuoi esportare solo quelli selezionati. Assicurati che le texture siano collegate correttamente al Principled BSDF. È ideale per web e VR."
+    "topic": "How to Create a Transparent Glass Material",
+    "content": "Use the Principled BSDF shader with Transmission set to 1.0 and low Roughness for a smooth glass. Enable 'Screen Space Refraction' in the material settings. In Eevee, set Blend Mode to 'Alpha Hashed' or 'Alpha Blend' and enable 'Refraction'. Optionally, add a Normal Map for more realism."
   },
   {
     "chapter": "Use Cases",
-    "topic": "Come realizzare un loop animato (es. rotazione infinita)",
-    "content": "Aggiungi un keyframe per la rotazione all'inizio e un altro a fine timeline (es. frame 1: 0°, frame 250: 360°). Nella Graph Editor, seleziona la curva e applica il modificatore 'Cycles' per ripetere l'animazione all’infinito. Imposta l’output su un numero di frame multiplo del loop per seamless playback."
+    "topic": "How to Export a Model in glTF Format",
+    "content": "Go to File > Export > glTF 2.0 (.glb/.gltf). Choose whether to export in binary format (.glb) or JSON+bin (.gltf). Enable 'Selected Objects' if you want to export only the selected ones. Make sure textures are correctly linked to the Principled BSDF. It’s ideal for web and VR."
   },
   {
     "chapter": "Use Cases",
-    "topic": "Come usare Grease Pencil per animare una linea",
-    "content": "Crea un oggetto Grease Pencil, passa in Draw Mode e disegna la linea. Attiva Onion Skin nel pannello Object Data Properties. Aggiungi keyframe disegnando su fotogrammi diversi. Passa a Animation o Dope Sheet per gestire la sequenza. Il tratto può essere modificato con i pennelli di Sculpt."
+    "topic": "How to Create a Looping Animation (e.g., Infinite Rotation)",
+    "content": "Add a keyframe for rotation at the beginning and another at the end of the timeline (e.g., frame 1: 0°, frame 250: 360°). In the Graph Editor, select the curve and apply the 'Cycles' modifier to repeat the animation infinitely. Set the output to a number of frames that is a multiple of the loop for seamless playback."
   },
   {
     "chapter": "Use Cases",
-    "topic": "Come usare un add-on come LoopTools per uniformare vertici",
-    "content": "Attiva LoopTools da Edit > Preferences > Add-ons. Entra in Edit Mode, seleziona i vertici da uniformare, premi W (o tasto destro) e scegli 'LoopTools > Relax' o 'Circle' per allineamento regolare. È utile per ripulire geometrie organiche o migliorare la topologia."
+    "topic": "How to Animate a Line with Grease Pencil",
+    "content": "Create a Grease Pencil object, switch to Draw Mode, and draw the line. Enable Onion Skin in the Object Data Properties panel. Add keyframes by drawing on different frames. Switch to Animation or Dope Sheet to manage the sequence. The stroke can be modified with Sculpt brushes."
   },
   {
-  "chapter": "Use Cases",
-  "topic": "Come applicare una texture a un oggetto",
-  "content": "Seleziona l’oggetto, vai nel tab Material Properties e crea un nuovo materiale. Aggiungi un nodo Image Texture nello Shader Editor, carica un file immagine e collegalo al nodo Principled BSDF (input Base Color). Assicurati che l’oggetto sia unwrapped. Passa in modalità Material Preview o Render per vedere il risultato."
+    "chapter": "Use Cases",
+    "topic": "How to Use an Add-on Like LoopTools to Relax Vertices",
+    "content": "Enable LoopTools from Edit > Preferences > Add-ons. Enter Edit Mode, select the vertices to relax, press W (or right-click), and choose 'LoopTools > Relax' or 'Circle' for regular alignment. This is useful for cleaning organic geometry or improving topology."
   },
   {
-  "chapter": "Use Cases",
-  "topic": "Come usare un HDRI per illuminare la scena",
-  "content": "Vai nel pannello World Properties > Color > clicca sul cerchio > Environment Texture. Carica un file HDRI. Se usi Cycles, l’effetto sarà visibile in Rendered View. Puoi anche regolare la rotazione con un nodo Mapping collegato al nodo Texture Coordinate nel Shader Editor."
+    "chapter": "Use Cases",
+    "topic": "How to Apply a Texture to an Object",
+    "content": "Select the object, go to the Material Properties tab, and create a new material. Add an Image Texture node in the Shader Editor, load an image file, and connect it to the Base Color input of the Principled BSDF. Make sure the object is unwrapped. Switch to Material Preview or Render mode to see the result."
   },
   {
-  "chapter": "Use Cases",
-  "topic": "Come dipingere una texture direttamente sull’oggetto",
-  "content": "Entra in Texture Paint Mode. Crea un nuovo Image Texture (es. 2048x2048). Assegna la texture a un materiale e collega il nodo Image Texture al Principled BSDF. Dipingi direttamente sull’oggetto. Salva l’immagine al termine (Image > Save As) per evitare la perdita dei dati."
+    "chapter": "Use Cases",
+    "topic": "How to Use an HDRI to Light the Scene",
+    "content": "Go to the World Properties panel > Color > click the circle > Environment Texture. Load an HDRI file. If using Cycles, the effect will be visible in Rendered View. You can also adjust the rotation with a Mapping node connected to the Texture Coordinate node in the Shader Editor."
+  },
+  {
+    "chapter": "Use Cases",
+    "topic": "How to Paint a Texture Directly on the Object",
+    "content": "Enter Texture Paint Mode. Create a new Image Texture (e.g., 2048x2048). Assign the texture to a material and connect the Image Texture node to the Principled BSDF. Paint directly on the object. Save the image at the end (Image > Save As) to avoid data loss."
   }
 ]
+

@@ -586,12 +586,25 @@ class GenAIClient(QWidget):
                     self.loading_label.hide()
                 self.send_button.setEnabled(True)
                 self.attesa_risposta = False
-                self.add_message(data["response"], 'bot')
+
+                risposta = data["response"]
+                self.add_message(risposta, 'bot')
+
+                # 🛑 FERMA IL POLLING SE È UNA RISPOSTA FORZATA O INCOMPLETA
+                lower_resp = risposta.lower()
+                if (
+                        "not present in the documentation" in lower_resp
+                        or "documentazione non disponibile" in lower_resp
+                        or "indice documentazione non trovato" in lower_resp
+                ):
+                    print("[INFO] Risposta forzata ricevuta → polling fermato.")
+                    self.timer.stop()
         except Exception as e:
             if self.loading_label:
                 self.loading_label.hide()
             self.send_button.setEnabled(True)
             self.attesa_risposta = False
+            self.timer.stop()  # 🔁 ferma anche in caso di errore
             self.add_message(f"Errore: {str(e)}", 'bot')
 
     def carica_immagine(self):

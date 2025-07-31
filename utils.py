@@ -100,13 +100,15 @@ def query_rag(question, top_k=5):
     except ImportError:
         return [{"text": "Dipendenze non installate. Premi 'Installa Dipendenze' dal pannello.", "source": "Sistema"}]
 
-    INDEX_PATH = os.path.join(os.path.dirname(__file__), "blender_faiss_index.pkl")
+
+    BASE_DIR = os.path.abspath(os.path.dirname(__file__))  # non salire di livello
+    INDEX_PATH = os.path.join(BASE_DIR, "blender_faiss_index.pkl")
 
     if not os.path.exists(INDEX_PATH):
         return [{"text": "Indice documentazione non trovato.", "source": "Sistema"}]
 
-    model = SentenceTransformer("intfloat/multilingual-e5-large", device=get_device_for_transformer())
-
+    # model = SentenceTransformer("intfloat/multilingual-e5-large", device=get_device_for_transformer())
+    model = SentenceTransformer("intfloat/e5-large-v2", device=get_device_for_transformer())
 
     with open(INDEX_PATH, "rb") as f:
         data = pickle.load(f)
@@ -131,13 +133,17 @@ def recupera_chunk_simili_faiss(domanda, k=5):
     except ImportError:
         return "[ERRORE] Moduli mancanti."
 
-    INDEX_PATH = os.path.join(os.path.dirname(__file__), "blender_faiss_index.pkl")
+    BASE_DIR = os.path.abspath(os.path.dirname(__file__))  # non salire di livello
+    INDEX_PATH = os.path.join(BASE_DIR, "blender_faiss_index.pkl")
+
     if not os.path.exists(INDEX_PATH):
         return "[ERRORE] Indice FAISS non trovato."
 
     # model = SentenceTransformer("intfloat/multilingual-e5-large")
 
-    model = SentenceTransformer("intfloat/multilingual-e5-large", device=get_device_for_transformer())
+    # model = SentenceTransformer("intfloat/multilingual-e5-large", device=get_device_for_transformer())
+
+    model = SentenceTransformer("intfloat/e5-large-v2", device=get_device_for_transformer())
 
     with open(INDEX_PATH, "rb") as f:
         data = pickle.load(f)
@@ -152,7 +158,8 @@ def recupera_chunk_simili_faiss(domanda, k=5):
     risultati = []
     for idx in faiss_indices[0]:
         testo = texts[idx]
-        fonte = metadatas[idx]["source"]
+        meta = metadatas[idx]
+        fonte = meta.get("source") or f"{meta.get('chapter', '?')} - {meta.get('topic', '?')}"
         preview = testo.strip().replace("\n", " ")[:150]
         print(f" → Chunk FAISS #{idx} [Fonte: {fonte}]: {preview}...")
         risultati.append(f"[Fonte: {fonte}]\n{testo}")
@@ -292,17 +299,44 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
         # history_manager.save()
         chat_history = history_manager.get_conversational_context()
 
+        # if is_question_technical(user_question):
+        #     try:
+        #         blender_docs = recupera_chunk_simili_faiss(user_question)
+        #         print("[DEBUG] Chunk documentazione recuperati.")
+        #     except Exception as e:
+        #         blender_docs = "Documentazione non disponibile."
+        #         print("[ERRORE] Recupero documentazione:", str(e))
+        # else:
+        #     blender_docs = ""
+        #     if user_question.strip():
+        #         print("[DEBUG] RAG disattivato per domanda non tecnica.")
+
         if is_question_technical(user_question):
             try:
                 blender_docs = recupera_chunk_simili_faiss(user_question)
+                if "[ERRORE]" in blender_docs:
+                    risposta = "not present in the documentation"
+                    print("[ERRORE] Documentazione non trovata, risposta forzata.")
+                    history_manager.add("GenAI", risposta)
+                    if BLENDER_ENV:
+                        bpy.app.timers.register(lambda: setattr(props, "genai_response_text", risposta))
+                    else:
+                        props.genai_response_text = risposta
+                    return  # ⛔ Fermati qui
                 print("[DEBUG] Chunk documentazione recuperati.")
             except Exception as e:
-                blender_docs = "Documentazione non disponibile."
-                print("[ERRORE] Recupero documentazione:", str(e))
+                risposta = "not present in the documentation"
+                print(f"[ERRORE] Recupero documentazione fallito: {str(e)}")
+                history_manager.add("GenAI", risposta)
+                if BLENDER_ENV:
+                    bpy.app.timers.register(lambda: setattr(props, "genai_response_text", risposta))
+                else:
+                    props.genai_response_text = risposta
+                return
         else:
             blender_docs = ""
-            if user_question.strip():
-                print("[DEBUG] RAG disattivato per domanda non tecnica.")
+
+        print("[DEBUG] 🔍 Contenuto recuperato dai chunk:\n", blender_docs)
 
         # === PROMPT VISION o RAG ===
         if image_path and os.path.exists(image_path):
@@ -316,20 +350,20 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
                 prompt += f"=== User Question ===\n{user_question}\n"
         else:
             prompt = (
-                "You are a helpful assistant for Blender 4.4 integrated in a modeling environment.\n"
+                "You are a technical assistant for Blender 4.4 integrated in a modeling environment. You have NO access to external knowledge or pretraining. Your entire knowledge is LIMITED to the following documentation excerpts. "
+                "If the answer to the user question is not DIRECTLY and LITERALLY stated in the documentation section below, respond only with:\nnot present in the documentation.\n"
                 "You must analyze each question and act accordingly:\n\n"
                 "1. If the question is related to Blender's functionality (modeling, shading, scripting, etc.), "
                 "you must answer strictly and exclusively using the official Blender 4.4 documentation and the current scene context.\n"
                 "2. If the question is casual, conversational or not technical (e.g., greetings like 'hello', or informal messages), "
                 "respond in a friendly and brief way, without using any documentation.\n"
-                "3. If the answer is not explicitly supported by the documentation, and the question is technical, respond with: 'not present in the documentation'.\n\n"
-                
-                "=== Scene Model Context ===\n"
-                f"{model_context}\n\n"
+            
+                 "=== Scene Model Context ===\n"
+                 f"{model_context}\n\n"
                 "=== Blender 4.4 Official Documentation ===\n"
                 f"{blender_docs}\n\n"
-                "=== Conversation History ===\n"
-                f"{chat_history}\n\n"
+                 "=== Conversation History ===\n"
+                 f"{chat_history}\n\n"
                 "=== User Question ===\n"
                 f"{user_question}\n\n"
                 "Respond **exclusively** in English, regardless of the user's question language. Use a clear and technical tone when the question is technical. Otherwise, be concise and friendly."

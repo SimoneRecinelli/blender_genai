@@ -104,35 +104,43 @@ def start_flask_server():
         last_response["text"] = ""
         last_response["ready"] = False
 
-        def update_callback(props):
-            print("[Flask] ✅ Risposta generata da Ollama!")
-            last_response["text"] = props.genai_response_text
-            last_response["ready"] = True
-
         def run_in_main_thread():
             try:
                 props = bpy.context.scene.genai_props
                 props.genai_question = domanda
                 props.genai_image_path = image_path
-                # selection_now = [obj for obj in bpy.context.view_layer.objects if obj.select_get()]
-                # selected_objects = selection_now.copy()
-                # query_ollama_with_docs_async(domanda, props, selected_objects, lambda: update_callback(props))
+
                 selection_now = [obj for obj in bpy.context.view_layer.objects if obj.select_get()]
                 selected_objects = selection_now.copy()
 
-                # Selezione vuota e nessuna immagine → mostra messaggio e NON manda la query
                 if not selected_objects and not image_path:
                     props.genai_response_text = "No object is currently selected in the scene. Please select one or more objects or upload an image."
                     last_response["text"] = props.genai_response_text
                     last_response["ready"] = True
                     return
 
-                # ✅ Procedi: passiamo anche selected_objects vuoto, se c'è immagine
-                query_ollama_with_docs_async(domanda, props, selected_objects, lambda: update_callback(props))
+                def update_callback(props):
+                    print("[Flask] ✅ Risposta generata da Ollama!")
+                    last_response["text"] = props.genai_response_text
+                    last_response["ready"] = True
 
+                # ⛑️ Avvolgi in try/except anche il thread async
+                try:
+                    query_ollama_with_docs_async(domanda, props, selected_objects, lambda: update_callback(props))
+                except Exception as e:
+                    print("[ERRORE] Query async fallita:", str(e))
+                    props.genai_response_text = f"[Errore interno] {str(e)}"
+                    last_response["text"] = props.genai_response_text
+                    last_response["ready"] = True
 
             except Exception as e:
                 print("[ERRORE] Nel thread principale:", str(e))
+                if "props" in locals():
+                    props.genai_response_text = f"[Errore interno] {str(e)}"
+                    last_response["text"] = props.genai_response_text
+                else:
+                    last_response["text"] = f"[Errore interno] {str(e)}"
+                last_response["ready"] = True
 
         bpy.app.timers.register(run_in_main_thread)
         return jsonify({"status": "Domanda ricevuta da Blender"})

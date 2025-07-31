@@ -27,6 +27,21 @@ INDEX_PATH = os.path.join(BASE_DIR, "blender_faiss_index.pkl")
 EMBEDDING_MODEL = "intfloat/e5-large-v2"
 QUERY = "How do I apply a bump map in Blender?"
 
+from langchain.prompts import PromptTemplate
+
+prompt_template = PromptTemplate.from_template(
+    """Usa solo le informazioni contenute nei documenti forniti per rispondere alla domanda dell'utente.
+Se non trovi la risposta nei documenti, rispondi onestamente che non è presente.
+
+DOMANDA: {question}
+
+DOCUMENTI:
+{context}
+
+RISPOSTA (dettagliata, chiara e con riferimenti se presenti):"""
+)
+
+
 # === 1. Caricamento JSON ===
 print("[INFO] Caricamento chunk da JSON...")
 with open(JSON_PATH, "r", encoding="utf-8") as f:
@@ -46,7 +61,7 @@ embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
 # === 4. FAISS ===
 print("[INFO] Indicizzazione FAISS...")
 db = FAISS.from_documents(docs, embeddings)
-retriever = db.as_retriever(search_kwargs={"k": 6})
+retriever = db.as_retriever(search_kwargs={"k": 10})
 
 # === 5. Salvataggio su disco ===
 print(f"[INFO] Salvataggio indice FAISS in: {INDEX_PATH}")
@@ -63,7 +78,13 @@ print("[INFO] Avvio LLM...")
 llm = Ollama(model="llama3:instruct", temperature=0)
 
 # === 7. RetrievalQA ===
-qa_chain = RetrievalQA.from_chain_type(llm=llm, retriever=retriever, return_source_documents=True)
+qa_chain = RetrievalQA.from_chain_type(
+    llm=llm,
+    retriever=retriever,
+    return_source_documents=True,
+    chain_type_kwargs={"prompt": prompt_template}
+)
+
 
 # === 8. Esecuzione ===
 print(f"\nDomanda: {QUERY}\n")
