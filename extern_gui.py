@@ -779,8 +779,32 @@ class GenAIClient(QWidget):
             return
 
         try:
-            # 🔽 Recupera dinamicamente il path dell’interprete Python di Blender
-            blender_python = sys.executable
+            # === 1. Tenta con interprete di sistema se disponibile
+            def trova_interprete_compatibile():
+                possibili = [
+                    "/opt/anaconda3/bin/python3",  # Anaconda macOS
+                    "/usr/local/bin/python3",  # installazione homebrew
+                    "/usr/bin/python3",  # fallback Linux
+                    shutil.which("python3")  # sistema
+                ]
+                for p in possibili:
+                    if p and os.path.exists(p):
+                        try:
+                            # Prova a importare Flask e Whisper
+                            test = subprocess.run(
+                                [p, "-c", "import flask, whisper, speech_recognition"],
+                                stdout=subprocess.DEVNULL,
+                                stderr=subprocess.DEVNULL
+                            )
+                            if test.returncode == 0:
+                                return p
+                        except Exception:
+                            continue
+                return sys.executable  # fallback a Blender
+
+            import shutil
+            blender_python = trova_interprete_compatibile()
+            print("[DEBUG] Interprete scelto:", blender_python)
 
             # 🔽 Aggiunge 'scripts/modules' al PYTHONPATH in modo che il server lo erediti
             env = os.environ.copy()
@@ -798,12 +822,6 @@ class GenAIClient(QWidget):
                     env["PYTHONPATH"] = f"{modules_dir}:{existing_path}"
 
             script_path = os.path.join(BASE_DIR, "speech_server.py")
-            # self.speech_server_process = subprocess.Popen(
-            #     [blender_python, script_path],
-            #     stdout=subprocess.DEVNULL,
-            #     stderr=subprocess.DEVNULL,
-            #     env=env  # ✅ passa le variabili di ambiente aggiornate
-            # )
 
             print("[DEBUG] Avvio script:", script_path)
             print("[DEBUG] Esiste lo script?", os.path.exists(script_path))

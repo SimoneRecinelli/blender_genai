@@ -50,7 +50,8 @@ def install_dependencies_if_needed():
         ("sounddevice", "sounddevice"),
         ("scipy", "scipy"),
         ("openai-whisper", "whisper"),
-        ("torch", "torch")
+        ("torch", "torch"),
+        ("numpy==1.26.4", "numpy"),
     ]
 
     if platform.system() == "Darwin":
@@ -73,7 +74,40 @@ def install_dependencies_if_needed():
         else:
             print(f"[SETUP] ✓ {pip_name} già presente")
 
+def install_ffmpeg_if_needed():
+    import shutil
+    if shutil.which("ffmpeg") is not None:
+        print("[SETUP] ✓ ffmpeg già presente")
+        return
+
+    print("[SETUP] ❌ ffmpeg non trovato. Provo a installarlo...")
+
+    if platform.system() == "Darwin":
+        # Richiede Homebrew
+        if shutil.which("brew") is None:
+            print("[ERRORE] Homebrew non installato. Installa prima brew da https://brew.sh/")
+            return
+        try:
+            subprocess.check_call(["brew", "install", "ffmpeg"])
+            print("[SETUP] ✅ ffmpeg installato con brew")
+        except subprocess.CalledProcessError as e:
+            print(f"[ERRORE] Installazione ffmpeg fallita: {e}")
+
+    elif platform.system() == "Linux":
+        try:
+            subprocess.check_call(["sudo", "apt-get", "update"])
+            subprocess.check_call(["sudo", "apt-get", "install", "-y", "ffmpeg"])
+            print("[SETUP] ✅ ffmpeg installato con apt")
+        except subprocess.CalledProcessError as e:
+            print(f"[ERRORE] Installazione ffmpeg fallita: {e}")
+
+    else:
+        print("[ERRORE] Sistema operativo non supportato per l’installazione automatica di ffmpeg.")
+
+
 install_dependencies_if_needed()
+install_ffmpeg_if_needed()
+
 
 # === 4. Flask server: Lazy init ===
 _flask_server_started = False
