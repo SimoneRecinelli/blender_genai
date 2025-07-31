@@ -51,8 +51,9 @@ with open(JSON_PATH, "r", encoding="utf-8") as f:
 print("[INFO] Creazione Document objects...")
 docs = []
 for entry in raw_chunks:
-    metadata = {k: v for k, v in entry.items() if k != "content"}
-    docs.append(Document(page_content=entry["content"], metadata=metadata))
+    metadata = {k: v for k, v in entry.items() if k != "text"}
+    docs.append(Document(page_content=entry["text"], metadata=metadata))
+
 
 # === 3. Embedding ===
 print(f"[INFO] Calcolo embeddings con: {EMBEDDING_MODEL}")
@@ -61,7 +62,7 @@ embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
 # === 4. FAISS ===
 print("[INFO] Indicizzazione FAISS...")
 db = FAISS.from_documents(docs, embeddings)
-retriever = db.as_retriever(search_kwargs={"k": 10})
+retriever = db.as_retriever(search_kwargs={"k": 15})
 
 # === 5. Salvataggio su disco ===
 print(f"[INFO] Salvataggio indice FAISS in: {INDEX_PATH}")
