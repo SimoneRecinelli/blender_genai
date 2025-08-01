@@ -15,6 +15,33 @@ bl_info = {
 }
 
 
+import subprocess
+import os
+
+def start_speech_server():
+    server_path = os.path.join(os.path.dirname(__file__), "speech_server.py")
+
+    # 🔎 Verifica se è già attivo su porta 5056
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        if s.connect_ex(("127.0.0.1", 5056)) == 0:
+            print("[INFO] speech_server già attivo.")
+            return
+    except Exception as e:
+        print(f"[DEBUG] Errore controllo porta 5056: {e}")
+    finally:
+        s.close()
+
+    # 🟢 Avvia lo script in background
+    try:
+        subprocess.Popen(["python3", server_path],
+                         stdout=subprocess.DEVNULL,
+                         stderr=subprocess.DEVNULL)
+        print("[INFO] speech_server avviato.")
+    except Exception as e:
+        print(f"[ERRORE] Avvio speech_server: {e}")
+
+
 def shutdown_gui():
     import socket
     try:
@@ -50,6 +77,8 @@ def register():
     except Exception as e:
         print("[ERRORE] Avvio server Flask:", e)
 
+    # ✅ Avvio server vocale
+    start_speech_server()
 
     bpy.app.timers.register(monitor_blender_shutdown, persistent=True)
 

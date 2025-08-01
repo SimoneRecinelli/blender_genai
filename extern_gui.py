@@ -288,7 +288,7 @@ class GenAIClient(QWidget):
         self.raise_mac_window()
 
         self.speech_server_process = None
-        self.avvia_speech_server()
+
         print("[DEBUG] Metodo avvia_speech_server() chiamato")
 
         self.registrazione_attiva = False  # stato toggle microfono
