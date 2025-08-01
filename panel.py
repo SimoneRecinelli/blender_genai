@@ -34,7 +34,8 @@ class GENAI_PT_Panel(bpy.types.Panel):
         layout = self.layout
         layout.operator("genai.show_external_chat", text="Apri Chat Esterna 🖥️", icon="PLUGIN")
         layout.separator()
-        layout.operator("genai.run_rag", text="Esegui RAG 📄", icon="FILE_SCRIPT")
+        layout.operator("genai.run_rag", text="Esegui RAG da JSON 📄", icon="FILE_SCRIPT")
+        layout.operator("genai.run_rag_pdf", text="Esegui RAG da PDF 📄", icon="FILE_SCRIPT")
 
 class GENAI_OT_RunRAG(bpy.types.Operator):
     bl_idname = "genai.run_rag"
@@ -42,11 +43,24 @@ class GENAI_OT_RunRAG(bpy.types.Operator):
     bl_description = "Esegui il sistema RAG per interrogare la documentazione di Blender"
 
     def execute(self, context):
-        # script_path = os.path.join(os.path.dirname(__file__), "langchain_rag_blender_pdf.py")
         script_path = os.path.join(os.path.dirname(__file__), "rag_from_json.py")
         try:
             subprocess.run([sys.executable, script_path], check=True)
-            self.report({'INFO'}, "RAG eseguito con successo.")
+            self.report({'INFO'}, "RAG da JSON eseguito con successo.")
+        except Exception as e:
+            self.report({'ERROR'}, f"Errore durante l'esecuzione RAG: {e}")
+        return {'FINISHED'}
+
+class GENAI_OT_RunRAGpdf(bpy.types.Operator):
+    bl_idname = "genai.run_rag_pdf"
+    bl_label = "Esegui RAG"
+    bl_description = "Esegui il sistema RAG per interrogare la documentazione di Blender"
+
+    def execute(self, context):
+        script_path = os.path.join(os.path.dirname(__file__), "langchain_rag_blender_pdf.py")
+        try:
+            subprocess.run([sys.executable, script_path], check=True)
+            self.report({'INFO'}, "RAG da PDF eseguito con successo.")
         except Exception as e:
             self.report({'ERROR'}, f"Errore durante l'esecuzione RAG: {e}")
         return {'FINISHED'}
@@ -58,6 +72,7 @@ classes = [
     GenAIProperties,
     GENAI_PT_Panel,
     GENAI_OT_RunRAG,
+    GENAI_OT_RunRAGpdf,
 ]
 
 def register():
