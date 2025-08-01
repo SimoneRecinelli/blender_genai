@@ -4,6 +4,7 @@ import subprocess
 import platform
 import threading
 import importlib.util
+from .utils import is_question_technical
 
 # === 1. Aggiungi la cartella 'scripts/modules' di Blender a sys.path ===
 try:
@@ -168,11 +169,13 @@ def start_flask_server():
                 selection_now = [obj for obj in bpy.context.view_layer.objects if obj.select_get()]
                 selected_objects = selection_now.copy()
 
-                if not selected_objects and not image_path:
-                    props.genai_response_text = "No object is currently selected in the scene. Please select one or more objects or upload an image."
-                    last_response["text"] = props.genai_response_text
-                    last_response["ready"] = True
-                    return
+                # Blocca solo se la domanda è tecnica e mancano selezione + immagine
+                if is_question_technical(domanda):
+                    if not selected_objects and not image_path:
+                        props.genai_response_text = "No object is currently selected in the scene. Please select one or more objects or upload an image."
+                        last_response["text"] = props.genai_response_text
+                        last_response["ready"] = True
+                        return
 
                 def update_callback(props):
                     print("[Flask] ✅ Risposta generata da Ollama!")
