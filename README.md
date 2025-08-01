@@ -16,7 +16,7 @@
   <p>
     Questo progetto propone un sistema di supporto intelligente per Blender, basato su modelli GenAI per assistere nella modellazione 3D in modo contestuale e multimodale.
 
-Sviluppato per il corso di **Computer Graphics & Multimedia** (A.A. 2024/2025) presso l’**Università Politecnica delle Marche**, tenuto dal **Prof. Primo Zingaretti**, coadiuvato dai tutor **Emanuele Balloni** e **Lorenzo Stacchio**.
+Sviluppato per il corso di **Computer Graphics & Multimedia** (A.A. 2024/2025) presso l’**Università Politecnica delle Marche**, tenuto dal **Prof. Primo Zingaretti**, coadiuvato dai **Dott. Emanuele Balloni** e [**Dott. Lorenzo Stacchio**](https://github.com/lorenzo-stacchio).
 
 Realizzato da **Simone Recinelli**, **Diego Santarelli** e **Andrea Marini**.
   </p>
