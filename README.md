@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="icons/logo.png" alt="Blender GenAI Logo" width="240"/>
+  <img src="icons/genai_icon.png" alt="Blender GenAI Logo" width="240"/>
 
   <p>
     <img src="https://forthebadge.com/images/badges/built-with-love.svg"/>
