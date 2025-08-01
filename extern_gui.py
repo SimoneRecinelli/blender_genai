@@ -528,6 +528,8 @@ class GenAIClient(QWidget):
 
     def invia_domanda(self):
         domanda = self.textbox.toPlainText().strip()
+        if domanda:
+            domanda = domanda[0].upper() + domanda[1:]
 
         # Blocco se non c'è né testo né immagine
         if not domanda and not self.image_path:

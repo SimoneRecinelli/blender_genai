@@ -30,7 +30,7 @@ QUERY = "How do I apply a bump map in Blender?"
 from langchain.prompts import PromptTemplate
 
 prompt_template = PromptTemplate.from_template(
-    """Usa solo le informazioni contenute nei documenti forniti per rispondere alla domanda dell'utente.
+"""Usa solo le informazioni contenute nei documenti forniti per rispondere alla domanda dell'utente.
 Se non trovi la risposta nei documenti, rispondi onestamente che non è presente.
 
 DOMANDA: {question}

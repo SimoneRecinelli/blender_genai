@@ -76,14 +76,17 @@ def install_dependencies_if_needed():
 
 def install_ffmpeg_if_needed():
     import shutil
+
     if shutil.which("ffmpeg") is not None:
         print("[SETUP] ✓ ffmpeg già presente")
         return
 
     print("[SETUP] ❌ ffmpeg non trovato. Provo a installarlo...")
 
-    if platform.system() == "Darwin":
-        # Richiede Homebrew
+    system = platform.system()
+
+    if system == "Darwin":
+        # macOS – usa Homebrew
         if shutil.which("brew") is None:
             print("[ERRORE] Homebrew non installato. Installa prima brew da https://brew.sh/")
             return
@@ -93,7 +96,7 @@ def install_ffmpeg_if_needed():
         except subprocess.CalledProcessError as e:
             print(f"[ERRORE] Installazione ffmpeg fallita: {e}")
 
-    elif platform.system() == "Linux":
+    elif system == "Linux":
         try:
             subprocess.check_call(["sudo", "apt-get", "update"])
             subprocess.check_call(["sudo", "apt-get", "install", "-y", "ffmpeg"])
@@ -101,13 +104,31 @@ def install_ffmpeg_if_needed():
         except subprocess.CalledProcessError as e:
             print(f"[ERRORE] Installazione ffmpeg fallita: {e}")
 
+    elif system == "Windows":
+        # Windows – usa Chocolatey
+        try:
+            if shutil.which("choco") is None:
+                print("[SETUP] ❌ Chocolatey non trovato. Provo a installarlo...")
+                subprocess.check_call([
+                    "powershell",
+                    "Set-ExecutionPolicy Bypass -Scope Process -Force; "
+                    "[System.Net.ServicePointManager]::SecurityProtocol = "
+                    "[System.Net.ServicePointManager]::SecurityProtocol -bor 3072; "
+                    "iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))"
+                ])
+                print("[SETUP] ✅ Chocolatey installato.")
+
+            subprocess.check_call(["choco", "install", "-y", "ffmpeg"])
+            print("[SETUP] ✅ ffmpeg installato con Chocolatey.")
+
+        except subprocess.CalledProcessError as e:
+            print(f"[ERRORE] Installazione ffmpeg fallita: {e}")
+
     else:
         print("[ERRORE] Sistema operativo non supportato per l’installazione automatica di ffmpeg.")
 
-
 install_dependencies_if_needed()
 install_ffmpeg_if_needed()
-
 
 # === 4. Flask server: Lazy init ===
 _flask_server_started = False
