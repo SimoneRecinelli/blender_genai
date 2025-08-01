@@ -339,6 +339,29 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
         print("[DEBUG] 🔍 Contenuto recuperato dai chunk:\n", blender_docs)
 
         # === PROMPT VISION o RAG ===
+        def build_prompt(user_question: str, scene_context: str, blender_chunks: list[str], chat_history: str) -> str:
+            chunked_context = "\n\n".join(f"[Source]\n{chunk.strip()}" for chunk in blender_chunks if chunk.strip())
+            return (
+                "You are a technical assistant for Blender 4.4 integrated in a modeling environment. "
+                "You have NO access to external knowledge or pretraining. Your entire knowledge is LIMITED to the following documentation excerpts. "
+                "If the answer to the user question is not DIRECTLY and LITERALLY stated in the documentation section below, respond only with:\n"
+                "not present in the documentation.\n\n"
+                "You must analyze each question and act accordingly:\n\n"
+                "1. If the question is related to Blender's functionality (modeling, shading, scripting, etc.), "
+                "you must answer strictly and exclusively using the official Blender 4.4 documentation and the current scene context.\n"
+                "2. If the question is casual, conversational or not technical (e.g., greetings like 'hello', or informal messages), "
+                "respond in a friendly and brief way, without using any documentation.\n\n"
+                "=== Scene Model Context ===\n"
+                f"{scene_context}\n\n"
+                "=== Blender 4.4 Official Documentation ===\n"
+                f"{chunked_context}\n\n"
+                "=== Conversation History ===\n"
+                f"{chat_history}\n\n"
+                "=== User Question ===\n"
+                f"{user_question}\n\n"
+                "Respond **exclusively** in English, regardless of the user's question language. Use a clear and technical tone when the question is technical. Otherwise, be concise and friendly."
+            )
+
         if image_path and os.path.exists(image_path):
             prompt = (
                 "You are a visual assistant integrated into Blender.\n"
@@ -349,26 +372,8 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
             if user_question.strip():
                 prompt += f"=== User Question ===\n{user_question}\n"
         else:
-            prompt = (
-                "You are a technical assistant for Blender 4.4 integrated in a modeling environment. You have NO access to external knowledge or pretraining. Your entire knowledge is LIMITED to the following documentation excerpts. "
-                "If the answer to the user question is not DIRECTLY and LITERALLY stated in the documentation section below, respond only with:\nnot present in the documentation.\n"
-                "You must analyze each question and act accordingly:\n\n"
-                "1. If the question is related to Blender's functionality (modeling, shading, scripting, etc.), "
-                "you must answer strictly and exclusively using the official Blender 4.4 documentation and the current scene context.\n"
-                "2. If the question is casual, conversational or not technical (e.g., greetings like 'hello', or informal messages), "
-                "respond in a friendly and brief way, without using any documentation.\n"
-            
-                 "=== Scene Model Context ===\n"
-                 f"{model_context}\n\n"
-                "=== Blender 4.4 Official Documentation ===\n"
-                f"{blender_docs}\n\n"
-                 "=== Conversation History ===\n"
-                 f"{chat_history}\n\n"
-                "=== User Question ===\n"
-                f"{user_question}\n\n"
-                "Respond **exclusively** in English, regardless of the user's question language. Use a clear and technical tone when the question is technical. Otherwise, be concise and friendly."
-                "Otherwise, be concise and friendly."
-            )
+            chunks = blender_docs.strip().split("\n\n") if blender_docs.strip() else []
+            prompt = build_prompt(user_question, model_context, chunks, chat_history)
 
         if image_path:
             print("[DEBUG] ⬆️ Invio immagine a Ollama")
