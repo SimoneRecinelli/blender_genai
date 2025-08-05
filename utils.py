@@ -126,7 +126,7 @@ def query_rag(question, top_k=5):
         })
     return results
 
-def recupera_chunk_simili_faiss(domanda, k=5):
+def recupera_chunk_simili_faiss(domanda, k=15):
     try:
         import faiss
         from sentence_transformers import SentenceTransformer
@@ -165,6 +165,10 @@ def recupera_chunk_simili_faiss(domanda, k=5):
         risultati.append(f"[Fonte: {fonte}]\n{testo}")
 
     return "\n\n".join(risultati)
+
+    if not risultati:
+        return "[ERRORE] Nessun risultato trovato nei chunk."
+
 
 # === CONTESTO MESH BLENDER ===
 
@@ -284,11 +288,7 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
         print("[DEBUG] Esecuzione async query_ollama_with_docs")
 
         image_path = props.genai_image_path if props and props.genai_image_path else None
-        # model_context = get_model_context(selected_objects)
-
-        # ✅ SELEZIONE È GIÀ PASSATA DAL THREAD PRINCIPALE
         current_selection = selected_objects
-
         model_context = get_model_context(current_selection)
 
         history_manager = ChatHistoryManager()
@@ -296,72 +296,46 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
 
         if user_question.strip():
             history_manager.add("USER", user_question)
-        # history_manager.save()
-        chat_history = history_manager.get_conversational_context()
 
-        # if is_question_technical(user_question):
-        #     try:
-        #         blender_docs = recupera_chunk_simili_faiss(user_question)
-        #         print("[DEBUG] Chunk documentazione recuperati.")
-        #     except Exception as e:
-        #         blender_docs = "Documentazione non disponibile."
-        #         print("[ERRORE] Recupero documentazione:", str(e))
-        # else:
-        #     blender_docs = ""
-        #     if user_question.strip():
-        #         print("[DEBUG] RAG disattivato per domanda non tecnica.")
+        chat_history = history_manager.get_conversational_context()
+        chunks = []  # Inizializza i chunk documentazione
 
         if is_question_technical(user_question):
             try:
-                blender_docs = recupera_chunk_simili_faiss(user_question)
-                if "[ERRORE]" in blender_docs:
-                    risposta = "not present in the documentation"
-                    print("[ERRORE] Documentazione non trovata, risposta forzata.")
-                    history_manager.add("GenAI", risposta)
-                    if BLENDER_ENV:
-                        bpy.app.timers.register(lambda: setattr(props, "genai_response_text", risposta))
-                    else:
-                        props.genai_response_text = risposta
-                    return  # ⛔ Fermati qui
-                print("[DEBUG] Chunk documentazione recuperati.")
+                print(f"[DEBUG] Domanda tecnica rilevata: {user_question}")
+                blender_docs = recupera_chunk_simili_faiss(user_question, k=10)
+                chunks = blender_docs.strip().split("\n\n") if blender_docs.strip() else []
+
+                if not chunks:
+                    print("[WARNING] Nessun chunk trovato — prompt senza documentazione.")
             except Exception as e:
-                risposta = "not present in the documentation"
-                print(f"[ERRORE] Recupero documentazione fallito: {str(e)}")
-                history_manager.add("GenAI", risposta)
-                if BLENDER_ENV:
-                    bpy.app.timers.register(lambda: setattr(props, "genai_response_text", risposta))
-                else:
-                    props.genai_response_text = risposta
-                return
+                print(f"[ERROR] Documentation retrieval failed: {str(e)}")
         else:
-            blender_docs = ""
+            print("[DEBUG] Domanda non tecnica — nessun chunk documentazione usato.")
 
-        print("[DEBUG] 🔍 Contenuto recuperato dai chunk:\n", blender_docs)
+        print("[DEBUG] 🔍 Numero chunk recuperati:", len(chunks))
 
-        # === PROMPT VISION o RAG ===
+        # === PROMPT BUILDER ===
         def build_prompt(user_question: str, scene_context: str, blender_chunks: list[str], chat_history: str) -> str:
             chunked_context = "\n\n".join(f"[Source]\n{chunk.strip()}" for chunk in blender_chunks if chunk.strip())
             return (
-                "You are a technical assistant for Blender 4.4 integrated in a modeling environment. "
-                "You have NO access to external knowledge or pretraining. Your entire knowledge is LIMITED to the following documentation excerpts. "
-                "If the answer to the user question is not DIRECTLY and LITERALLY stated in the documentation section below, respond only with:\n"
-                "not present in the documentation.\n\n"
-                "You must analyze each question and act accordingly:\n\n"
-                "1. If the question is related to Blender's functionality (modeling, shading, scripting, etc.), "
-                "you must answer strictly and exclusively using the official Blender 4.4 documentation and the current scene context.\n"
-                "2. If the question is casual, conversational or not technical (e.g., greetings like 'hello', or informal messages), "
-                "respond in a friendly and brief way, without using any documentation.\n\n"
+                "You are a strict technical assistant for Blender 4.4. "
+                "Your ONLY allowed knowledge is what is explicitly stated in the documentation below.\n\n"
+                "🚫 Do NOT use general knowledge, assumptions, or inference.\n"
+                "✅ ONLY use the documentation provided below. If the answer is not found LITERALLY in the documentation, you must reply:\n"
+                "\"not present in the documentation\"\n\n"
                 "=== Scene Model Context ===\n"
                 f"{scene_context}\n\n"
-                "=== Blender 4.4 Official Documentation ===\n"
+                "=== Blender 4.4 Official Documentation (JSON) ===\n"
                 f"{chunked_context}\n\n"
                 "=== Conversation History ===\n"
                 f"{chat_history}\n\n"
                 "=== User Question ===\n"
                 f"{user_question}\n\n"
-                "Respond **exclusively** in English, regardless of the user's question language. Use a clear and technical tone when the question is technical. Otherwise, be concise and friendly."
+                "Respond only in English. Keep a professional, technical tone. Answer only if the documentation allows it."
             )
 
+        # === COSTRUISCI PROMPT ===
         if image_path and os.path.exists(image_path):
             prompt = (
                 "You are a visual assistant integrated into Blender.\n"
@@ -372,8 +346,14 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
             if user_question.strip():
                 prompt += f"=== User Question ===\n{user_question}\n"
         else:
-            chunks = blender_docs.strip().split("\n\n") if blender_docs.strip() else []
-            prompt = build_prompt(user_question, model_context, chunks, chat_history)
+            prompt = (
+                "You are a friendly assistant integrated in Blender.\n"
+                "A user sent the following casual or non-technical message. "
+                "Respond briefly and kindly, and DO NOT refer to Blender’s documentation or scene.\n\n"
+                f"=== User Message ===\n{user_question}"
+            )
+
+        print("\n[DEBUG] PROMPT COMPLETO INVIATO A OLLAMA:\n", prompt)
 
         if image_path:
             print("[DEBUG] ⬆️ Invio immagine a Ollama")
