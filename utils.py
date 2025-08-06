@@ -288,6 +288,7 @@ def send_vision_prompt_to_ollama(prompt: str, image_path: str = None, model: str
 # === QUERY OLLAMA CON DOC + IMMAGINE (ASYNC) ===
 
 def query_ollama_with_docs_async(user_question, props, selected_objects, update_callback=None):
+
     def worker():
         print("⭐️⭐️ ------------------ Esecuzione query ------------------ ⭐️⭐")
 
@@ -309,17 +310,23 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
             "what is selected",
             "describe the scene selected",
             "describe the scene",
+            "descrivimi la scena",
+            "descrivimi l'oggetto selezionato",
         }
 
-        if is_describe_selection and not current_selection:
-            print("[DEBUG] Nessun oggetto selezionato → risposta manuale.")
-            risposta = "No object is currently selected in the scene."
+        if is_describe_selection:
+            if not current_selection:
+                print("[DEBUG] Nessun oggetto selezionato → risposta manuale.")
+                risposta = "No object is currently selected in the scene."
+            else:
+                print("[DEBUG] Descrizione completa della scena richiesta.")
+                risposta = get_model_context(current_selection)
 
             def update():
                 props.genai_response_text = risposta
                 history_manager.add("GenAI", risposta)
                 if update_callback:
-                    update()
+                    update_callback()
 
             if BLENDER_ENV:
                 bpy.app.timers.register(update)
