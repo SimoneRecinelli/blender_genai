@@ -296,7 +296,7 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
             "describe object",
             "what is selected",
             "describe the scene selected",
-            "describe the scene"
+            "describe the scene",
         }
 
         if is_describe_selection and not current_selection:
