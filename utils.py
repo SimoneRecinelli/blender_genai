@@ -31,15 +31,13 @@ def get_device_for_transformer():
 
 def is_question_technical(question: str) -> bool:
     question = question.strip().lower()
-    banal = {"ciao", "hello", "hey", "salve", "grazie", "ok", "come va", "how are you", "buongiorno", "good morning",
-             "buonasera", "good evening"}
+    banal = {"hello", "hey", "ok", "how are you", "good morning", "good evening"}
     if question in banal:
         return False
     if len(question.split()) < 3:
         return False
     return True
 
-# === CRONOLOGIA CHAT IN MEMORIA E SU DISCO ===
 
 # === GESTIONE CRONOLOGIA CHAT CON CLASSE ===
 
@@ -57,7 +55,7 @@ class ChatHistoryManager:
             try:
                 with open(self._path, "r", encoding="utf-8") as f:
                     self._history = json.load(f)
-                    print(f"[DEBUG] Chat caricata da: {self._path}")
+                    # print(f"[DEBUG] Chat caricata da: {self._path}")
             except Exception as e:
                 print(f"[ERRORE] Caricamento chat: {e}")
         else:
@@ -68,7 +66,7 @@ class ChatHistoryManager:
             with open(self._path, "w", encoding="utf-8") as f:
                 json.dump(self._history, f, ensure_ascii=False, indent=2)
             os.chmod(self._path, 0o644)  # ✅ Assicura lettura/scrittura
-            print(f"[DEBUG] Chat salvata in: {self._path}")
+            # print(f"[DEBUG] Chat salvata in: {self._path}")
         except Exception as e:
             print(f"[ERRORE] Salvataggio chat: {e}")
 
@@ -165,9 +163,6 @@ def recupera_chunk_simili_faiss(domanda, k=15):
         risultati.append(f"[Fonte: {fonte}]\n{testo}")
 
     return "\n\n".join(risultati)
-
-    if not risultati:
-        return "[ERRORE] Nessun risultato trovato nei chunk."
 
 
 # === CONTESTO MESH BLENDER ===
@@ -285,7 +280,7 @@ def send_vision_prompt_to_ollama(prompt: str, image_path: str = None, model: str
 
 def query_ollama_with_docs_async(user_question, props, selected_objects, update_callback=None):
     def worker():
-        print("[DEBUG] Esecuzione async query_ollama_with_docs")
+        print("⭐️⭐️ ------------------ Esecuzione query ------------------ ⭐️⭐")
 
         image_path = props.genai_image_path if props and props.genai_image_path else None
         current_selection = selected_objects
@@ -346,12 +341,7 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
             if user_question.strip():
                 prompt += f"=== User Question ===\n{user_question}\n"
         else:
-            prompt = (
-                "You are a friendly assistant integrated in Blender.\n"
-                "A user sent the following casual or non-technical message. "
-                "Respond briefly and kindly, and DO NOT refer to Blender’s documentation or scene.\n\n"
-                f"=== User Message ===\n{user_question}"
-            )
+            prompt = build_prompt(user_question, model_context, chunks, chat_history)
 
         print("\n[DEBUG] PROMPT COMPLETO INVIATO A OLLAMA:\n", prompt)
 
@@ -363,6 +353,8 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
             print("[DEBUG] 🚫 Nessuna immagine fornita (image_path=None)")
 
         risposta = send_vision_prompt_to_ollama(prompt, image_path)
+
+        print("\n[DEBUG] ✅ Risposta:\n", risposta)
 
         def update():
             props.genai_response_text = risposta
