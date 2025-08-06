@@ -307,9 +307,22 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
             "describe the selected object",
             "describe selected object",
             "describe object",
+            "describe this object",
             "what is selected",
-            "describe the scene selected",
+            "what object is selected",
+            "show selected object details",
+            "give me details about the selected object",
+            "describe the current selection",
+            "describe selection",
+            "what's selected",
+
             "describe the scene",
+            "describe the scene selected",
+            "describe current scene",
+            "give me scene details",
+            "what's in the scene",
+            "what objects are in the scene",
+            "show scene summary",
             "descrivimi la scena",
             "descrivimi l'oggetto selezionato",
         }
@@ -355,10 +368,13 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
         # === PROMPT BUILDER ===
         def build_prompt(user_question: str, scene_context: str, doc_text: str, chat_history: str) -> str:
             return (
-                "You are a strict technical assistant for Blender 4.4. "
+                "You are a strict technical assistant for Blender 4.4.\n"
                 "Your ONLY allowed knowledge is what is explicitly stated in the documentation below.\n\n"
-                "🚫 Do NOT use general knowledge, assumptions, or inference.\n"
-                "✅ ONLY use the documentation provided below. If the answer is not found LITERALLY in the documentation, you must reply:\n"
+                "🚫 Do NOT use general knowledge or external assumptions.\n"
+                "✅ You MUST base your answer exclusively on the documentation provided.\n"
+                "💡 If the documentation contains relevant explanations, instructions, keybindings, or descriptions "
+                "(even if scattered across different sections), you MUST synthesize and integrate them to answer the question.\n"
+                "⚠️ Only if the documentation is completely unrelated or no useful information is present, reply strictly:\n"
                 "\"This information is not explicitly documented in the official Blender 4.4 documentation.\"\n\n"
                 "=== Scene Model Context ===\n"
                 f"{scene_context}\n\n"

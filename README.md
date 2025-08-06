@@ -133,17 +133,25 @@ le dipendenze vengono installate **automaticamente all’avvio dell’addon** tr
 ~/Library/Application Support/Blender/4.4/scripts/modules/
 ```
 
-Dipendenze incluse:
+Dipendenze incluse (installate automaticamente all'avvio):
 - [Flask](https://flask.palletsprojects.com/)
 - [FAISS](https://github.com/facebookresearch/faiss)
 - [sentence-transformers](https://www.sbert.net/)
-- [langchain-core](https://docs.langchain.com/docs/components/langchain-core) + [langchain-community](https://github.com/langchain-ai/langchain)
-- [PyMuPDF](https://pymupdf.readthedocs.io/)
+- [LangChain](https://www.langchain.com/) core e moduli community
+- [PyMuPDF (fitz)](https://pymupdf.readthedocs.io/)
 - [PyQt5](https://riverbankcomputing.com/software/pyqt/)
 - [psutil](https://psutil.readthedocs.io/)
 - [requests](https://requests.readthedocs.io/)
+- [pyttsx3](https://pypi.org/project/pyttsx3/) – sintesi vocale TTS
+- [SpeechRecognition](https://pypi.org/project/SpeechRecognition/) – dettatura vocale
+- [sounddevice](https://pypi.org/project/sounddevice/) – input microfono
+- [openai-whisper](https://github.com/openai/whisper) – trascrizione audio
+- [torch](https://pytorch.org/) – backend per Whisper
+- [scipy](https://www.scipy.org/) – supporto audio per Whisper
+- [numpy](https://numpy.org/) – libreria numerica
+- [regex](https://pypi.org/project/regex/) – parsing testuale avanzato
 - [pyobjc](https://pyobjc.readthedocs.io/en/latest/) *(macOS only)*
-
+- **ffmpeg** *(eseguibile di sistema, installato automaticamente se assente)*
 
 ### 📦 Clonare il repository
 

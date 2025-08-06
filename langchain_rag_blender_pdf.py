@@ -28,26 +28,26 @@ EMBEDDING_MODEL = "intfloat/e5-large-v2"
 QUERY = "How can you use the geometry proximity node in Blender?"
 
 # === 1. Caricamento PDF ===
-print("[INFO] Caricamento PDF...")
+# print("[INFO] Caricamento PDF...")
 loader = PyMuPDFLoader(PDF_PATH)
 docs = loader.load()
 
 # === 2. Suddivisione in chunk ===
-print("[INFO] Suddivisione in chunk...")
+# print("[INFO] Suddivisione in chunk...")
 splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=100)
 chunks = splitter.split_documents(docs)
 
 # === 3. Embedding model ===
-print(f"[INFO] Calcolo embeddings con: {EMBEDDING_MODEL}")
+# print(f"[INFO] Calcolo embeddings con: {EMBEDDING_MODEL}")
 embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
 
 # === 4. Costruzione FAISS retriever ===
-print("[INFO] Indicizzazione FAISS...")
+# print("[INFO] Indicizzazione FAISS...")
 db = FAISS.from_documents(chunks, embeddings)
 retriever = db.as_retriever(search_kwargs={"k": 6})
 
 # === 💾 5. Salvataggio su disco ===
-print(f"[INFO] Salvataggio indice in: {INDEX_PATH}")
+# print(f"[INFO] Salvataggio indice in: {INDEX_PATH}")
 try:
     with open(INDEX_PATH, "wb") as f:
         pickle.dump({
@@ -55,12 +55,12 @@ try:
             "texts": [doc.page_content for doc in chunks],
             "metadatas": [doc.metadata for doc in chunks]
         }, f)
-    print(f"Indice FAISS salvato correttamente.")
+    # print(f"Indice FAISS salvato correttamente.")
 except Exception as e:
     print(f"[ERRORE] durante il salvataggio: {e}")
 
 # === 6. LLM ===
-print("[INFO] Avvio LLM...")
+# print("[INFO] Avvio LLM...")
 llm = Ollama(model="llama3:instruct", temperature=0)
 
 # === 7. Catena RAG ===
