@@ -52,6 +52,7 @@ with open(JSON_PATH, "r", encoding="utf-8") as f:
 docs = []
 for entry in raw_chunks:
     metadata = {k: v for k, v in entry.items() if k != "text"}
+    metadata["source"] = "json"
     docs.append(Document(page_content=entry["text"], metadata=metadata))
 
 

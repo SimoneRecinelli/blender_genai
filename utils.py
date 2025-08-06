@@ -92,18 +92,15 @@ class ChatHistoryManager:
 # === QUERY RAG (senza import globali) ===
 
 def query_rag(question, top_k=5):
-
     import faiss
     from sentence_transformers import SentenceTransformer
 
-
-    BASE_DIR = os.path.abspath(os.path.dirname(__file__))  # non salire di livello
+    BASE_DIR = os.path.abspath(os.path.dirname(__file__))
     INDEX_PATH = os.path.join(BASE_DIR, "blender_faiss_index.pkl")
 
     if not os.path.exists(INDEX_PATH):
         return [{"text": "Indice documentazione non trovato.", "source": "Sistema"}]
 
-    # model = SentenceTransformer("intfloat/multilingual-e5-large", device=get_device_for_transformer())
     model = SentenceTransformer("intfloat/e5-large-v2", device=get_device_for_transformer())
 
     with open(INDEX_PATH, "rb") as f:
@@ -114,29 +111,36 @@ def query_rag(question, top_k=5):
 
     query_embedding = model.encode([question])
     distances, indices = index.search(query_embedding, top_k)
+
     results = []
     for i in indices[0]:
+        meta = metadatas[i]
+        chapter = meta.get("chapter")
+        topic = meta.get("topic")
+        if chapter and topic:
+            source = f"{chapter} - {topic}"
+        elif meta.get("source"):
+            source = meta["source"]
+        else:
+            source = "Fonte sconosciuta"
+
         results.append({
             "text": texts[i],
-            "source": metadatas[i]["source"]
+            "source": source
         })
+
     return results
 
-def recupera_chunk_simili_faiss(domanda, k=15):
 
+def recupera_chunk_simili_faiss(domanda, k=15):
     import faiss
     from sentence_transformers import SentenceTransformer
 
-
-    BASE_DIR = os.path.abspath(os.path.dirname(__file__))  # non salire di livello
+    BASE_DIR = os.path.abspath(os.path.dirname(__file__))
     INDEX_PATH = os.path.join(BASE_DIR, "blender_faiss_index.pkl")
 
     if not os.path.exists(INDEX_PATH):
         return "[ERRORE] Indice FAISS non trovato."
-
-    # model = SentenceTransformer("intfloat/multilingual-e5-large")
-
-    # model = SentenceTransformer("intfloat/multilingual-e5-large", device=get_device_for_transformer())
 
     model = SentenceTransformer("intfloat/e5-large-v2", device=get_device_for_transformer())
 
@@ -149,14 +153,22 @@ def recupera_chunk_simili_faiss(domanda, k=15):
     query_embedding = model.encode([domanda])
     distances, faiss_indices = index.search(query_embedding, k)
 
-    print(f"\n[DEBUG] Chunk simili per la domanda: \"{domanda}\"")
     risultati = []
     for idx in faiss_indices[0]:
         testo = texts[idx]
         meta = metadatas[idx]
-        fonte = meta.get("source") or f"{meta.get('chapter', '?')} - {meta.get('topic', '?')}"
-        preview = testo.strip().replace("\n", " ")[:150]
-        print(f" → Chunk FAISS #{idx} [Fonte: {fonte}]: {preview}...")
+
+        # Fonte preferita: chapter + topic
+        chapter = meta.get("chapter")
+        topic = meta.get("topic")
+
+        if chapter and topic:
+            fonte = f"{chapter} - {topic}"
+        elif meta.get("source"):
+            fonte = meta["source"]
+        else:
+            fonte = "Fonte sconosciuta"
+
         risultati.append(f"[Fonte: {fonte}]\n{testo}")
 
     return "\n\n".join(risultati)
@@ -340,7 +352,7 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
                 "Your ONLY allowed knowledge is what is explicitly stated in the documentation below.\n\n"
                 "🚫 Do NOT use general knowledge, assumptions, or inference.\n"
                 "✅ ONLY use the documentation provided below. If the answer is not found LITERALLY in the documentation, you must reply:\n"
-                "\"not present in the documentation\"\n\n"
+                "\"This information is not explicitly documented in the official Blender 4.4 documentation.\"\n\n"
                 "=== Scene Model Context ===\n"
                 f"{scene_context}\n\n"
                 "=== Blender 4.4 Official Documentation ===\n"
