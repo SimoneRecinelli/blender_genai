@@ -53,6 +53,7 @@ def install_dependencies_if_needed():
         ("openai-whisper", "whisper"),
         ("torch", "torch"),
         ("numpy==1.26.4", "numpy"),
+        ("regex", "regex"),
     ]
 
     if platform.system() == "Darwin":
@@ -168,14 +169,6 @@ def start_flask_server():
 
                 selection_now = [obj for obj in bpy.context.view_layer.objects if obj.select_get()]
                 selected_objects = selection_now.copy()
-
-                # Blocca solo se la domanda è tecnica e mancano selezione + immagine
-                if is_question_technical(domanda):
-                    if not selected_objects and not image_path:
-                        props.genai_response_text = "No object is currently selected in the scene. Please select one or more objects or upload an image."
-                        last_response["text"] = props.genai_response_text
-                        last_response["ready"] = True
-                        return
 
                 def update_callback(props):
                     print("[Flask] ✅ Risposta generata da Ollama!")

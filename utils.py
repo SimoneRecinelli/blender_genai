@@ -92,11 +92,9 @@ class ChatHistoryManager:
 # === QUERY RAG (senza import globali) ===
 
 def query_rag(question, top_k=5):
-    try:
-        import faiss
-        from sentence_transformers import SentenceTransformer
-    except ImportError:
-        return [{"text": "Dipendenze non installate. Premi 'Installa Dipendenze' dal pannello.", "source": "Sistema"}]
+
+    import faiss
+    from sentence_transformers import SentenceTransformer
 
 
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))  # non salire di livello
@@ -125,11 +123,10 @@ def query_rag(question, top_k=5):
     return results
 
 def recupera_chunk_simili_faiss(domanda, k=15):
-    try:
-        import faiss
-        from sentence_transformers import SentenceTransformer
-    except ImportError:
-        return "[ERRORE] Moduli mancanti."
+
+    import faiss
+    from sentence_transformers import SentenceTransformer
+
 
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))  # non salire di livello
     INDEX_PATH = os.path.join(BASE_DIR, "blender_faiss_index.pkl")
@@ -289,30 +286,55 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
         history_manager = ChatHistoryManager()
         history_manager.load()
 
+        user_question_clean = user_question.strip().lower()
+
+        # ✅ Blocca solo domande esplicite sulla selezione, se nulla è selezionato
+        is_describe_selection = user_question_clean in {
+            "describe me the selected object",
+            "describe the selected object",
+            "describe selected object",
+            "describe object",
+            "what is selected",
+            "describe the scene selected",
+            "describe the scene"
+        }
+
+        if is_describe_selection and not current_selection:
+            print("[DEBUG] Nessun oggetto selezionato → risposta manuale.")
+            risposta = "No object is currently selected in the scene."
+
+            def update():
+                props.genai_response_text = risposta
+                history_manager.add("GenAI", risposta)
+                if update_callback:
+                    update()
+
+            if BLENDER_ENV:
+                bpy.app.timers.register(update)
+            else:
+                update()
+            return
+
+        # ✅ Continua con il flusso normale
         if user_question.strip():
             history_manager.add("USER", user_question)
 
         chat_history = history_manager.get_conversational_context()
-        chunks = []  # Inizializza i chunk documentazione
 
+        blender_docs = ""
         if is_question_technical(user_question):
             try:
                 print(f"[DEBUG] Domanda tecnica rilevata: {user_question}")
                 blender_docs = recupera_chunk_simili_faiss(user_question, k=10)
-                chunks = blender_docs.strip().split("\n\n") if blender_docs.strip() else []
-
-                if not chunks:
-                    print("[WARNING] Nessun chunk trovato — prompt senza documentazione.")
             except Exception as e:
                 print(f"[ERROR] Documentation retrieval failed: {str(e)}")
+                blender_docs = "[ERRORE] Documentazione non disponibile."
         else:
             print("[DEBUG] Domanda non tecnica — nessun chunk documentazione usato.")
-
-        print("[DEBUG] 🔍 Numero chunk recuperati:", len(chunks))
+            blender_docs = ""
 
         # === PROMPT BUILDER ===
-        def build_prompt(user_question: str, scene_context: str, blender_chunks: list[str], chat_history: str) -> str:
-            chunked_context = "\n\n".join(f"[Source]\n{chunk.strip()}" for chunk in blender_chunks if chunk.strip())
+        def build_prompt(user_question: str, scene_context: str, doc_text: str, chat_history: str) -> str:
             return (
                 "You are a strict technical assistant for Blender 4.4. "
                 "Your ONLY allowed knowledge is what is explicitly stated in the documentation below.\n\n"
@@ -322,7 +344,7 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
                 "=== Scene Model Context ===\n"
                 f"{scene_context}\n\n"
                 "=== Blender 4.4 Official Documentation ===\n"
-                f"{chunked_context}\n\n"
+                f"{doc_text}\n\n"
                 "=== Conversation History ===\n"
                 f"{chat_history}\n\n"
                 "=== User Question ===\n"
@@ -341,7 +363,7 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
             if user_question.strip():
                 prompt += f"=== User Question ===\n{user_question}\n"
         else:
-            prompt = build_prompt(user_question, model_context, chunks, chat_history)
+            prompt = build_prompt(user_question, model_context, blender_docs, chat_history)
 
         print("\n[DEBUG] PROMPT COMPLETO INVIATO A OLLAMA:\n", prompt)
 
