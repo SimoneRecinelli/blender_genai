@@ -321,7 +321,7 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
                 "\"not present in the documentation\"\n\n"
                 "=== Scene Model Context ===\n"
                 f"{scene_context}\n\n"
-                "=== Blender 4.4 Official Documentation (JSON) ===\n"
+                "=== Blender 4.4 Official Documentation ===\n"
                 f"{chunked_context}\n\n"
                 "=== Conversation History ===\n"
                 f"{chat_history}\n\n"

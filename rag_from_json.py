@@ -43,12 +43,12 @@ RISPOSTA (dettagliata, chiara e con riferimenti se presenti):"""
 
 
 # === 1. Caricamento JSON ===
-print("[INFO] Caricamento chunk da JSON...")
+# print("[INFO] Caricamento chunk da JSON...")
 with open(JSON_PATH, "r", encoding="utf-8") as f:
     raw_chunks = json.load(f)
 
 # === 2. Conversione in Document() ===
-print("[INFO] Creazione Document objects...")
+# print("[INFO] Creazione Document objects...")
 docs = []
 for entry in raw_chunks:
     metadata = {k: v for k, v in entry.items() if k != "text"}
@@ -56,26 +56,26 @@ for entry in raw_chunks:
 
 
 # === 3. Embedding ===
-print(f"[INFO] Calcolo embeddings con: {EMBEDDING_MODEL}")
+# print(f"[INFO] Calcolo embeddings con: {EMBEDDING_MODEL}")
 embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
 
 # === 4. FAISS ===
-print("[INFO] Indicizzazione FAISS...")
+# print("[INFO] Indicizzazione FAISS...")
 db = FAISS.from_documents(docs, embeddings)
 retriever = db.as_retriever(search_kwargs={"k": 15})
 
 # === 5. Salvataggio su disco ===
-print(f"[INFO] Salvataggio indice FAISS in: {INDEX_PATH}")
+# print(f"[INFO] Salvataggio indice FAISS in: {INDEX_PATH}")
 with open(INDEX_PATH, "wb") as f:
     pickle.dump({
         "index": db.index,
         "texts": [doc.page_content for doc in docs],
         "metadatas": [doc.metadata for doc in docs]
     }, f)
-print("Indice salvato correttamente.")
+# print("Indice salvato correttamente.")
 
 # === 6. LLM ===
-print("[INFO] Avvio LLM...")
+# print("[INFO] Avvio LLM...")
 llm = Ollama(model="llama3:instruct", temperature=0)
 
 # === 7. RetrievalQA ===
