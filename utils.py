@@ -55,7 +55,6 @@ class ChatHistoryManager:
             try:
                 with open(self._path, "r", encoding="utf-8") as f:
                     self._history = json.load(f)
-                    # print(f"[DEBUG] Chat caricata da: {self._path}")
             except Exception as e:
                 print(f"[ERRORE] Caricamento chat: {e}")
         else:
@@ -66,7 +65,6 @@ class ChatHistoryManager:
             with open(self._path, "w", encoding="utf-8") as f:
                 json.dump(self._history, f, ensure_ascii=False, indent=2)
             os.chmod(self._path, 0o644)  # ✅ Assicura lettura/scrittura
-            # print(f"[DEBUG] Chat salvata in: {self._path}")
         except Exception as e:
             print(f"[ERRORE] Salvataggio chat: {e}")
 
@@ -285,6 +283,7 @@ def send_vision_prompt_to_ollama(prompt: str, image_path: str = None, model: str
     except Exception as e:
         return f"[Errore Ollama Vision] {str(e)}"
 
+
 # === QUERY OLLAMA CON DOC + IMMAGINE (ASYNC) ===
 
 def query_ollama_with_docs_async(user_question, props, selected_objects, update_callback=None):
@@ -292,67 +291,20 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
     def worker():
         print("⭐️⭐️ ------------------ Esecuzione query ------------------ ⭐️⭐")
 
-        image_path = props.genai_image_path if props and props.genai_image_path else None
+        image_path = props.genai_image_path if props and getattr(props, 'genai_image_path', None) else None
         current_selection = selected_objects
         model_context = get_model_context(current_selection)
 
         history_manager = ChatHistoryManager()
         history_manager.load()
 
-        user_question_clean = user_question.strip().lower()
-
-        # ✅ Blocca solo domande esplicite sulla selezione, se nulla è selezionato
-        is_describe_selection = user_question_clean in {
-            "describe me the selected object",
-            "describe the selected object",
-            "describe selected object",
-            "describe object",
-            "describe this object",
-            "what is selected",
-            "what object is selected",
-            "show selected object details",
-            "give me details about the selected object",
-            "describe the current selection",
-            "describe selection",
-            "what's selected",
-
-            "describe the scene",
-            "describe the scene selected",
-            "describe current scene",
-            "give me scene details",
-            "what's in the scene",
-            "what objects are in the scene",
-            "show scene summary",
-            "descrivimi la scena",
-            "descrivimi l'oggetto selezionato",
-        }
-
-        if is_describe_selection:
-            if not current_selection:
-                print("[DEBUG] Nessun oggetto selezionato → risposta manuale.")
-                risposta = "No object is currently selected in the scene."
-            else:
-                print("[DEBUG] Descrizione completa della scena richiesta.")
-                risposta = get_model_context(current_selection)
-
-            def update():
-                props.genai_response_text = risposta
-                history_manager.add("GenAI", risposta)
-                if update_callback:
-                    update_callback()
-
-            if BLENDER_ENV:
-                bpy.app.timers.register(update)
-            else:
-                update()
-            return
-
-        # ✅ Continua con il flusso normale
+        # Storico: aggiungo la domanda dell'utente se presente
         if user_question.strip():
             history_manager.add("USER", user_question)
 
         chat_history = history_manager.get_conversational_context()
 
+        # Recupero documentazione solo per domande tecniche
         blender_docs = ""
         if is_question_technical(user_question):
             try:
@@ -374,8 +326,8 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
                 "✅ You MUST base your answer exclusively on the documentation provided.\n"
                 "💡 If the documentation contains relevant explanations, instructions, keybindings, or descriptions "
                 "(even if scattered across different sections), you MUST synthesize and integrate them to answer the question.\n"
-                "⚠️ Only if the documentation is completely unrelated or no useful information is present, reply strictly:\n"
-                "\"This information is not explicitly documented in the official Blender 4.4 documentation.\"\n\n"
+                "If the question is a greeting (such as hello and similiars) or compliments or any other option instead of a formal question about Blender, reply politely.\n"
+                "If the user is asking a question about the scene whitout adding a screenshot or selection an object in the scene, reply politely asking to select an object in the scene or add a screenshot in order to describe the scene.\n"
                 "=== Scene Model Context ===\n"
                 f"{scene_context}\n\n"
                 "=== Blender 4.4 Official Documentation ===\n"

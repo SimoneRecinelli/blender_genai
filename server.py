@@ -4,6 +4,9 @@ import subprocess
 import platform
 import threading
 import importlib.util
+import time
+import shutil
+import ctypes
 from .utils import is_question_technical
 
 # === 1. Aggiungi la cartella 'scripts/modules' di Blender a sys.path ===
@@ -76,8 +79,37 @@ def install_dependencies_if_needed():
         else:
             print(f"[SETUP] ✓ {pip_name} già presente")
 
+# ========= Helper Windows per elevazione UAC =========
+
+def _is_admin():
+    try:
+        return ctypes.windll.shell32.IsUserAnAdmin()
+    except Exception:
+        return False
+
+def _run_elevated_powershell(ps_command: str, show_window=True):
+    ctypes.windll.shell32.ShellExecuteW(
+        None, "runas", "powershell.exe",
+        f'-NoProfile -ExecutionPolicy Bypass -Command "{ps_command}"',
+        None, 1 if show_window else 0
+    )
+
+def _wait_until_ffmpeg_ready(timeout_sec=240, interval_sec=3):
+    t0 = time.time()
+    while time.time() - t0 < timeout_sec:
+        if shutil.which("ffmpeg") is not None:
+            return True
+        candidate = r"C:\ProgramData\chocolatey\bin\ffmpeg.exe"
+        if os.path.isfile(candidate):
+            os.environ["PATH"] = os.path.dirname(candidate) + os.pathsep + os.environ.get("PATH", "")
+            if shutil.which("ffmpeg"):
+                return True
+        time.sleep(interval_sec)
+    return False
+
+# === Installazione ffmpeg (con installazione choco se manca) ===
+
 def install_ffmpeg_if_needed():
-    import shutil
 
     if shutil.which("ffmpeg") is not None:
         print("[SETUP] ✓ ffmpeg già presente")
@@ -106,28 +138,80 @@ def install_ffmpeg_if_needed():
         except subprocess.CalledProcessError as e:
             print(f"[ERRORE] Installazione ffmpeg fallita: {e}")
 
+
     elif system == "Windows":
-        # Windows – usa Chocolatey
-        try:
-            if shutil.which("choco") is None:
-                print("[SETUP] ❌ Chocolatey non trovato. Provo a installarlo...")
-                subprocess.check_call([
-                    "powershell",
-                    "Set-ExecutionPolicy Bypass -Scope Process -Force; "
-                    "[System.Net.ServicePointManager]::SecurityProtocol = "
-                    "[System.Net.ServicePointManager]::SecurityProtocol -bor 3072; "
-                    "iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))"
-                ])
-                print("[SETUP] ✅ Chocolatey installato.")
 
-            subprocess.check_call(["choco", "install", "-y", "ffmpeg"])
-            print("[SETUP] ✅ ffmpeg installato con Chocolatey.")
+        def _install_with_choco_here():
 
-        except subprocess.CalledProcessError as e:
-            print(f"[ERRORE] Installazione ffmpeg fallita: {e}")
+            try:
+
+                subprocess.check_call(["choco", "install", "-y", "ffmpeg"])
+
+                print("[SETUP] ✅ ffmpeg installato con Chocolatey.")
+
+                return True
+
+            except (subprocess.CalledProcessError, FileNotFoundError) as e:
+
+                print(f"[ATTENZIONE] choco non disponibile o installazione fallita qui: {e}")
+
+                return False
+
+        if _is_admin() and shutil.which("choco"):
+
+            if _install_with_choco_here():
+                return
+
+        ps_script = r"""
+
+    $ErrorActionPreference = 'Stop'
+
+    if (-not (Get-Command choco -ErrorAction SilentlyContinue)) {
+
+      Write-Host '>> Installing Chocolatey...'
+
+      Set-ExecutionPolicy Bypass -Scope Process -Force
+
+      [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+
+      iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+    }
+
+    try { choco upgrade chocolatey -y } catch { Write-Warning $_ }
+
+    Write-Host '>> Installing ffmpeg via choco...'
+
+    choco install -y ffmpeg
+
+    exit 0
+
+    """
+
+        print("[SETUP] ↪ Richiesta elevazione (UAC) per installare Chocolatey e ffmpeg...")
+
+        _run_elevated_powershell(ps_script)
+
+        if _wait_until_ffmpeg_ready(timeout_sec=240):
+
+            print("[SETUP] ✅ ffmpeg installato e disponibile.")
+
+        else:
+
+            print("[SETUP] Non riesco a verificare automaticamente ffmpeg.")
+
+            print(
+                "Se hai rifiutato il prompt UAC, riavvia Blender come Amministratore oppure installa manualmente:")
+
+            print("1) Apri PowerShell come Admin")
+
+            print("2) choco install -y ffmpeg")
+
 
     else:
+
         print("[ERRORE] Sistema operativo non supportato per l’installazione automatica di ffmpeg.")
+
 
 install_dependencies_if_needed()
 install_ffmpeg_if_needed()
