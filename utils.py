@@ -339,14 +339,30 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
                 "Respond only in English. Keep a professional, technical tone. Answer only if the documentation allows it."
             )
 
-        # === COSTRUISCI PROMPT ===
-        if image_path and os.path.exists(image_path):
-            prompt = (
+        def build_image_prompt(user_question: str, scene_context: str, chat_history: str) -> str:
+            """
+            Costruisce un prompt specifico per quando è presente uno screenshot della scena Blender.
+            """
+            return (
                 "You are a visual assistant integrated into Blender.\n"
                 "You are given a screenshot of the 3D scene in Blender.\n"
-                "If a question is provided, respond using both the image and question.\n"
-                "If no question is provided, just describe what is visible in the image.\n\n"
+                "Analyze only what is visible in the 3D Viewport and related UI panels.\n"
+                "Provide a detailed and accurate description without guessing.\n"
+                "If the user provides a question, answer it using both the image and the scene context provided.\n"
+                "If no question is provided, describe the scene following a technical, factual structure:\n"
+                "- Viewport state (perspective/orthographic, grid visibility)\n"
+                "- List of visible objects with type and selection state\n"
+                "- Active object details if visible\n"
+                "- Camera and lights presence and placement\n"
+                "- Shading/overlays state if visible\n"
+                "- Short summary of the scene\n\n"
+                f"=== Scene Model Context (from Blender selection) ===\n{scene_context}\n\n"
+                f"=== User Question (optional) ===\n{user_question or 'Describe the scene.'}\n"
             )
+
+        # === COSTRUISCI PROMPT ===
+        if image_path and os.path.exists(image_path):
+            prompt = build_image_prompt(user_question, model_context, chat_history)
             if user_question.strip():
                 prompt += f"=== User Question ===\n{user_question}\n"
         else:
