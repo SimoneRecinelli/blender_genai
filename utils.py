@@ -186,71 +186,112 @@ def get_model_context(selected_objs):
     names_by_type = {}
 
     for obj in selected_objs:
-        # Conta oggetti per tipo
         obj_type = obj.type
         type_counts[obj_type] = type_counts.get(obj_type, 0) + 1
         names_by_type.setdefault(obj_type, []).append(obj.name)
 
-        if obj_type != 'MESH':
+        # === MESH ===
+        if obj_type == 'MESH':
+            mesh = obj.data
+            dimensions = obj.dimensions
+            materials = [slot.material.name if slot.material else "Nessuno" for slot in obj.material_slots]
+            uv_layers = list(mesh.uv_layers.keys()) or ["Nessuna"]
+            modifiers = [m.type for m in obj.modifiers] or ["Nessuno"]
+            shading = "Smooth" if any(p.use_smooth for p in mesh.polygons) else "Flat"
+            parent_name = obj.parent.name if obj.parent else "Nessuno"
+
+            bm = bmesh.new()
+            bm.from_mesh(mesh)
+            bm.normal_update()
+            bm.verts.ensure_lookup_table()
+            bm.faces.ensure_lookup_table()
+
+            num_tris = sum(1 for f in bm.faces if len(f.verts) == 3)
+            is_manifold = all(e.is_manifold for e in bm.edges)
+            double_verts = bmesh.ops.find_doubles(bm, verts=bm.verts, dist=0.0001)["targetmap"]
+            flipped_normals = sum(1 for f in bm.faces if f.normal.z < 0)
+
+            bm.free()
+
+            context = {
+                "Nome oggetto": obj.name,
+                "Vertici": len(mesh.vertices),
+                "Spigoli": len(mesh.edges),
+                "Facce": len(mesh.polygons),
+                "Triangoli": num_tris,
+                "Dimensioni (X,Y,Z)": f"{dimensions.x:.2f}, {dimensions.y:.2f}, {dimensions.z:.2f}",
+                "Modificatori": modifiers,
+                "Materiali": materials,
+                "UV Maps": uv_layers,
+                "Shading": shading,
+                "Parent": parent_name,
+                "Manifold": "Sì" if is_manifold else "No",
+                "Vertici doppi (vicini)": len(double_verts),
+                "Facce con normali invertite (Z-)": flipped_normals
+            }
+
+        # === LIGHT ===
+        elif obj_type == 'LIGHT':
+            light = obj.data
             context = {
                 "Nome oggetto": obj.name,
                 "Tipo": obj_type,
-                "Nota": "Questo tipo di oggetto non è supportato per l'analisi geometrica. Seleziona una Mesh per analisi dettagliata."
+                "Parent": obj.parent.name if obj.parent else "Nessuno",
+                "Posizione": f"{obj.location.x:.2f}, {obj.location.y:.2f}, {obj.location.z:.2f}",
+                "Tipo luce": light.type,
+                "Energia": f"{light.energy}",
+                "Colore": f"({light.color[0]:.2f}, {light.color[1]:.2f}, {light.color[2]:.2f})",
+                "Shadows": "On" if light.use_shadow else "Off"
             }
-            summary = "\n".join([f"{k}: {v}" for k, v in context.items()])
-            context_list.append(summary)
-            continue
 
-        mesh = obj.data
-        dimensions = obj.dimensions
-        materials = [slot.material.name if slot.material else "Nessuno" for slot in obj.material_slots]
-        uv_layers = list(mesh.uv_layers.keys()) or ["Nessuna"]
-        modifiers = [m.type for m in obj.modifiers] or ["Nessuno"]
-        shading = "Smooth" if any(p.use_smooth for p in mesh.polygons) else "Flat"
-        parent_name = obj.parent.name if obj.parent else "Nessuno"
+        # === CAMERA ===
+        elif obj_type == 'CAMERA':
+            cam = obj.data
+            context = {
+                "Nome oggetto": obj.name,
+                "Tipo": obj_type,
+                "Parent": obj.parent.name if obj.parent else "Nessuno",
+                "Posizione": f"{obj.location.x:.2f}, {obj.location.y:.2f}, {obj.location.z:.2f}",
+                "Tipo proiezione": cam.type,  # 'PERSP', 'ORTHO', 'PANO'
+                "Lunghezza focale (mm)": f"{cam.lens:.2f}" if cam.type == "PERSP" else "N/A",
+                "Clip Start": f"{cam.clip_start:.3f}",
+                "Clip End": f"{cam.clip_end:.1f}",
+                "Sensor Width (mm)": f"{cam.sensor_width:.2f}",
+                "Depth of Field": "On" if cam.dof.use_dof else "Off"
+            }
 
-        bm = bmesh.new()
-        bm.from_mesh(mesh)
-        bm.normal_update()
-        bm.verts.ensure_lookup_table()
-        bm.faces.ensure_lookup_table()
+        # === ALTRI TIPI ===
+        else:
+            context = {
+                "Nome oggetto": obj.name,
+                "Tipo": obj_type,
+                "Parent": obj.parent.name if obj.parent else "Nessuno",
+                "Posizione": f"{obj.location.x:.2f}, {obj.location.y:.2f}, {obj.location.z:.2f}",
+                "Rotazione (XYZ°)": f"{obj.rotation_euler.x:.1f}, {obj.rotation_euler.y:.1f}, {obj.rotation_euler.z:.1f}",
+                "Scala": f"{obj.scale.x:.2f}, {obj.scale.y:.2f}, {obj.scale.z:.2f}",
+            }
 
-        num_tris = sum(1 for f in bm.faces if len(f.verts) == 3)
-        is_manifold = all(e.is_manifold for e in bm.edges)
-        double_verts = bmesh.ops.find_doubles(bm, verts=bm.verts, dist=0.0001)["targetmap"]
-        flipped_normals = sum(1 for f in bm.faces if f.normal.z < 0)
+            # Se possibile, aggiungi nome del datablock associato (es. font, curve, ecc.)
+            if obj.data and hasattr(obj.data, "name"):
+                context["Datablock"] = obj.data.name
 
-        bm.free()
-
-        context = {
-            "Nome oggetto": obj.name,
-            "Vertici": len(mesh.vertices),
-            "Spigoli": len(mesh.edges),
-            "Facce": len(mesh.polygons),
-            "Triangoli": num_tris,
-            "Dimensioni (X,Y,Z)": f"{dimensions.x:.2f}, {dimensions.y:.2f}, {dimensions.z:.2f}",
-            "Modificatori": modifiers,
-            "Materiali": materials,
-            "UV Maps": uv_layers,
-            "Shading": shading,
-            "Parent": parent_name,
-            "Manifold": "Sì" if is_manifold else "No",
-            "Vertici doppi (vicini)": len(double_verts),
-            "Facce con normali invertite (Z-)": flipped_normals
-        }
+            # Se disponibile, aggiungi dimensioni (non tutti gli oggetti le hanno)
+            if hasattr(obj, "dimensions"):
+                context[
+                    "Dimensioni (X,Y,Z)"] = f"{obj.dimensions.x:.2f}, {obj.dimensions.y:.2f}, {obj.dimensions.z:.2f}"
 
         summary = "\n".join([f"{k}: {v}" for k, v in context.items()])
         context_list.append(summary)
 
-    # Riepilogo iniziale
+    # === Riepilogo iniziale ===
     type_summary = []
     for obj_type, count in type_counts.items():
         names = ", ".join(names_by_type[obj_type])
         type_summary.append(f"{count} {obj_type}{'s' if count > 1 else ''} ({names})")
 
     header = f"The scene you have selected contains {len(selected_objs)} object(s): " + " – ".join(type_summary) + ".\n\n"
-
     return header + "\n\n".join(context_list)
+
 
 
 
@@ -327,7 +368,10 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
                 "💡 If the documentation contains relevant explanations, instructions, keybindings, or descriptions "
                 "(even if scattered across different sections), you MUST synthesize and integrate them to answer the question.\n"
                 "If the question is a greeting (such as hello and similiars) or compliments or any other option instead of a formal question about Blender, reply politely.\n"
-                "If the user is asking a question about the scene whitout adding a screenshot or selection an object in the scene, reply politely asking to select an object in the scene or add a screenshot in order to describe the scene.\n"
+                "If the user asks a question about the scene:\n"
+                "- Regardless of object type, if the Scene Model Context below contains any objects, you MUST describe them in detail.\n"
+                "- If truly no object is selected and no screenshot is provided, politely ask the user to select an object or provide a screenshot.\n"
+
                 "=== Scene Model Context ===\n"
                 f"{scene_context}\n\n"
                 "=== Blender 4.4 Official Documentation ===\n"
