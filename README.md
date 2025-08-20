@@ -178,6 +178,8 @@ ollama pull llama3.2-vision
 
 In questo modo sarà possibile utilizzare l'LLM necessario per il chatbot.
 
+⚠️ Affinché il plugin funzioni correttamente, Ollama deve essere sempre attivo sulla macchina!
+
 ### 📥 Installare l'addon su Blender
 Per installare il progetto come addon Blender:
 
