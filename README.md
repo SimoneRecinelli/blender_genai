@@ -167,6 +167,17 @@ git lfs install
 git lfs pull
 ```
 
+### 🦙 Installare Ollama e download del modello
+È necessario installare ollama per il proprio sistema operativo (https://ollama.com/download).
+
+Una volta scaricato il framework, avviarlo, aprire il terminale e digitare il seguente comando:
+
+```bash
+ollama pull llama3.2-vision
+```
+
+In questo modo sarà possibile utilizzare l'LLM necessario per il chatbot.
+
 ### 📥 Installare l'addon su Blender
 Per installare il progetto come addon Blender:
 
