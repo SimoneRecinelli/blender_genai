@@ -34,9 +34,9 @@ Realizzato da **Simone Recinelli**, **Diego Santarelli** e **Andrea Marini**.
 - [⚙️ Requisiti & Setup](#️-requisiti--setup)
   - [✅ Dipendenze Python: installazione automatica](#-dipendenze-python-installazione-automatica)
   - [📦 Clonare il repository](#-clonare-il-repository)
-  - [📥 Installare laddon su Blender](#-installare-laddon-su-blender)
+  - [📥 Installare l'addon su Blender](#-installare-laddon-su-blender)
   - [🚀 Avviare l'interfaccia](#-avviare-linterfaccia)
-- [🪟 Interfaccia Esterna del Chatbot](#-interfaccia-esterna-del-chatbot)
+- [🪟 Interfaccia del Chatbot](#-interfaccia-esterna-del-chatbot)
   - [✨ Caratteristiche principali della GUI](#-caratteristiche-principali-della-gui)
 - [📊 Demo](#-demo)
 - [👨‍💼 Autori](#-autori)
@@ -81,6 +81,7 @@ blender_genai/
 ├── __init__.py                # Entry point per l'addon
 ├── panel.py                   # UI in Blender (chat, immagine, toggle)
 ├── genai_operator.py          # Operatore per interazione con AI
+├── chat_history.json          # Storico persistente della chat
 ├── utils.py                   # Funzioni core, modelli, RAG
 ├── server.py                  # Server Flask + auto install dipendenze
 ├── extern_gui.py              # Interfaccia esterna PyQt5
@@ -205,7 +206,7 @@ L’addon include una interfaccia grafica personalizzata esterna sviluppata in P
 
 - 🌗 Tema chiaro/scuro attivabile con uno switch animato
 
-- ⌨️ Invio con Enter e a capo con Shift+Enter
+- ⌨️ Invio con Enter e a capo con Shift+Invio
 
 - 🔁 Integrazione con il sistema RAG per risposte documentate
 
