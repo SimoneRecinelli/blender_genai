@@ -36,22 +36,25 @@
     ]
   },
   {
-    "id": "01_002",
-    "chapter": "1. Introduction",
-    "topic": "3D Space Navigation",
-    "text": "Navigation in Blender is done using mouse and keyboard: rotate with MMB, zoom with the scroll wheel or Ctrl+MMB, pan with Shift+MMB. You can also use the numeric keypad keys for predefined views (e.g., 1=front, 3=right, 7=top).",
-    "keywords": [
-      "mmb",
-      "zoom",
-      "views",
-      "predefined",
-      "numeric",
-      "shift",
-      "navigation",
-      "keyboard",
-      "keypad",
-      "scroll"
-    ]
+  "id": "01_002",
+  "chapter": "1. Introduction",
+  "topic": "3D Space Navigation",
+  "text": "Navigation in Blender is done using mouse, keyboard, or trackpad. With a mouse, rotate the view with the Middle Mouse Button (MMB), zoom with the scroll wheel or Ctrl+MMB, and pan with Shift+MMB. You can also use the numeric keypad for predefined views: 1 = front view, 3 = right view, 7 = top view, and 5 to toggle between perspective and orthographic mode. If your keyboard does not have a numeric keypad (e.g., on laptops), enable 'Emulate Numpad' from Edit > Preferences > Input. This allows you to use the standard number keys (1, 3, 5, 7) for view navigation. On macOS laptops with only a trackpad, enable 'Multi-touch Gestures' in Preferences > Input > Touchpad. Zoom with a two-finger pinch and pan with a two-finger drag. If 'Emulate 3 Button Mouse' is available and enabled, you can orbit the view with Alt + left click, pan with Shift + Alt + left click, and zoom with Command (⌘) + Alt + left click. Note that Ctrl + left click on macOS triggers a right-click by default, so it should be avoided for navigation. On Windows laptops with a trackpad, similar multi-touch gestures may work depending on the device. Alternatively, enabling 'Emulate 3 Button Mouse' allows you to rotate the view with Alt + left click, pan with Shift + Alt + left click, and zoom with Ctrl + Alt + left click. You can also use the navigation gizmo in the top-right corner of the 3D Viewport to click and drag or jump to specific views.",
+  "keywords": [
+    "navigation",
+    "mmb",
+    "zoom",
+    "pan",
+    "keyboard",
+    "trackpad",
+    "mac",
+    "windows",
+    "emulate",
+    "views",
+    "keypad",
+    "numpad",
+    "shortcuts"
+  ]
   },
   {
     "id": "01_003",
