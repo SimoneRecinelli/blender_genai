@@ -15,9 +15,11 @@ from PyQt5.QtGui import QIcon, QPixmap, QMovie
 from PyQt5.QtCore import QCoreApplication, Qt, QTimer, QSize, QPropertyAnimation, QRect
 from PyQt5.QtSvg import QSvgWidget
 
+IS_MAC = platform.system() == "Darwin"
+IS_WIN = platform.system() == "Windows"
 
 # PyObjC per macOS (aggiunta al sys.path se necessario)
-if platform.system() == "Darwin":
+if IS_MAC:
     user_site = os.path.expanduser("~/.local/lib/python3.11/site-packages")
     if user_site not in sys.path:
         sys.path.append(user_site)
@@ -129,15 +131,14 @@ class GenAIClient(QWidget):
 
         self.voice_process = None
 
-
         # === Imposta l'icona della finestra in base al sistema operativo ===
-        if platform.system() == "Darwin":
+        if IS_MAC:
             from AppKit import NSApplication, NSImage
             icon_path = os.path.join(BASE_DIR, "icons", "genai_icon.icns")
             nsimage = NSImage.alloc().initWithContentsOfFile_(icon_path)
             if nsimage:
                 NSApplication.sharedApplication().setApplicationIconImage_(nsimage)
-        elif platform.system() == "Windows":
+        elif IS_WIN:
             icon_path = os.path.join(BASE_DIR, "icons", "genai_icon.ico")
         else:
             icon_path = os.path.join(BASE_DIR, "icons", "genai_icon.png")
@@ -171,7 +172,6 @@ class GenAIClient(QWidget):
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setWindowTitle("GenAI Assistant Chat")
-        # threading.Thread(target=self.listen_for_front_request, daemon=True).start()
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint | Qt.MSWindowsFixedSizeDialogHint)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setWindowTitle("GenAI Assistant Chat")
@@ -198,13 +198,14 @@ class GenAIClient(QWidget):
         self.add_image_button.setIconSize(QSize(24, 24))
         self.add_image_button.setFixedSize(40, 40)
         self.add_image_button.setCursor(Qt.PointingHandCursor)
-        self.add_image_button.setStyleSheet("""
+        self.add_image_button.setStyleSheet(
+            """
             QPushButton {
                 border-radius: 20px;
                 background-color: #ddd;
             }
-        """)
-
+            """
+        )
         self.add_image_button.clicked.connect(self.carica_immagine)
 
         # BOTTONE INVIO DOMANDA
@@ -213,12 +214,14 @@ class GenAIClient(QWidget):
         self.send_button.setIconSize(QSize(24, 24))
         self.send_button.setFixedSize(40, 40)
         self.send_button.setCursor(Qt.PointingHandCursor)
-        self.send_button.setStyleSheet("""
+        self.send_button.setStyleSheet(
+            """
             QPushButton {
                 border-radius: 20px;
                 background-color: #ddd;
             }
-        """)
+            """
+        )
         self.send_button.clicked.connect(self.invia_domanda)
 
         # BOTTONE DETTATURA
@@ -227,12 +230,14 @@ class GenAIClient(QWidget):
         self.mic_button.setIconSize(QSize(24, 24))
         self.mic_button.setFixedSize(40, 40)
         self.mic_button.setCursor(Qt.PointingHandCursor)
-        self.mic_button.setStyleSheet("""
+        self.mic_button.setStyleSheet(
+            """
             QPushButton {
                 border-radius: 20px;
                 background-color: #ddd;
             }
-        """)
+            """
+        )
         self.mic_button.clicked.connect(self.avvia_dettatura)
 
         self.preview_widget = QWidget()
@@ -263,9 +268,6 @@ class GenAIClient(QWidget):
         switch_row.addStretch()
         self.main_layout.addLayout(switch_row)
 
-        # self.setStyleSheet(self.dark_stylesheet)
-        # self.setLayout(self.main_layout)
-
         self.content = QWidget()
         self.content.setLayout(self.main_layout)
         self.setLayout(QVBoxLayout())  # wrapper
@@ -285,10 +287,13 @@ class GenAIClient(QWidget):
         self.timer.timeout.connect(self.check_response)
 
         self.show()
-        self.raise_mac_window()
+        if IS_MAC:
+            self.raise_mac_window()
+        else:
+            self.raise_()
+            self.activateWindow()
 
         self.speech_server_process = None
-
         print("[DEBUG] Metodo avvia_speech_server() chiamato")
 
         self.registrazione_attiva = False  # stato toggle microfono
@@ -318,27 +323,10 @@ class GenAIClient(QWidget):
         QTimer.singleShot(1000, monitor_blender_process)
 
     def toggle_tema(self, enabled: bool):
-        # # 1. Disattiva aggiornamenti
-        # self.setUpdatesEnabled(False)
-        #
-        # # 2. Salva geometria attuale
-        # geom = self.geometry()
-        #
-        # # 3. Applica stylesheet
-        # self.setStyleSheet(self.light_stylesheet if enabled else self.dark_stylesheet)
-        #
-        # # 4. Ripristina geometria
-        # self.setGeometry(geom)
-        #
-        # # 5. Re-enable updates and repaint
-        # self.setUpdatesEnabled(True)
-        # self.repaint()
-        # self.update()
-
         theme = self.light_stylesheet if enabled else self.dark_stylesheet
         self.content.setStyleSheet(theme)
 
-        if platform.system() == "Darwin":
+        if IS_MAC:
             def raise_fix():
                 self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
                 self.show()
@@ -360,7 +348,11 @@ class GenAIClient(QWidget):
             # 🔼 Ripristina always on top dopo la chiusura
             self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
             self.show()
-            self.raise_mac_window()
+            if IS_MAC:
+                self.raise_mac_window()
+            else:
+                self.raise_()
+                self.activateWindow()
 
     def listen_for_front_request(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -378,8 +370,9 @@ class GenAIClient(QWidget):
         except OSError:
             print("[DEBUG] Socket già in uso — GUI probabilmente attiva")
 
-
     def raise_mac_window(self):
+        if not IS_MAC:
+            return
         try:
             win_id = int(self.winId())
             if win_id == 0:
@@ -398,12 +391,12 @@ class GenAIClient(QWidget):
 
     def focusInEvent(self, event):
         super().focusInEvent(event)
-        if platform.system() == "Darwin":
+        if IS_MAC:
             QTimer.singleShot(50, self.raise_mac_window)
 
     def focusOutEvent(self, event):
         super().focusOutEvent(event)
-        if platform.system() == "Darwin":
+        if IS_MAC:
             QTimer.singleShot(50, self.raise_mac_window)
 
     def mousePressEvent(self, event):
@@ -457,7 +450,8 @@ class GenAIClient(QWidget):
             speak_button.setFixedSize(30, 30)
             speak_button.setIconSize(QSize(18, 18))
             speak_button.setCursor(Qt.PointingHandCursor)
-            speak_button.setStyleSheet("""
+            speak_button.setStyleSheet(
+                """
                 QPushButton {
                     background-color: #ddd;
                     border: none;
@@ -466,7 +460,8 @@ class GenAIClient(QWidget):
                 QPushButton:hover {
                     background-color: #bbb;
                 }
-            """)
+                """
+            )
 
             # Pulsante "Ferma"
             stop_button = QPushButton()
@@ -474,7 +469,8 @@ class GenAIClient(QWidget):
             stop_button.setFixedSize(30, 30)
             stop_button.setIconSize(QSize(18, 18))
             stop_button.setCursor(Qt.PointingHandCursor)
-            stop_button.setStyleSheet("""
+            stop_button.setStyleSheet(
+                """
                    QPushButton {
                        background-color: #f66;
                        border: none;
@@ -483,17 +479,92 @@ class GenAIClient(QWidget):
                    QPushButton:hover {
                        background-color: #d44;
                    }
-               """)
+               """
+            )
 
             def leggi_testo():
-                import subprocess
+                import subprocess, sys
+
+                # stop se c'è TTS già in corso
                 if self.voice_process and self.voice_process.poll() is None:
-                    self.voice_process.terminate()
-                self.voice_process = subprocess.Popen(["say", "-v", "Samantha", text])
+                    try:
+                        self.voice_process.terminate()
+                    except Exception:
+                        pass
+                    self.voice_process = None
+
+                try:
+                    if IS_MAC:
+                        # macOS
+                        self.voice_process = subprocess.Popen(["say", "-v", "Samantha", text])
+
+                    elif IS_WIN:
+                        # Windows: usa System.Speech e manda il testo su STDIN (UTF-8)
+                        ps_exe = r"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
+                        if not os.path.exists(ps_exe):
+                            ps_exe = "powershell"  # fallback, se serve
+
+                        ps_cmd = [
+                            ps_exe,
+                            "-NoProfile",
+                            "-ExecutionPolicy", "Bypass",
+                            "-Command",
+                            (
+                                "Add-Type -AssemblyName System.Speech; "
+                                "$s = New-Object System.Speech.Synthesis.SpeechSynthesizer; "
+                                "$s.Rate = 0; $s.Volume = 100; "
+                                "$s.SelectVoice('Microsoft Zira Desktop'); "
+                                "[Console]::InputEncoding = [System.Text.Encoding]::UTF8; "
+                                "$t = [Console]::In.ReadToEnd(); "
+                                "$s.Speak($t)"
+                            ),
+                        ]
+
+                        self.voice_process = subprocess.Popen(
+                            ps_cmd,
+                            stdin=subprocess.PIPE,
+                            stdout=subprocess.DEVNULL,
+                            stderr=subprocess.PIPE,  # così possiamo leggere eventuali errori
+                        )
+                        try:
+                            self.voice_process.stdin.write(text.encode("utf-8", errors="ignore"))
+                            self.voice_process.stdin.close()
+                        except Exception:
+                            pass
+
+                    else:
+                        # Linux (opzionale)
+                        self.voice_process = subprocess.Popen(["espeak", text])
+
+                except FileNotFoundError as e:
+                    self.add_message(f"❌ Lettura vocale non disponibile ({e}).", "bot")
+                    self.voice_process = None
+                except Exception as e:
+                    # prova a mostrare stderr di PowerShell se presente
+                    try:
+                        err = b""
+                        if self.voice_process and self.voice_process.stderr:
+                            err = self.voice_process.stderr.read(400)
+                        msg = f"❌ Errore lettura vocale: {e}"
+                        if err:
+                            msg += f"\nDettagli: {err.decode('utf-8', errors='ignore')[:350]}"
+                        self.add_message(msg, "bot")
+                    except Exception:
+                        self.add_message(f"❌ Errore lettura vocale: {e}", "bot")
+                    finally:
+                        self.voice_process = None
+
 
             def ferma_dettatura():
-                if self.voice_process and self.voice_process.poll() is None:
-                    self.voice_process.terminate()
+                # Ferma l’eventuale parlato in corso
+                try:
+                    if self.voice_process and self.voice_process.poll() is None:
+                        self.voice_process.terminate()
+                except Exception:
+                    pass
+                finally:
+                    self.voice_process = None
+
 
             speak_button.clicked.connect(leggi_testo)
             stop_button.clicked.connect(ferma_dettatura)
@@ -509,12 +580,9 @@ class GenAIClient(QWidget):
             wrapper_layout.addWidget(label, 1)
             wrapper_layout.addSpacing(8)
             wrapper_layout.addWidget(btns_widget, 0, Qt.AlignVCenter | Qt.AlignRight)
-        
         else:
             wrapper_layout.addStretch()
             wrapper_layout.addWidget(label, 0, Qt.AlignRight)
-
-
 
         wrapper_widget = QWidget()
         wrapper_widget.setLayout(wrapper_layout)
@@ -524,7 +592,6 @@ class GenAIClient(QWidget):
 
         QTimer.singleShot(100, lambda: self.scroll_area.verticalScrollBar().setValue(
             self.scroll_area.verticalScrollBar().maximum()))
-
 
     def invia_domanda(self):
         domanda = self.textbox.toPlainText().strip()
@@ -557,7 +624,6 @@ class GenAIClient(QWidget):
         self.chat_layout.addWidget(self.loading_label)
 
         try:
-            # Non forzare una domanda se manca il testo
             payload = {"question": domanda}
             if image_path:
                 payload["image_path"] = image_path
@@ -595,9 +661,9 @@ class GenAIClient(QWidget):
                 # 🛑 FERMA IL POLLING SE È UNA RISPOSTA FORZATA O INCOMPLETA
                 lower_resp = risposta.lower()
                 if (
-                        "not present in the documentation" in lower_resp
-                        or "documentazione non disponibile" in lower_resp
-                        or "indice documentazione non trovato" in lower_resp
+                    "not present in the documentation" in lower_resp
+                    or "documentazione non disponibile" in lower_resp
+                    or "indice documentazione non trovato" in lower_resp
                 ):
                     print("[INFO] Risposta forzata ricevuta → polling fermato.")
                     self.timer.stop()
@@ -610,71 +676,116 @@ class GenAIClient(QWidget):
             self.add_message(f"Errore: {str(e)}", 'bot')
 
     def carica_immagine(self):
-        self.hide()  # Nasconde la finestra della chat prima dello screenshot
-        QApplication.processEvents()
-        QTimer.singleShot(500, self._esegui_screenshot)
+        if IS_MAC:
+            self.hide()
+            QApplication.processEvents()
+            QTimer.singleShot(500, self._esegui_screenshot)
+        else:
+            self._lower_window_windows()
+            QTimer.singleShot(500, self._esegui_screenshot)
+
+    # --- WINDOWS: abbassa/riporta la finestra in modo sicuro ---
+    def _lower_window_windows(self):
+        if not IS_WIN:
+            return
+        try:
+            import win32gui, win32con
+            hwnd = int(self.winId())
+            win32gui.SetWindowPos(
+                hwnd, win32con.HWND_NOTOPMOST,
+                0, 0, 0, 0,
+                win32con.SWP_NOMOVE | win32con.SWP_NOSIZE | win32con.SWP_NOACTIVATE
+            )
+            win32gui.ShowWindow(hwnd, win32con.SW_MINIMIZE)
+        except Exception:
+            self.setWindowFlags(self.windowFlags() & ~Qt.WindowStaysOnTopHint)
+            self.show()
+            self.setWindowState(self.windowState() | Qt.WindowMinimized)
+            QApplication.processEvents()
+
+    def _restore_window_windows(self):
+        if not IS_WIN:
+            return
+        try:
+            import win32gui, win32con
+            hwnd = int(self.winId())
+            win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
+            win32gui.SetWindowPos(
+                hwnd, win32con.HWND_TOPMOST,
+                0, 0, 0, 0,
+                win32con.SWP_NOMOVE | win32con.SWP_NOSIZE
+            )
+        except Exception:
+            self.setWindowState(self.windowState() & ~Qt.WindowMinimized)
+            self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
+            self.show()
+            self.raise_()
+            self.activateWindow()
+            QApplication.processEvents()
 
     def _esegui_screenshot(self):
         import datetime
-        import subprocess
-        from AppKit import NSWorkspace
-        from Quartz import (
-            CGWindowListCopyWindowInfo,
-            kCGWindowListOptionOnScreenOnly,
-            kCGNullWindowID
-        )
 
-        def bring_blender_to_front():
-            try:
-                subprocess.run(["osascript", "-e", 'tell application "Blender" to activate'])
-            except Exception as e:
-                self.add_message(f"Errore attivazione Blender: {str(e)}", "bot")
+        if IS_MAC:
+            import subprocess
+            from AppKit import NSWorkspace
+            from Quartz import (
+                CGWindowListCopyWindowInfo,
+                kCGWindowListOptionOnScreenOnly,
+                kCGNullWindowID
+            )
 
-        def get_blender_window_bounds():
-            options = kCGWindowListOptionOnScreenOnly
-            windowList = CGWindowListCopyWindowInfo(options, kCGNullWindowID)
-            for window in windowList:
-                if "Blender" in window.get("kCGWindowOwnerName", ""):
-                    bounds = window.get("kCGWindowBounds", {})
-                    return (
-                        int(bounds.get("X", 0)),
-                        int(bounds.get("Y", 0)),
-                        int(bounds.get("Width", 0)),
-                        int(bounds.get("Height", 0))
-                    )
-            return None
+            def bring_blender_to_front():
+                try:
+                    subprocess.run(["osascript", "-e", 'tell application "Blender" to activate'])
+                except Exception as e:
+                    self.add_message(f"Errore attivazione Blender: {str(e)}", "bot")
+
+            def get_blender_window_bounds():
+                options = kCGWindowListOptionOnScreenOnly
+                windowList = CGWindowListCopyWindowInfo(options, kCGNullWindowID)
+                for window in windowList:
+                    if "Blender" in window.get("kCGWindowOwnerName", ""):
+                        bounds = window.get("kCGWindowBounds", {})
+                        return (
+                            int(bounds.get("X", 0)),
+                            int(bounds.get("Y", 0)),
+                            int(bounds.get("Width", 0)),
+                            int(bounds.get("Height", 0))
+                        )
+                return None
+        else:
+            def bring_blender_to_front():
+                pass
+
+            def get_blender_window_bounds():
+                return None
 
         try:
             bring_blender_to_front()
             QApplication.processEvents()
             QApplication.instance().thread().msleep(300)
 
-            bounds = get_blender_window_bounds()
             screen = QApplication.primaryScreen()
             screenshot = screen.grabWindow(0)
 
-            if bounds:
-                dpr = screen.devicePixelRatio()
-                screen_height = screen.size().height() * dpr
-
-                x, y, w, h = bounds
-                x = int(x * dpr)
-                y = int((screen_height - y - h) * dpr)
-                w = int(w * dpr)
-                h = int(h * dpr)
-
-                cropped = screenshot.copy(x, y, w, h)
+            if IS_MAC:
+                bounds = get_blender_window_bounds()
+                if bounds:
+                    dpr = screen.devicePixelRatio()
+                    screen_height = screen.size().height() * dpr
+                    x, y, w, h = bounds
+                    x = int(x * dpr)
+                    y = int((screen_height - y - h) * dpr)
+                    w = int(w * dpr)
+                    h = int(h * dpr)
+                    cropped = screenshot.copy(x, y, w, h)
+                else:
+                    self.add_message("Finestra di Blender non trovata, screenshot dell'intero schermo.", "bot")
+                    cropped = screenshot
             else:
-                self.add_message("Finestra di Blender non trovata, screenshot dell'intero schermo.", "bot")
                 cropped = screenshot
 
-            # now = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-            # path = os.path.join(BASE_DIR, f"blender_screenshot_{now}.png")
-            # cropped.save(path)
-            # self.image_path = path
-            now = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-
-            # 🔁 Rimuove screenshot precedenti nella stessa cartella
             for f in os.listdir(BASE_DIR):
                 if f.startswith("blender_screenshot_") and f.endswith(".png"):
                     try:
@@ -682,18 +793,16 @@ class GenAIClient(QWidget):
                     except Exception:
                         pass
 
-            # ✅ Salva nella directory di progetto (accessibile da Blender)
+            now = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
             path = os.path.join(BASE_DIR, f"blender_screenshot_{now}.png")
             cropped.save(path)
             self.image_path = path
 
-            # Pulisce preview precedente
             for i in reversed(range(self.preview_layout.count())):
                 widget = self.preview_layout.itemAt(i).widget()
                 if widget:
                     widget.setParent(None)
 
-            # Anteprima immagine
             self.image_preview_label = QLabel()
             pixmap = QPixmap(path).scaledToWidth(100, Qt.SmoothTransformation)
             self.image_preview_label.setPixmap(pixmap)
@@ -701,13 +810,13 @@ class GenAIClient(QWidget):
             self.image_preview_label.setCursor(Qt.PointingHandCursor)
             self.image_preview_label.mousePressEvent = self.mostra_immagine_intera
 
-            # Bottone elimina
             self.delete_button = QPushButton()
             self.delete_button.setIcon(QIcon(ICON_TRASH))
             self.delete_button.setIconSize(QSize(20, 20))
             self.delete_button.setFixedSize(28, 28)
             self.delete_button.setCursor(Qt.PointingHandCursor)
-            self.delete_button.setStyleSheet("""
+            self.delete_button.setStyleSheet(
+                """
                 QPushButton {
                     background-color: #ddd;
                     color: white;
@@ -716,10 +825,10 @@ class GenAIClient(QWidget):
                 QPushButton:hover {
                     background-color: #c00;
                 }
-            """)
+            """
+            )
             self.delete_button.clicked.connect(self.rimuovi_immagine)
 
-            # Layout con immagine a sinistra e bottone a destra
             container = QWidget()
             outer_layout = QHBoxLayout()
             outer_layout.setContentsMargins(0, 0, 0, 0)
@@ -747,12 +856,17 @@ class GenAIClient(QWidget):
             self.image_container = container
             self.preview_layout.addWidget(container)
 
-
         except Exception as e:
             self.add_message(f"Errore durante la cattura: {str(e)}", "bot")
         finally:
-            self.show()
-            self.raise_mac_window()
+            if IS_MAC:
+                self.show()
+                self.raise_mac_window()
+            else:
+                self._restore_window_windows()
+                self.show()
+                self.raise_()
+                self.activateWindow()
 
     def rimuovi_immagine(self):
         self.image_path = None
@@ -781,7 +895,6 @@ class GenAIClient(QWidget):
             return
 
         try:
-            # === 1. Tenta con interprete di sistema se disponibile
             def trova_interprete_compatibile():
                 possibili = [
                     "/opt/anaconda3/bin/python3",  # Anaconda macOS
@@ -792,7 +905,6 @@ class GenAIClient(QWidget):
                 for p in possibili:
                     if p and os.path.exists(p):
                         try:
-                            # Prova a importare Flask e Whisper
                             test = subprocess.run(
                                 [p, "-c", "import flask, whisper, speech_recognition"],
                                 stdout=subprocess.DEVNULL,
@@ -808,7 +920,6 @@ class GenAIClient(QWidget):
             blender_python = trova_interprete_compatibile()
             print("[DEBUG] Interprete scelto:", blender_python)
 
-            # 🔽 Aggiunge 'scripts/modules' al PYTHONPATH in modo che il server lo erediti
             env = os.environ.copy()
             modules_dir = None
 
@@ -843,7 +954,6 @@ class GenAIClient(QWidget):
         import requests
 
         if self.registrazione_attiva:
-            # 👉 Secondo click: CANCELLA la dettatura in corso
             try:
                 requests.get("http://127.0.0.1:5056/cancel", timeout=3)
             except Exception as e:
@@ -851,15 +961,14 @@ class GenAIClient(QWidget):
             self.ripristina_bottone_microfono()
             return
 
-        # Primo click → Avvia dettatura
         self.registrazione_attiva = True
         self.dettatura_in_corso = True
         self.send_button.setEnabled(False)
         self.add_image_button.setEnabled(False)
         self.mic_button.setEnabled(False)
 
-        # Rende il microfono rosso
-        self.mic_button.setStyleSheet("""
+        self.mic_button.setStyleSheet(
+            """
             QPushButton {
                 border-radius: 20px;
                 background-color: #e74c3c;
@@ -867,7 +976,8 @@ class GenAIClient(QWidget):
             QPushButton:hover {
                 background-color: #c0392b;
             }
-        """)
+            """
+        )
         self.mic_button.setEnabled(True)
 
         def run_dettatura():
@@ -896,10 +1006,8 @@ class GenAIClient(QWidget):
             except Exception as e:
                 QTimer.singleShot(0, lambda: self.add_message(f"❌ Errore: {e}", "bot"))
             finally:
-
                 QTimer.singleShot(0, self.ripristina_bottone_microfono)
 
-        # Avvia in background
         threading.Thread(target=run_dettatura, daemon=True).start()
 
     def ripristina_bottone_microfono(self):
@@ -908,7 +1016,8 @@ class GenAIClient(QWidget):
         self.send_button.setEnabled(True)
         self.add_image_button.setEnabled(True)
         self.mic_button.setEnabled(True)
-        self.mic_button.setStyleSheet("""
+        self.mic_button.setStyleSheet(
+            """
             QPushButton {
                 border-radius: 20px;
                 background-color: #ddd;
@@ -916,14 +1025,14 @@ class GenAIClient(QWidget):
             QPushButton:hover {
                 background-color: #bbb;
             }
-        """)
-
+            """
+        )
 
 # 🔁 1. Prova a bindare: se fallisce, esci (GUI già aperta)
-import socket
+import socket as _sock
 
 def start_singleton_socket():
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s = _sock.socket(_sock.AF_INET, _sock.SOCK_STREAM)
     try:
         s.bind(("localhost", 5055))  # socket unico
         s.listen(1)
@@ -966,5 +1075,3 @@ if __name__ == "__main__":
     app = QApplication.instance() or QApplication(sys.argv)
     window = GenAIClient()
     app.exec_()
-
-
