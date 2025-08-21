@@ -70,7 +70,7 @@ Il sistema Blender GenAI Assistant integra strumenti intelligenti per assistere 
   - 🔒 **Avvio singleton della GUI**, riportata in primo piano se già aperta
   - 🧹 **Reset automatico della chat** alla chiusura di Blender o dell’interfaccia
   - 🧠 **Script dedicato per indicizzazione documentazione PDF**, integrato con LangChain e FAISS
-- 📚 **Sistema RAG** integrato con ricerca semantica nella documentazione Blender  
+- 📚 **Sistema RAG** integrato con ricerca semantica nella documentazione Blender
   Sono stati implementati due approcci complementari:  
   1. **RAG basato su JSON tematici** → chunk generati manualmente, con maggiore coerenza semantica e risposte più mirate.  
   2. **RAG basato su parsing PDF** → copertura più ampia e facilmente aggiornabile, utile per domande trasversali sulla documentazione.  
