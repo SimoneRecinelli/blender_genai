@@ -70,6 +70,10 @@ Il sistema Blender GenAI Assistant integra strumenti intelligenti per assistere 
   - 🔒 **Avvio singleton della GUI**, riportata in primo piano se già aperta
   - 🧹 **Reset automatico della chat** alla chiusura di Blender o dell’interfaccia
   - 🧠 **Script dedicato per indicizzazione documentazione PDF**, integrato con LangChain e FAISS
+- 📚 **Sistema RAG** integrato con ricerca semantica nella documentazione Blender  
+  Sono stati implementati due approcci complementari:  
+  1. **RAG basato su JSON tematici** → chunk generati manualmente, con maggiore coerenza semantica e risposte più mirate.  
+  2. **RAG basato su parsing PDF** → copertura più ampia e facilmente aggiornabile, utile per domande trasversali sulla documentazione.  
 
 ---
 
@@ -77,16 +81,28 @@ Il sistema Blender GenAI Assistant integra strumenti intelligenti per assistere 
 
 ```
 blender_genai/
-├── icons/                     # Icone SVG/Pixmap
-├── __init__.py                # Entry point per l'addon
-├── panel.py                   # UI in Blender (chat, immagine, toggle)
-├── genai_operator.py          # Operatore per interazione con AI
-├── chat_history.json          # Storico persistente della chat
-├── utils.py                   # Funzioni core, modelli, RAG
-├── server.py                  # Server Flask + auto install dipendenze
-├── extern_gui.py              # Interfaccia esterna PyQt5
-├── langchain_rag_blender.py   # Logica RAG e indexing
-└── README.md                  # Questo file
+├── icons/                        # Icone SVG/PNG per GUI e pannello
+├── scripts/                      # Script ausiliari e di test
+│   ├── read_pickle.py             # Utility per leggere file pickle
+│   ├── blender_chunks.json        # Chunk JSON tematici per RAG
+│   ├── Blender_doc.pdf            # Documentazione Blender in formato PDF
+│   ├── blender_faiss_index.pkl    # Indice FAISS per il retrieval
+│   ├── book_sliced.pdf            # Documento PDF preprocessato in chunk
+│   ├── .gitattributes             # Configurazione Git (es. LFS)
+│   ├── .gitignore                 # File esclusi dal versionamento
+│   └── __init__.py                # Inizializzazione pacchetto scripts
+├── extern_gui.py                  # Interfaccia grafica esterna in PyQt5
+├── genai_operator.py              # Operatori Blender per interazione con AI
+├── gui_launcher.py                # Avvio separato della GUI esterna
+├── langchain_rag_blender_pdf.py   # Script RAG basato su documentazione PDF
+├── LICENSE                        # Licenza MIT del progetto
+├── open_pkl.py                    # Script per aprire file pickle
+├── panel.py                       # Pannello UI in Blender (sidebar GenAI)
+├── rag_from_json.py                # Script RAG basato su JSON tematico
+├── README.md                      # Documentazione principale del progetto
+├── server.py                      # Server Flask + gestione dipendenze
+├── speech_server.py               # Server Flask per riconoscimento vocale
+└── utils.py                       # Funzioni core (RAG, embeddings, AI context)
 ```
 
 ---
