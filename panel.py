@@ -37,6 +37,36 @@ class GENAI_PT_Panel(bpy.types.Panel):
         layout.operator("genai.run_rag", text="Esegui RAG da JSON 📄", icon="FILE_SCRIPT")
         layout.operator("genai.run_rag_pdf", text="Esegui RAG da PDF 📄", icon="FILE_SCRIPT")
 
+class GENAI_OT_ShowExternalChat(bpy.types.Operator):
+    bl_idname = "genai.show_external_chat"
+    bl_label = "Apri Chat Esterna"
+    bl_description = "Avvia o porta in primo piano la finestra della chat GenAI esterna"
+
+    def execute(self, context):
+        import socket
+        script_path = os.path.join(os.path.dirname(__file__), "extern_gui.py")
+
+        # 🔎 Verifica se la GUI è già attiva (socket 5055)
+        try:
+            s = socket.create_connection(("localhost", 5055), timeout=1)
+            s.sendall(b"bring-to-front")
+            s.close()
+            self.report({'INFO'}, "Chat già attiva → portata in primo piano.")
+            return {'FINISHED'}
+        except (ConnectionRefusedError, OSError):
+            pass  # nessuna GUI attiva, avvia nuova istanza
+
+        # 🟢 Avvia GUI in processo separato
+        try:
+            subprocess.Popen(
+                [sys.executable, script_path],
+
+            )
+            self.report({'INFO'}, "Chat avviata.")
+        except Exception as e:
+            self.report({'ERROR'}, f"Errore avvio GUI: {e}")
+        return {'FINISHED'}
+
 class GENAI_OT_RunRAG(bpy.types.Operator):
     bl_idname = "genai.run_rag"
     bl_label = "Esegui RAG"
@@ -73,6 +103,7 @@ classes = [
     GENAI_PT_Panel,
     GENAI_OT_RunRAG,
     GENAI_OT_RunRAGpdf,
+    GENAI_OT_ShowExternalChat,
 ]
 
 def register():

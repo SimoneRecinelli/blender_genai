@@ -729,11 +729,17 @@ class GenAIClient(QWidget):
         if IS_MAC:
             import subprocess
             from AppKit import NSWorkspace
-            from Quartz import (
-                CGWindowListCopyWindowInfo,
-                kCGWindowListOptionOnScreenOnly,
-                kCGNullWindowID
-            )
+
+            try:
+                from Quartz import (
+                    CGWindowListCopyWindowInfo,
+                    kCGWindowListOptionOnScreenOnly,
+                    kCGNullWindowID
+                )
+                HAS_QUARTZ = True
+            except ImportError:
+                print("[AVVISO] Quartz non disponibile, userò screenshot intero")
+                HAS_QUARTZ = False
 
             def bring_blender_to_front():
                 try:
@@ -742,10 +748,13 @@ class GenAIClient(QWidget):
                     self.add_message(f"Errore attivazione Blender: {str(e)}", "bot")
 
             def get_blender_window_bounds():
+                if not HAS_QUARTZ:
+                    return None
                 options = kCGWindowListOptionOnScreenOnly
                 windowList = CGWindowListCopyWindowInfo(options, kCGNullWindowID)
+                subprocess.run(["osascript", "-e", 'tell application "Blender" to activate'])
                 for window in windowList:
-                    if "Blender" in window.get("kCGWindowOwnerName", ""):
+                    if "Blender" in window.get("kCGWindowOwnerName", "").lower():
                         bounds = window.get("kCGWindowBounds", {})
                         return (
                             int(bounds.get("X", 0)),
@@ -781,7 +790,6 @@ class GenAIClient(QWidget):
                     h = int(h * dpr)
                     cropped = screenshot.copy(x, y, w, h)
                 else:
-                    self.add_message("Finestra di Blender non trovata, screenshot dell'intero schermo.", "bot")
                     cropped = screenshot
             else:
                 cropped = screenshot

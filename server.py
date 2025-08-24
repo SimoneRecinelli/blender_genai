@@ -33,22 +33,61 @@ def is_installed(module_name):
     except Exception:
         return False
 
-def install_dependencies_if_needed():
-    if not modules_dir:
-        print("[ERRORE] 'modules_dir' non disponibile. Interrompo.")
-        return
+# def install_dependencies_if_needed():
+#     required = [
+#         ("faiss-cpu", "faiss"),
+#         ("flask", "flask"),
+#         ("requests", "requests"),
+#         ("PyQt5", "PyQt5"),
+#         ("psutil", "psutil"),
+#         ("PyMuPDF", "fitz"),
+#         ("pyttsx3", "pyttsx3"),
+#         ("SpeechRecognition", "speech_recognition"),
+#         ("sounddevice", "sounddevice"),
+#         ("scipy", "scipy"),
+#         ("openai-whisper", "whisper"),
+#         ("torch", "torch"),
+#         ("numpy==1.26.4", "numpy"),
+#         ("regex", "regex"),
+#     ]
+#
+#     if platform.system() == "Darwin":
+#         required += [
+#             ("pyobjc", "objc"),
+#             ("pyobjc-framework-Cocoa", "AppKit"),
+#         ]
+#
+#     # installa i pacchetti base
+#     for pip_name, module_name in required:
+#         if not is_installed(module_name):
+#             print(f"[SETUP] Installazione mancante: {pip_name}")
+#             try:
+#                 subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", pip_name])
+#             except subprocess.CalledProcessError as e:
+#                 print(f"[ERRORE] Installazione fallita per {pip_name}: {e}")
+#         else:
+#             print(f"[SETUP] ✓ {pip_name} già presente")
+#
+#     try:
+#         subprocess.check_call([
+#             sys.executable, "-m", "pip", "install", "--upgrade",
+#             "langchain", "langchain-core", "langchain-community",
+#             "langchain-huggingface", "sentence-transformers",
+#             "faiss-cpu", "PyQt5",
+#             "pyobjc-core", "pyobjc-framework-Cocoa"
+#         ])
+#
+#     except subprocess.CalledProcessError as e:
+#         print(f"[ERRORE] Aggiornamento LangChain/HuggingFace fallito: {e}")
 
+def install_dependencies_if_needed():
     required = [
         ("faiss-cpu", "faiss"),
-        ("sentence-transformers", "sentence_transformers"),
         ("flask", "flask"),
         ("requests", "requests"),
         ("PyQt5", "PyQt5"),
         ("psutil", "psutil"),
         ("PyMuPDF", "fitz"),
-        ("langchain", "langchain"),
-        ("langchain-core", "langchain_core"),
-        ("langchain-community", "langchain_community"),
         ("pyttsx3", "pyttsx3"),
         ("SpeechRecognition", "speech_recognition"),
         ("sounddevice", "sounddevice"),
@@ -57,27 +96,38 @@ def install_dependencies_if_needed():
         ("torch", "torch"),
         ("numpy==1.26.4", "numpy"),
         ("regex", "regex"),
+
+        # pacchetti critici
+        ("langchain", "langchain"),
+        ("langchain-core", "langchain_core"),
+        ("langchain-community", "langchain_community"),
+        ("langchain-huggingface", "langchain_huggingface"),
+        ("sentence-transformers", "sentence_transformers"),
     ]
 
     if platform.system() == "Darwin":
         required += [
-            ("Foundation", "Foundation"),
-            ("pyobjc", "objc"),
-            ("AppKit", "AppKit")
+            ("pyobjc-core", "objc"),
+            ("pyobjc-framework-Cocoa", "AppKit"),
+            ("pyobjc-framework-Quartz", "Quartz"),
         ]
 
     for pip_name, module_name in required:
-        if not is_installed(module_name):
+        if is_installed(module_name):
+            print(f"[SETUP] ✓ {pip_name} già presente")
+        else:
             print(f"[SETUP] Installazione mancante: {pip_name}")
             try:
-                subprocess.check_call([
-                    sys.executable, "-m", "pip", "install", pip_name,
-                    "--target", modules_dir
-                ])
+                subprocess.check_call(
+                    [sys.executable, "-m", "pip", "install", "--upgrade", pip_name],
+                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+                )
+                print(f"[SETUP] ✅ {pip_name} installato")
             except subprocess.CalledProcessError as e:
                 print(f"[ERRORE] Installazione fallita per {pip_name}: {e}")
-        else:
-            print(f"[SETUP] ✓ {pip_name} già presente")
+
+
+
 
 # ========= Helper Windows per elevazione UAC =========
 
