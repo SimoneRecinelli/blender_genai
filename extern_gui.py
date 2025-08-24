@@ -42,10 +42,20 @@ class ChatTextBox(QTextEdit):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Return and not (event.modifiers() & Qt.ShiftModifier):
+            # 🔒 Blocca se non ci sono né testo né immagine
+            testo = self.toPlainText().strip()
+            if (not testo and not self.parent.image_path):
+                return  # IGNORA pressione Invio
+
+            # 🔒 Blocca se pulsante invio disabilitato
+            if not self.parent.send_button.isEnabled():
+                return  # IGNORA pressione Invio
+
             if not self.parent.attesa_risposta and not self.parent.dettatura_in_corso:
                 self.parent.invia_domanda()
         else:
             super().keyPressEvent(event)
+
 
 class ImageViewer(QDialog):
     def __init__(self, image_path):
@@ -192,6 +202,7 @@ class GenAIClient(QWidget):
         self.textbox = ChatTextBox(self)
         self.textbox.setFixedHeight(60)
         self.textbox.setPlaceholderText("Ask a question...")
+        self.textbox.textChanged.connect(self.aggiorna_stato_invio)
 
         self.add_image_button = QPushButton()
         self.add_image_button.setIcon(QIcon(ICON_LOAD))
@@ -223,6 +234,8 @@ class GenAIClient(QWidget):
             """
         )
         self.send_button.clicked.connect(self.invia_domanda)
+
+        self.send_button.setEnabled(False)
 
         # BOTTONE DETTATURA
         self.mic_button = QPushButton()
@@ -680,6 +693,7 @@ class GenAIClient(QWidget):
             self.hide()
             QApplication.processEvents()
             QTimer.singleShot(500, self._esegui_screenshot)
+            self.aggiorna_stato_invio()
         else:
             self._lower_window_windows()
             QTimer.singleShot(500, self._esegui_screenshot)
@@ -883,6 +897,7 @@ class GenAIClient(QWidget):
         self.image_container = None
         self.image_preview_label = None
         self.delete_button = None
+        self.aggiorna_stato_invio()
 
     def avvia_speech_server(self):
         import subprocess
@@ -1018,6 +1033,13 @@ class GenAIClient(QWidget):
 
         threading.Thread(target=run_dettatura, daemon=True).start()
 
+    def aggiorna_stato_invio(self):
+        testo = self.textbox.toPlainText().strip()
+        if testo or self.image_path:
+            self.send_button.setEnabled(True)
+        else:
+            self.send_button.setEnabled(False)
+
     def ripristina_bottone_microfono(self):
         self.dettatura_in_corso = False
         self.registrazione_attiva = False
@@ -1035,6 +1057,8 @@ class GenAIClient(QWidget):
             }
             """
         )
+        self.aggiorna_stato_invio()
+
 
 # 🔁 1. Prova a bindare: se fallisce, esci (GUI già aperta)
 import socket as _sock

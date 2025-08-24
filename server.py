@@ -27,10 +27,17 @@ except ImportError:
     subprocess.call([sys.executable, "-m", "ensurepip"])
 
 # === 3. Installa le dipendenze in 'scripts/modules' ===
+# def is_installed(module_name):
+#     try:
+#         return importlib.util.find_spec(module_name) is not None
+#     except Exception:
+#         return False
+
 def is_installed(module_name):
     try:
-        return importlib.util.find_spec(module_name) is not None
-    except Exception:
+        __import__(module_name)
+        return True
+    except ImportError:
         return False
 
 # def install_dependencies_if_needed():
