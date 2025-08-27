@@ -11,10 +11,16 @@ echo "[SETUP] Installerò i pacchetti in: $MODULES_DIR"
 $BLENDER_PY -m ensurepip
 $BLENDER_PY -m pip install --upgrade pip
 
-# installa i pacchetti richiesti
+# 1. Blocca numpy alla versione compatibile
+$BLENDER_PY -m pip install --force-reinstall "numpy==1.26.4" --target "$MODULES_DIR"
+
+# 2. Installa openai-whisper senza dipendenze (così non forza numpy 2.x)
+$BLENDER_PY -m pip install --no-deps --upgrade openai-whisper --target "$MODULES_DIR"
+
+# 3. Installa tutti gli altri pacchetti
 $BLENDER_PY -m pip install \
     faiss-cpu flask requests PyQt5 psutil PyMuPDF pyttsx3 \
-    SpeechRecognition sounddevice scipy openai-whisper torch "numpy==1.26.4" regex \
+    SpeechRecognition sounddevice scipy torch regex \
     langchain langchain-core langchain-community langchain-huggingface sentence-transformers \
     pyobjc-core pyobjc-framework-Cocoa pyobjc-framework-Quartz \
     --target "$MODULES_DIR"
