@@ -1,13 +1,4 @@
-import sys
-import os
-import subprocess
-import platform
-import threading
-import importlib.util
-import time
-import shutil
-import ctypes
-from .utils import is_question_technical
+import sys, os, platform, threading, time, shutil, ctypes
 
 # === 1. Aggiungi la cartella 'scripts/modules' di Blender a sys.path ===
 try:
@@ -19,16 +10,8 @@ except Exception as e:
     print(f"[ERRORE] Impossibile accedere a bpy o user_resource: {e}")
     modules_dir = None
 
-# === 2. Abilita pip se necessario ===
-try:
-    import pip
-except ImportError:
-    print("[SETUP] pip non trovato. Attivazione con ensurepip...")
-    subprocess.call([sys.executable, "-m", "ensurepip"])
 
-import sys, os, subprocess, importlib, platform
-
-# === Determina la cartella modules di Blender ===
+# === 2. Determina la cartella modules in base al sistema operativo ===
 def get_modules_dir():
     try:
         import bpy
@@ -49,81 +32,14 @@ modules_dir = get_modules_dir()
 if modules_dir not in sys.path:
     sys.path.insert(0, modules_dir)
 
-# === Funzione robusta per garantire un pacchetto ===
-def ensure_package(pip_name, import_name=None):
-    import_name = import_name or pip_name
-    try:
-        return importlib.import_module(import_name)
-    except ImportError:
-        print(f"[SETUP] Installazione mancante: {pip_name}")
-        try:
-            subprocess.check_call([sys.executable, "-m", "pip", "install", pip_name, "--target", modules_dir])
-        except subprocess.CalledProcessError as e:
-            print(f"[ERRORE] Installazione fallita per {pip_name}: {e}")
-
-        if modules_dir not in sys.path:
-            sys.path.insert(0, modules_dir)
-
-        try:
-            return importlib.import_module(import_name)
-        except ImportError:
-            # fallback: site-packages interni di Blender
-            site_packages = os.path.join(
-                os.path.dirname(sys.executable),
-                "lib", f"python{sys.version_info.major}.{sys.version_info.minor}", "site-packages"
-            )
-            if site_packages not in sys.path:
-                sys.path.insert(0, site_packages)
-            return importlib.import_module(import_name)
-
-# === Funzione principale ===
-def install_dependencies_if_needed():
-    required = [
-        ("faiss-cpu", "faiss"),
-        ("flask", "flask"),
-        ("requests", "requests"),
-        ("PyQt5", "PyQt5"),
-        ("psutil", "psutil"),
-        ("PyMuPDF", "fitz"),
-        ("pyttsx3", "pyttsx3"),
-        ("SpeechRecognition", "speech_recognition"),
-        ("sounddevice", "sounddevice"),
-        ("scipy", "scipy"),
-        ("openai-whisper", "whisper"),
-        ("torch", "torch"),
-        ("numpy==1.26.4", "numpy"),
-        ("regex", "regex"),
-        ("langchain", "langchain"),
-        ("langchain-core", "langchain_core"),
-        ("langchain-community", "langchain_community"),
-        ("langchain-huggingface", "langchain_huggingface"),
-        ("sentence-transformers", "sentence_transformers"),
-    ]
-
-    if platform.system() == "Darwin":
-        required += [
-            ("pyobjc-core", "objc"),
-            ("pyobjc-framework-Cocoa", "AppKit"),
-            ("pyobjc-framework-Quartz", "Quartz"),
-        ]
-
-    for pip_name, module_name in required:
-        try:
-            ensure_package(pip_name, module_name)
-            print(f"[SETUP] ✓ {pip_name} pronto")
-        except Exception as e:
-            print(f"[ERRORE] Non riesco a importare {pip_name}: {e}")
-
-
-
 
 # ========= Helper Windows per elevazione UAC =========
-
 def _is_admin():
     try:
         return ctypes.windll.shell32.IsUserAnAdmin()
     except Exception:
         return False
+
 
 def _run_elevated_powershell(ps_command: str, show_window=True):
     ctypes.windll.shell32.ShellExecuteW(
@@ -131,6 +47,7 @@ def _run_elevated_powershell(ps_command: str, show_window=True):
         f'-NoProfile -ExecutionPolicy Bypass -Command "{ps_command}"',
         None, 1 if show_window else 0
     )
+
 
 def _wait_until_ffmpeg_ready(timeout_sec=240, interval_sec=3):
     t0 = time.time()
@@ -145,10 +62,9 @@ def _wait_until_ffmpeg_ready(timeout_sec=240, interval_sec=3):
         time.sleep(interval_sec)
     return False
 
-# === Installazione ffmpeg (con installazione choco se manca) ===
 
+# === 3. Installazione ffmpeg se manca ===
 def install_ffmpeg_if_needed():
-
     if shutil.which("ffmpeg") is not None:
         print("[SETUP] ✓ ffmpeg già presente")
         return
@@ -176,83 +92,48 @@ def install_ffmpeg_if_needed():
         except subprocess.CalledProcessError as e:
             print(f"[ERRORE] Installazione ffmpeg fallita: {e}")
 
-
     elif system == "Windows":
-
         def _install_with_choco_here():
-
             try:
-
                 subprocess.check_call(["choco", "install", "-y", "ffmpeg"])
-
                 print("[SETUP] ✅ ffmpeg installato con Chocolatey.")
-
                 return True
-
             except (subprocess.CalledProcessError, FileNotFoundError) as e:
-
                 print(f"[ATTENZIONE] choco non disponibile o installazione fallita qui: {e}")
-
                 return False
 
         if _is_admin() and shutil.which("choco"):
-
             if _install_with_choco_here():
                 return
 
         ps_script = r"""
-
-    $ErrorActionPreference = 'Stop'
-
-    if (-not (Get-Command choco -ErrorAction SilentlyContinue)) {
-
-      Write-Host '>> Installing Chocolatey...'
-
-      Set-ExecutionPolicy Bypass -Scope Process -Force
-
-      [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
-
-      iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-
-    }
-
-    try { choco upgrade chocolatey -y } catch { Write-Warning $_ }
-
-    Write-Host '>> Installing ffmpeg via choco...'
-
-    choco install -y ffmpeg
-
-    exit 0
-
-    """
+        $ErrorActionPreference = 'Stop'
+        if (-not (Get-Command choco -ErrorAction SilentlyContinue)) {
+          Write-Host '>> Installing Chocolatey...'
+          Set-ExecutionPolicy Bypass -Scope Process -Force
+          [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+          iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+        }
+        try { choco upgrade chocolatey -y } catch { Write-Warning $_ }
+        Write-Host '>> Installing ffmpeg via choco...'
+        choco install -y ffmpeg
+        exit 0
+        """
 
         print("[SETUP] ↪ Richiesta elevazione (UAC) per installare Chocolatey e ffmpeg...")
-
         _run_elevated_powershell(ps_script)
 
         if _wait_until_ffmpeg_ready(timeout_sec=240):
-
             print("[SETUP] ✅ ffmpeg installato e disponibile.")
-
         else:
-
             print("[SETUP] Non riesco a verificare automaticamente ffmpeg.")
-
-            print(
-                "Se hai rifiutato il prompt UAC, riavvia Blender come Amministratore oppure installa manualmente:")
-
+            print("Se hai rifiutato il prompt UAC, riavvia Blender come Amministratore oppure installa manualmente:")
             print("1) Apri PowerShell come Admin")
-
             print("2) choco install -y ffmpeg")
 
-
     else:
-
         print("[ERRORE] Sistema operativo non supportato per l’installazione automatica di ffmpeg.")
 
-
-install_dependencies_if_needed()
-install_ffmpeg_if_needed()
 
 # === 4. Flask server: Lazy init ===
 _flask_server_started = False
@@ -269,6 +150,7 @@ def start_flask_server():
         from .utils import query_ollama_with_docs_async
     except ImportError as e:
         print("[ERRORE] Dipendenza mancante all’avvio del server:", e)
+        print("⚠️ Esegui prima setup_env_mac.sh o setup_env_win.bat")
         return
 
     app = Flask(__name__)
@@ -297,7 +179,6 @@ def start_flask_server():
                     last_response["text"] = props.genai_response_text
                     last_response["ready"] = True
 
-                # ⛑️ Avvolgi in try/except anche il thread async
                 try:
                     query_ollama_with_docs_async(domanda, props, selected_objects, lambda: update_callback(props))
                 except Exception as e:

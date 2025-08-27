@@ -5,14 +5,17 @@ import threading
 import traceback
 import time
 import queue
+import tempfile
 
+# === Stato e coda risultati ===
 stop_recording_flag = threading.Event()
 result_queue = queue.Queue()
 
-# === Imposta sys.path per usare i moduli installati da server.py ===
+# === Imposta sys.path per moduli installati in setup_env_xxx ===
 def get_modules_dir():
-    blender_version = "4.4"
-    if platform.system() == "Darwin":
+    # rileva versione Blender
+    blender_version = "4.5"
+    if platform.system() == "Darwin":  # macOS
         return os.path.expanduser(f"~/Library/Application Support/Blender/{blender_version}/scripts/modules")
     elif platform.system() == "Windows":
         return os.path.join(os.getenv("APPDATA"), f"Blender Foundation\\Blender\\{blender_version}\\scripts\\modules")
@@ -25,18 +28,19 @@ modules_dir = get_modules_dir()
 if modules_dir not in sys.path:
     sys.path.insert(0, modules_dir)
 
-# === Importa i moduli necessari (già installati) ===
+# === Importa moduli (già installati) ===
 from flask import Flask, jsonify
 import whisper
 import numpy as np
 import sounddevice as sd
 from scipy.io.wavfile import write
-import tempfile
 
 # === Inizializza Flask e Whisper ===
 app = Flask(__name__)
 whisper_model = whisper.load_model("base")
 
+
+# === Funzione di registrazione e trascrizione ===
 def background_listen(max_duration=120):
     print("[DEBUG] 🎙️ Registrazione avviata.")
     stop_recording_flag.clear()
@@ -94,6 +98,8 @@ def background_listen(max_duration=120):
         traceback.print_exc()
         result_queue.put({"status": "error", "error": str(e)})
 
+
+# === Endpoint Flask ===
 @app.route('/speech', methods=['GET'])
 def speech_to_text():
     print("[DEBUG] ➤ Richiesta GET /speech ricevuta.")
@@ -109,12 +115,14 @@ def speech_to_text():
     else:
         return jsonify({"status": "error", "error": "Nessun risultato."})
 
+
 @app.route('/cancel', methods=['GET'])
 def cancel_recording():
     print("[DEBUG] ❕ Richiesta /cancel ricevuta.")
     stop_recording_flag.set()
     return jsonify({"status": "cancelled"})
 
+
 if __name__ == '__main__':
-    print("[DEBUG] ✅ Server avviato su http://127.0.0.1:5056")
-    app.run(port=5056)
+    print("[DEBUG] ✅ Speech server avviato su http://127.0.0.1:5056")
+    app.run(host="127.0.0.1", port=5056)
