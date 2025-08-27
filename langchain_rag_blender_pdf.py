@@ -1,11 +1,22 @@
 import os
 import sys
+import platform
 import pickle
 
-# Aggiunge i pacchetti user al path di Blender
-user_site = os.path.expanduser("~/.local/lib/python3.11/site-packages")
-if user_site not in sys.path:
-    sys.path.append(user_site)
+# === Aggiunge la cartella modules di Blender al sys.path ===
+def get_modules_dir():
+    blender_version = "4.5"  # cambia se usi Blender diverso
+    if platform.system() == "Darwin":
+        return os.path.expanduser(f"~/Library/Application Support/Blender/{blender_version}/scripts/modules")
+    elif platform.system() == "Windows":
+        return os.path.join(os.getenv("APPDATA"), f"Blender Foundation\\Blender\\{blender_version}\\scripts\\modules")
+    else:
+        return os.path.expanduser(f"~/.config/blender/{blender_version}/scripts/modules")
+
+modules_dir = get_modules_dir()
+if modules_dir not in sys.path:
+    sys.path.insert(0, modules_dir)
+
 
 # === Dipendenze ===
 try:

@@ -25,4 +25,18 @@ $BLENDER_PY -m pip install \
     pyobjc-core pyobjc-framework-Cocoa pyobjc-framework-Quartz \
     --target "$MODULES_DIR"
 
+# === Installazione Ollama se manca ===
+if ! command -v ollama &> /dev/null; then
+    echo "[SETUP] Ollama non trovato. Lo installo..."
+    curl -fsSL https://ollama.com/install.sh | sh
+    hash -r  # aggiorna PATH in shell corrente
+else
+    echo "[SETUP] ✓ Ollama già presente"
+fi
+
+# === Pull modelli ===
+echo "[SETUP] Scarico modelli Ollama richiesti..."
+ollama pull llama3.2-vision
+ollama pull llama3:instruct
+
 echo "[SETUP] ✅ Installazione completata!"
