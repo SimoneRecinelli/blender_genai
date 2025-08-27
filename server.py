@@ -26,67 +26,57 @@ except ImportError:
     print("[SETUP] pip non trovato. Attivazione con ensurepip...")
     subprocess.call([sys.executable, "-m", "ensurepip"])
 
-# === 3. Installa le dipendenze in 'scripts/modules' ===
-# def is_installed(module_name):
-#     try:
-#         return importlib.util.find_spec(module_name) is not None
-#     except Exception:
-#         return False
+import sys, os, subprocess, importlib, platform
 
-def is_installed(module_name):
+# === Determina la cartella modules di Blender ===
+def get_modules_dir():
     try:
-        __import__(module_name)
-        return True
+        import bpy
+        major, minor, _ = bpy.app.version  # es. (4, 5, 0)
+        blender_version = f"{major}.{minor}"
+    except Exception:
+        blender_version = "4.5"  # fallback se lanci fuori da Blender
+
+    if platform.system() == "Darwin":
+        return os.path.expanduser(f"~/Library/Application Support/Blender/{blender_version}/scripts/modules")
+    elif platform.system() == "Windows":
+        return os.path.join(os.getenv("APPDATA"), f"Blender Foundation\\Blender\\{blender_version}\\scripts\\modules")
+    else:
+        return os.path.expanduser(f"~/.config/blender/{blender_version}/scripts/modules")
+
+
+modules_dir = get_modules_dir()
+if modules_dir not in sys.path:
+    sys.path.insert(0, modules_dir)
+
+# === Funzione robusta per garantire un pacchetto ===
+def ensure_package(pip_name, import_name=None):
+    import_name = import_name or pip_name
+    try:
+        return importlib.import_module(import_name)
     except ImportError:
-        return False
+        print(f"[SETUP] Installazione mancante: {pip_name}")
+        try:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", pip_name, "--target", modules_dir])
+        except subprocess.CalledProcessError as e:
+            print(f"[ERRORE] Installazione fallita per {pip_name}: {e}")
 
-# def install_dependencies_if_needed():
-#     required = [
-#         ("faiss-cpu", "faiss"),
-#         ("flask", "flask"),
-#         ("requests", "requests"),
-#         ("PyQt5", "PyQt5"),
-#         ("psutil", "psutil"),
-#         ("PyMuPDF", "fitz"),
-#         ("pyttsx3", "pyttsx3"),
-#         ("SpeechRecognition", "speech_recognition"),
-#         ("sounddevice", "sounddevice"),
-#         ("scipy", "scipy"),
-#         ("openai-whisper", "whisper"),
-#         ("torch", "torch"),
-#         ("numpy==1.26.4", "numpy"),
-#         ("regex", "regex"),
-#     ]
-#
-#     if platform.system() == "Darwin":
-#         required += [
-#             ("pyobjc", "objc"),
-#             ("pyobjc-framework-Cocoa", "AppKit"),
-#         ]
-#
-#     # installa i pacchetti base
-#     for pip_name, module_name in required:
-#         if not is_installed(module_name):
-#             print(f"[SETUP] Installazione mancante: {pip_name}")
-#             try:
-#                 subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", pip_name])
-#             except subprocess.CalledProcessError as e:
-#                 print(f"[ERRORE] Installazione fallita per {pip_name}: {e}")
-#         else:
-#             print(f"[SETUP] ✓ {pip_name} già presente")
-#
-#     try:
-#         subprocess.check_call([
-#             sys.executable, "-m", "pip", "install", "--upgrade",
-#             "langchain", "langchain-core", "langchain-community",
-#             "langchain-huggingface", "sentence-transformers",
-#             "faiss-cpu", "PyQt5",
-#             "pyobjc-core", "pyobjc-framework-Cocoa"
-#         ])
-#
-#     except subprocess.CalledProcessError as e:
-#         print(f"[ERRORE] Aggiornamento LangChain/HuggingFace fallito: {e}")
+        if modules_dir not in sys.path:
+            sys.path.insert(0, modules_dir)
 
+        try:
+            return importlib.import_module(import_name)
+        except ImportError:
+            # fallback: site-packages interni di Blender
+            site_packages = os.path.join(
+                os.path.dirname(sys.executable),
+                "lib", f"python{sys.version_info.major}.{sys.version_info.minor}", "site-packages"
+            )
+            if site_packages not in sys.path:
+                sys.path.insert(0, site_packages)
+            return importlib.import_module(import_name)
+
+# === Funzione principale ===
 def install_dependencies_if_needed():
     required = [
         ("faiss-cpu", "faiss"),
@@ -103,8 +93,6 @@ def install_dependencies_if_needed():
         ("torch", "torch"),
         ("numpy==1.26.4", "numpy"),
         ("regex", "regex"),
-
-        # pacchetti critici
         ("langchain", "langchain"),
         ("langchain-core", "langchain_core"),
         ("langchain-community", "langchain_community"),
@@ -120,18 +108,11 @@ def install_dependencies_if_needed():
         ]
 
     for pip_name, module_name in required:
-        if is_installed(module_name):
-            print(f"[SETUP] ✓ {pip_name} già presente")
-        else:
-            print(f"[SETUP] Installazione mancante: {pip_name}")
-            try:
-                subprocess.check_call(
-                    [sys.executable, "-m", "pip", "install", "--upgrade", pip_name],
-                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-                )
-                print(f"[SETUP] ✅ {pip_name} installato")
-            except subprocess.CalledProcessError as e:
-                print(f"[ERRORE] Installazione fallita per {pip_name}: {e}")
+        try:
+            ensure_package(pip_name, module_name)
+            print(f"[SETUP] ✓ {pip_name} pronto")
+        except Exception as e:
+            print(f"[ERRORE] Non riesco a importare {pip_name}: {e}")
 
 
 
