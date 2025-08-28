@@ -1,5 +1,8 @@
 import bpy
 import socket
+import subprocess
+import os
+import sys
 
 # Import dei file interni all'addon
 from . import genai_operator, panel
@@ -15,9 +18,6 @@ bl_info = {
 }
 
 
-import subprocess
-import os
-
 def start_speech_server():
     server_path = os.path.join(os.path.dirname(__file__), "speech_server.py")
 
@@ -32,9 +32,10 @@ def start_speech_server():
     finally:
         s.close()
 
-    # 🟢 Avvia lo script in background
+    # 🟢 Avvia con il Python di Blender (non quello di sistema)
     try:
-        subprocess.Popen(["python3", server_path],
+        blender_python = sys.executable
+        subprocess.Popen([blender_python, server_path],
                          stdout=subprocess.DEVNULL,
                          stderr=subprocess.DEVNULL)
         print("[INFO] speech_server avviato.")
@@ -71,13 +72,12 @@ def register():
 
     # ✅ Avvia il server Flask
     try:
-        # ✅ Avvia il server Flask se non è già avviato
         server.start_flask_server()
         print("[INFO] Server Flask avviato da __init__.py")
     except Exception as e:
         print("[ERRORE] Avvio server Flask:", e)
 
-    # ✅ Avvio server vocale
+    # ✅ Avvia il server vocale
     start_speech_server()
 
     bpy.app.timers.register(monitor_blender_shutdown, persistent=True)

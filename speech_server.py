@@ -7,6 +7,18 @@ import time
 import queue
 import tempfile
 
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
+
+
+import numpy
+print("[DEBUG] NumPy caricato da:", numpy.__file__)
+print("[DEBUG] Versione NumPy:", numpy.__version__)
+print("[DEBUG] sys.path:")
+for p in sys.path:
+    print("   ", p)
+
+
 # === Stato e coda risultati ===
 stop_recording_flag = threading.Event()
 result_queue = queue.Queue()
