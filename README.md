@@ -31,12 +31,14 @@ Realizzato da **Simone Recinelli**, **Diego Santarelli** e **Andrea Marini**.
 - [🧹 Struttura del progetto](#-struttura-del-progetto)
 - [🛠️ Tecnologie utilizzate](#️-tecnologie-utilizzate)
 - [⚖️ Documentazione Blender (PDF)](#️-documentazione-blender-pdf)
+- [📑 Documentazione Blender (JSON)](#-documentazione-blender-json)
 - [⚙️ Requisiti & Setup](#️-requisiti--setup)
   - [✅ Dipendenze Python: installazione automatica](#-dipendenze-python-installazione-automatica)
   - [📦 Clonare il repository](#-clonare-il-repository)
   - [📥 Installare l'addon su Blender](#-installare-laddon-su-blender)
   - [🚀 Avviare l'interfaccia](#-avviare-linterfaccia)
-- [🪟 Interfaccia del Chatbot](#-interfaccia-esterna-del-chatbot)
+- [🎙️ Avvio manuale dello Speech Server](#-avvio-manuale-dello-speech-server)
+- [🪟 Interfaccia del Chatbot](#-interfaccia-del-chatbot)
   - [✨ Caratteristiche principali della GUI](#-caratteristiche-principali-della-gui)
 - [📊 Demo](#-demo)
 - [👨‍💼 Autori](#-autori)
@@ -81,8 +83,8 @@ Il sistema Blender GenAI Assistant integra strumenti intelligenti per assistere 
 
 ```
 blender_genai/
-├── icons/                        # Icone SVG/PNG per GUI e pannello
-├── scripts/                      # Script ausiliari e di test
+├── icons/                         # Icone SVG/PNG per GUI e pannello
+├── scripts/                       # Script ausiliari e di test
 │   ├── read_pickle.py             # Utility per leggere file pickle
 │   ├── blender_chunks.json        # Chunk JSON tematici per RAG
 │   ├── Blender_doc.pdf            # Documentazione Blender in formato PDF
@@ -98,9 +100,13 @@ blender_genai/
 ├── LICENSE                        # Licenza MIT del progetto
 ├── open_pkl.py                    # Script per aprire file pickle
 ├── panel.py                       # Pannello UI in Blender (sidebar GenAI)
-├── rag_from_json.py                # Script RAG basato su JSON tematico
+├── rag_from_json.py               # Script RAG basato su JSON tematico
 ├── README.md                      # Documentazione principale del progetto
 ├── server.py                      # Server Flask + gestione dipendenze
+├── setup_env_mac_full.sh          # Script di setup completo per macOS (Homebrew, Git, Python, pacchetti, Ollama, Whisper)
+├── setup_env_mac_minimal.sh       # Script di setup minimale per macOS (solo dipendenze Blender + Ollama + Whisper)
+├── setup_env_win_full.bat         # Script di setup completo per Windows (Chocolatey, Git, Python, pacchetti, Ollama, Whisper)
+├── setup_env_win_minimal.bat      # Script di setup minimale per Windows (solo dipendenze Blender + Ollama + Whisper)
 ├── speech_server.py               # Server Flask per riconoscimento vocale
 └── utils.py                       # Funzioni core (RAG, embeddings, AI context)
 ```
@@ -109,25 +115,68 @@ blender_genai/
 
 ## 🛠️ Tecnologie utilizzate
 
-| Stack       | Tecnologie |
-|-------------|------------|
-| AI Backend  | Ollama + LLaMA3, LLaVA, SentenceTransformers |
-| Retrieval   | FAISS, LangChain, HuggingFace embeddings |
-| Frontend    | Blender UI API, PyQt5 esterno |
-| Server      | Flask REST API |
-| Piattaforme | Blender 4.4+, Python 3.11, macOS & Windows |
+| Stack            | Tecnologie |
+|------------------|------------|
+| **AI Backend**   | Ollama + LLaMA 3.2 Vision, LLaMA 3 Instruct, Whisper (trascrizione vocale) |
+| **Retrieval (RAG)** | FAISS, SentenceTransformers (e5-large-v2), LangChain (core + community + huggingface) |
+| **Frontend**     | Blender 4.5 UI API (Python), PyQt5 (GUI esterna con tema dinamico, preview immagini, TTS) |
+| **Server**       | Flask REST API (addon interno), Speech Server Flask per dettatura vocale |
+| **Audio**        | SpeechRecognition, sounddevice, pyaudio, pyttsx3 (TTS), PortAudio, ffmpeg |
+| **Sistema**      | NumPy, SciPy, PyMuPDF (documentazione PDF), regex, psutil, requests |
+| **macOS only**   | PyObjC (AppKit, Quartz, Cocoa) per gestione finestra e screenshot |
+| **Piattaforme**  | Blender 4.5 (Python 3.11 integrato), macOS (ARM/Intel), Windows 10/11 |
 
-❌ Da controllare
 ---
 
 ## ⚖️ Documentazione Blender (PDF)
 
-Per permettere l'elaborazione della documentazione ufficiale di Blender **in locale**, il repository include il file `book_sliced.pdf`.
+Per permettere l'elaborazione della documentazione ufficiale di Blender **in locale**, il repository include il file `book_sliced.pdf`.  
+Questo PDF rappresenta l’intero manuale suddiviso in sezioni, utile per avere un riferimento completo della documentazione.
 
-## Documentazione Blender (JSON)
+## 📑 Documentazione Blender (JSON)
 
+Accanto al PDF, il repository include anche un file `blender_docs.json`.  
+Si tratta di una versione **strutturata e semantica** della documentazione ufficiale di Blender, utilizzata dal sistema RAG (Retrieval-Augmented Generation) per fornire risposte più pertinenti.
 
-❌ DA SCRIVERE E AGGIUNGERE AD INDICE 
+### Struttura del JSON
+
+Ogni entry del file ha questa forma:
+
+```json
+{
+  "id": "02_008",
+  "chapter": "2. Modeling",
+  "topic": "Modifiers (Mirror, Subdivision Surface, Boolean, etc.)",
+  "text": "Modifiers are non-destructive effects applied to objects. Mirror creates symmetry, Subdivision Surface smooths the mesh, Boolean allows logical operations between objects...",
+  "keywords": [
+    "modifiers",
+    "mirror",
+    "subdivision",
+    "boolean",
+    "objects",
+    "symmetry"
+  ]
+}
+```
+
+- **id** → identificatore univoco progressivo (capitolo + indice)  
+- **chapter** → capitolo del manuale (es. *Modeling, Animation, Materials*)  
+- **topic** → argomento specifico (es. *Modifiers*)  
+- **text** → spiegazione testuale estratta e pulita  
+- **keywords** → parole chiave per la ricerca semantica e il recupero rapido dei chunk  
+
+### Differenza con il PDF
+
+- **PDF (`book_sliced.pdf`)** → rappresenta l’intera documentazione in formato lineare, utile come sorgente completa ma difficile da interrogare direttamente.  
+- **JSON (`blender_docs.json`)** → fornisce chunk tematici e granulari, ottimizzati per la ricerca semantica con FAISS e `sentence-transformers`.  
+
+Grazie a questa struttura, l’addon è in grado di:  
+- recuperare rapidamente i paragrafi rilevanti alla domanda  
+- costruire un contesto preciso per l’LLM  
+- evitare risposte generiche non basate sulla documentazione ufficiale  
+
+⚡ In pratica: il **PDF è il manuale intero**, mentre il **JSON è il dizionario semantico** su cui il chatbot esegue la ricerca intelligente.
+
 ---
 # ⚙️ Requisiti & Setup
 
@@ -227,18 +276,22 @@ Abbiamo fornito **4 script** che automatizzano l’installazione delle dipendenz
 
 ---
 
-## 🦙 Installare Ollama e scaricare i modelli
-Indipendentemente dallo script scelto, è necessario installare Ollama per il proprio sistema operativo:  
-➡️ [Scarica Ollama](https://ollama.com/download)
+## 🦙 Ollama e modelli richiesti
+Non è necessario installare manualmente Ollama o scaricare i modelli:  
+gli script di setup (`.sh` su macOS, `.bat` su Windows) si occupano **automaticamente** di:
 
-Una volta installato, apri il terminale e scarica i modelli richiesti:
+- installare Ollama se non presente
+- avviare il servizio Ollama in background
+- scaricare i modelli richiesti:
+  - `llama3.2-vision` → Chatbot multimodale: gestisce le domande quando c’è un’immagine della scena.
+  - `llama3:instruct` → Chatbot con RAG testuale: gestisce le domande testuali usando documentazione JSON/PDF.
+
+⚠️ Affinché il plugin funzioni correttamente, Ollama deve essere **sempre attivo** sulla macchina:  
+gli script provvedono ad avviarlo in automatico, ma se necessario puoi avviarlo manualmente con:
 
 ```bash
-ollama pull llama3.2-vision
-ollama pull llama3:instruct
-```
+ollama serve
 
-⚠️ Affinché il plugin funzioni correttamente, **Ollama deve essere sempre attivo** sulla macchina!
 
 
 ### 📥 Installare l'addon su Blender
@@ -304,6 +357,31 @@ Di seguito si allegano due screen dell'interfaccia del chatbot realizzato, rispe
 
 
 ---
+
+## 🎙️ Avvio manuale dello Speech Server
+
+Per utilizzare la **dettatura vocale** (Whisper), è necessario avviare manualmente il server Flask `speech_server.py`.  
+Gli script `.sh` / `.bat` installano tutte le dipendenze, ma il server va lanciato con il Python integrato di Blender:
+
+### macOS
+```bash
+"/Applications/Blender.app/Contents/Resources/4.5/python/bin/python3.11" speech_server.py
+```
+
+### Windows
+```powershell
+& "C:\Program Files\Blender Foundation\Blender 4.5\4.5\python\bin\python.exe" speech_server.py
+```
+
+- Il server si avvia in locale su [http://127.0.0.1:5056](http://127.0.0.1:5056).  
+- Una volta attivo, puoi premere il **pulsante microfono** nella GUI PyQt5 per iniziare la registrazione vocale.  
+- Premi di nuovo il microfono per fermare e avviare la trascrizione.  
+
+⚠️ Se la porta `5056` risulta occupata, chiudi il processo precedente con:  
+```bash
+lsof -i :5056   # macOS/Linux
+taskkill /PID <PID> /F   # Windows
+```
 
 ## 📊 Demo
 
