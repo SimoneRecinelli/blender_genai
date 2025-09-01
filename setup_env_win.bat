@@ -9,17 +9,18 @@ echo ============================================
 echo [SETUP] Blender GenAI Assistant - Windows
 echo ============================================
 
-REM 0. Installa Chocolatey se manca (serve per git, python, portaudio, ecc.)
-where choco >nul 2>nul
-if errorlevel 1 (
-    echo [SETUP] Chocolatey non trovato. Lo installo...
-    powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-      "Set-ExecutionPolicy Bypass -Scope Process -Force; ^
-       [System.Net.ServicePointManager]::SecurityProtocol = 'Tls12'; ^
-       iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))"
-) else (
-    echo [SETUP] ✓ Chocolatey gia' presente
-)
+REM Usa direttamente il comando Chocolatey consigliato
+REM (funziona solo in cmd.exe, NON in PowerShell)
+
+@"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" ^
+  -NoProfile -InputFormat None -ExecutionPolicy Bypass ^
+  -Command "[Net.ServicePointManager]::SecurityProtocol = 3072; iex ((New-Object Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))" ^
+  && SET "PATH=%PATH%;%ALLUSERSPROFILE%\chocolatey\bin"
+
+REM Se vuoi evitare download via PowerShell, puoi installare con winget
+REM winget install --id chocolatey.chocolatey -e --source winget
+
+REM Continua con il resto dei comandi del tuo setup...
 
 REM 1. Installa Git se manca
 where git >nul 2>nul
@@ -79,6 +80,12 @@ if errorlevel 1 (
     echo [SETUP] ✓ Ollama gia' presente
 )
 
+
+REM 10b. Avvia Ollama in background
+echo [SETUP] Avvio Ollama...
+start /B ollama serve
+timeout /t 5 >nul
+
 REM 11. Pull modelli Ollama
 ollama pull llama3.2-vision
 ollama pull llama3:instruct
@@ -96,7 +103,5 @@ if not exist "%WHISPER_CACHE%\base.pt" (
 
 echo ============================================
 echo [SETUP] ✅ Installazione completata!
-echo [INFO] Per eseguire script con questi pacchetti usa sempre:
-echo         "%BLENDER_PY%" script.py
 echo ============================================
 pause
