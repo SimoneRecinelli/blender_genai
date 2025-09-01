@@ -69,7 +69,7 @@ REM 8. Reinstalla numpy per sicurezza
 "%BLENDER_PY%" -m pip install --force-reinstall "numpy==1.26.4" --target "%MODULES_DIR%"
 
 REM 9. Installa PortAudio (serve per sounddevice/pyaudio)
-choco install -y portaudio
+"%BLENDER_PY%" -m pip install pyaudio --target "%MODULES_DIR%" --upgrade
 
 REM 10. Installa Ollama se manca
 where ollama >nul 2>nul
@@ -100,6 +100,9 @@ if not exist "%WHISPER_CACHE%\base.pt" (
 ) else (
     echo [SETUP] ✓ Modello Whisper base gia' presente
 )
+
+echo [SETUP] Forzo numpy==1.26.4 per compatibilità
+"%BLENDER_PY%" -m pip install --force-reinstall "numpy==1.26.4" --target "%MODULES_DIR%"
 
 echo ============================================
 echo [SETUP] ✅ Installazione completata!

@@ -18,47 +18,6 @@ from PyQt5.QtSvg import QSvgWidget
 IS_MAC = platform.system() == "Darwin"
 IS_WIN = platform.system() == "Windows"
 
-IS_MAC = platform.system() == "Darwin"
-IS_WIN = platform.system() == "Windows"
-
-# --- Funzione cross-platform per portare Blender in primo piano ---
-def bring_blender_to_front():
-    system = platform.system()
-
-    if system == "Darwin":  # macOS
-        import subprocess
-        try:
-            subprocess.run(
-                ["osascript", "-e", 'tell application "Blender" to activate'],
-                check=True
-            )
-            return True
-        except Exception as e:
-            print(f"[AVVISO] impossibile portare Blender davanti su macOS: {e}")
-            return False
-
-    elif system == "Windows":  # Windows
-        try:
-            import win32gui, win32con
-
-            def enumHandler(hwnd, lParam):
-                if win32gui.IsWindowVisible(hwnd):
-                    title = win32gui.GetWindowText(hwnd)
-                    if "blender" in title.lower():
-                        win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
-                        win32gui.SetForegroundWindow(hwnd)
-
-            win32gui.EnumWindows(enumHandler, None)
-            return True
-        except Exception as e:
-            print(f"[AVVISO] impossibile portare Blender davanti su Windows: {e}")
-            return False
-
-    else:
-        print("[AVVISO] bring_blender_to_front non implementato per questo sistema operativo.")
-        return False
-
-
 # PyObjC per macOS (aggiunta al sys.path se necessario)
 if IS_MAC:
     user_site = os.path.expanduser("~/.local/lib/python3.11/site-packages")
@@ -796,6 +755,12 @@ class GenAIClient(QWidget):
                 print("[AVVISO] Quartz non disponibile, userò screenshot intero")
                 HAS_QUARTZ = False
 
+            def bring_blender_to_front():
+                try:
+                    subprocess.run(["osascript", "-e", 'tell application "Blender" to activate'])
+                except Exception as e:
+                    self.add_message(f"Errore attivazione Blender: {str(e)}", "bot")
+
             def get_blender_window_bounds():
                 if not HAS_QUARTZ:
                     return None
@@ -812,6 +777,13 @@ class GenAIClient(QWidget):
                             int(bounds.get("Height", 0))
                         )
                 return None
+        else:
+            def bring_blender_to_front():
+                pass
+
+            def get_blender_window_bounds():
+                return None
+
         try:
             bring_blender_to_front()
             QApplication.processEvents()
