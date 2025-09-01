@@ -117,84 +117,129 @@ blender_genai/
 | Server      | Flask REST API |
 | Piattaforme | Blender 4.4+, Python 3.11, macOS & Windows |
 
+❌ Da controllare
 ---
 
 ## ⚖️ Documentazione Blender (PDF)
 
-Per permettere l'elaborazione della documentazione ufficiale di Blender **in locale**, il repository include il file `Blender_doc.pdf`.
+Per permettere l'elaborazione della documentazione ufficiale di Blender **in locale**, il repository include il file `book_sliced.pdf`.
 
-> ⚠️ **Nota**: il file è gestito tramite **Git LFS**, poiché supera i 100MB.
+## Documentazione Blender (JSON)
 
-### Installare Git LFS (solo una volta):
+
+❌ DA SCRIVERE E AGGIUNGERE AD INDICE 
+---
+# ⚙️ Requisiti & Setup
+
+## ✅ Dipendenze Python: installazione automatica
+Non è necessario installare manualmente i pacchetti Python:  
+le dipendenze vengono installate **automaticamente** tramite gli script inclusi (`.sh` per macOS, `.bat` per Windows).  
+
+Tutti i pacchetti richiesti vengono salvati nella cartella:
+
+```
+~/Library/Application Support/Blender/4.5/scripts/modules/     (macOS)
+%APPDATA%\Blender Foundation\Blender\4.5\scripts\modules\ (Windows)
+```
+
+Dipendenze installate:
+- Flask – server locale per gestire richieste
+- FAISS – similarity search
+- sentence-transformers – embeddings semantici
+- LangChain – orchestrazione RAG
+- PyMuPDF – parsing PDF
+- PyQt5 – interfaccia grafica esterna
+- psutil – monitoraggio processi
+- requests – API HTTP
+- pyttsx3 – sintesi vocale
+- SpeechRecognition – dettatura vocale
+- sounddevice – input microfono
+- openai-whisper – trascrizione audio
+- torch – backend Whisper
+- scipy – gestione audio
+- numpy==1.26.4 – libreria numerica compatibile
+- regex – parsing testuale avanzato
+- pyobjc – solo macOS
+- ffmpeg – eseguibile di sistema, installato automaticamente se assente
+
+---
+
+## 📦 Clonare il repository
+Clonare il progetto in locale con:
 
 ```bash
-# macOS (Homebrew)
-brew install git-lfs
-
-# Ubuntu/Debian
-sudo apt install git-lfs
-
-git lfs install
+git clone https://github.com/SimoneRecinelli/blender_genai.git
+cd blender_genai
 ```
 
 ---
 
-## ⚙️ Requisiti & Setup
+## 🛠️ Setup automatico con script
 
-### ✅ Dipendenze Python: installazione automatica
+Abbiamo fornito **4 script** che automatizzano l’installazione delle dipendenze:
 
-Non è necessario installare manualmente pacchetti Python:  
-le dipendenze vengono installate **automaticamente all’avvio dell’addon** tramite `server.py` in:
+| Sistema | Script Full | Script Minimal |
+|---------|-------------|----------------|
+| **macOS** | `setup_env_mac_full.sh` <br> Installa *Homebrew, Git, Python, PyQt5, PortAudio, ffmpeg, Ollama* + dipendenze Python | `setup_env_mac_minimal.sh` <br> Installa solo le dipendenze Python (presuppone che Homebrew, Git, Python siano già presenti) |
+| **Windows** | `setup_env_win_full.bat` <br> Installa *Chocolatey, Git, Python, ffmpeg, Ollama* + dipendenze Python | `setup_env_win_minimal.bat` <br> Installa solo le dipendenze Python (presuppone che Git, Python siano già presenti) |
 
-```
-~/Library/Application Support/Blender/4.4/scripts/modules/
-```
+### 🔑 Differenza tra Full e Minimal
+- **Full** → pensato per sistemi *vergini*. Installa anche i gestori pacchetti (Homebrew/Chocolatey), Git, Python di sistema, librerie di sistema (PyQt5, PortAudio, ffmpeg), Ollama e i modelli.  
+- **Minimal** → pensato per sistemi *già configurati* con i tool principali. Installa solo le dipendenze Python necessarie al plugin e Ollama se assente.
 
-Dipendenze incluse (installate automaticamente all'avvio):
-- [Flask](https://flask.palletsprojects.com/)
-- [FAISS](https://github.com/facebookresearch/faiss)
-- [sentence-transformers](https://www.sbert.net/)
-- [LangChain](https://www.langchain.com/) core e moduli community
-- [PyMuPDF (fitz)](https://pymupdf.readthedocs.io/)
-- [PyQt5](https://riverbankcomputing.com/software/pyqt/)
-- [psutil](https://psutil.readthedocs.io/)
-- [requests](https://requests.readthedocs.io/)
-- [pyttsx3](https://pypi.org/project/pyttsx3/) – sintesi vocale TTS
-- [SpeechRecognition](https://pypi.org/project/SpeechRecognition/) – dettatura vocale
-- [sounddevice](https://pypi.org/project/sounddevice/) – input microfono
-- [openai-whisper](https://github.com/openai/whisper) – trascrizione audio
-- [torch](https://pytorch.org/) – backend per Whisper
-- [scipy](https://www.scipy.org/) – supporto audio per Whisper
-- [numpy](https://numpy.org/) – libreria numerica
-- [regex](https://pypi.org/project/regex/) – parsing testuale avanzato
-- [pyobjc](https://pyobjc.readthedocs.io/en/latest/) *(macOS only)*
-- **ffmpeg** *(eseguibile di sistema, installato automaticamente se assente)*
+---
 
-### 📦 Clonare il repository
+## ▶️ Come eseguire gli script
 
-```bash
-git lfs install
-git clone https://github.com/SimoneRecinelli/blender_genai.git
-```
+### macOS
+1. Apri il terminale e vai nella cartella del progetto:
+   ```bash
+   cd ~/Desktop/blender_genai
+   ```
+2. Dai i permessi di esecuzione (solo la prima volta):
+   ```bash
+   chmod +x setup_env_mac_full.sh
+   chmod +x setup_env_mac_minimal.sh
+   ```
+3. Avvia lo script scelto:
+   ```bash
+   ./setup_env_mac_full.sh
+   ```
+   oppure:
+   ```bash
+   ./setup_env_mac_minimal.sh
+   ```
 
-Se hai già clonato il repo **senza Git LFS**, puoi sistemare così:
-```bash
-git lfs install
-git lfs pull
-```
+### Windows
+1. Apri il **Prompt dei comandi** (`cmd.exe`) come **Amministratore**.  
+2. Vai nella cartella del progetto:
+   ```bat
+   cd Desktop\blender_genai
+   ```
+3. Esegui lo script scelto:
+   ```bat
+   setup_env_win_full.bat
+   ```
+   oppure:
+   ```bat
+   setup_env_win_minimal.bat
+   ```
 
-### 🦙 Installare Ollama e download del modello
-È necessario installare ollama per il proprio sistema operativo (https://ollama.com/download).
+---
 
-Una volta scaricato il framework, avviarlo, aprire il terminale e digitare il seguente comando:
+## 🦙 Installare Ollama e scaricare i modelli
+Indipendentemente dallo script scelto, è necessario installare Ollama per il proprio sistema operativo:  
+➡️ [Scarica Ollama](https://ollama.com/download)
+
+Una volta installato, apri il terminale e scarica i modelli richiesti:
 
 ```bash
 ollama pull llama3.2-vision
+ollama pull llama3:instruct
 ```
 
-In questo modo sarà possibile utilizzare l'LLM necessario per il chatbot.
+⚠️ Affinché il plugin funzioni correttamente, **Ollama deve essere sempre attivo** sulla macchina!
 
-⚠️ Affinché il plugin funzioni correttamente, Ollama deve essere sempre attivo sulla macchina!
 
 ### 📥 Installare l'addon su Blender
 Per installare il progetto come addon Blender:
