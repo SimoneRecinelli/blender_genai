@@ -26,7 +26,7 @@ else
     echo "[SETUP] ✓ Git già presente"
 fi
 
-# 2. Installa Python (aggiornato) se manca
+# 2. Installa Python (di sistema) se manca
 if ! command -v python3 &> /dev/null; then
     echo "[SETUP] Python3 non trovato. Lo installo con brew..."
     brew install python
@@ -38,8 +38,8 @@ fi
 echo "[SETUP] Uso Python di Blender: $BLENDER_PY"
 echo "[SETUP] Installerò i pacchetti in: $MODULES_DIR"
 
-$BLENDER_PY -m ensurepip
-$BLENDER_PY -m pip install --upgrade pip
+"$BLENDER_PY" -m ensurepip
+"$BLENDER_PY" -m pip install --upgrade pip
 
 # 4. Pulizia versioni NumPy sbagliate
 echo "[SETUP] Pulisco vecchie versioni di numpy (2.x/3.x)..."
@@ -48,24 +48,32 @@ rm -rf "$MODULES_DIR"/numpy-3.*
 
 # 5. Installa NumPy 1.26.4 compatibile
 echo "[SETUP] Installo numpy==1.26.4 (compatibile con Whisper + Numba)"
-$BLENDER_PY -m pip install --force-reinstall "numpy==1.26.4" --target "$MODULES_DIR"
+"$BLENDER_PY" -m pip install --force-reinstall "numpy==1.26.4" --target "$MODULES_DIR"
 
 # 6. Installa openai-whisper senza dipendenze
 echo "[SETUP] Installo openai-whisper (senza dipendenze)"
-$BLENDER_PY -m pip install --no-deps --upgrade openai-whisper --target "$MODULES_DIR"
+"$BLENDER_PY" -m pip install --no-deps --upgrade openai-whisper --target "$MODULES_DIR"
 
-# 7. Installa tutti gli altri pacchetti
+# 7. Installa pacchetti principali (senza PyQt5 da pip, che non funziona su ARM)
 echo "[SETUP] Installo pacchetti principali..."
-$BLENDER_PY -m pip install \
-    faiss-cpu flask requests PyQt5 psutil PyMuPDF pyttsx3 \
+"$BLENDER_PY" -m pip install \
+    faiss-cpu flask requests psutil PyMuPDF pyttsx3 \
     SpeechRecognition sounddevice scipy torch regex \
     langchain langchain-core langchain-community langchain-huggingface sentence-transformers \
     pyobjc-core pyobjc-framework-Cocoa pyobjc-framework-Quartz \
     --target "$MODULES_DIR" --upgrade
 
+# 7b. Installa PyQt5 con Homebrew (più stabile su macOS ARM)
+if ! brew list pyqt@5 &>/dev/null; then
+    echo "[SETUP] Installo PyQt5 con Homebrew..."
+    brew install pyqt@5
+else
+    echo "[SETUP] ✓ PyQt5 già presente"
+fi
+
 # 8. Reinstalla numpy 1.26.4 per sicurezza
 echo "[SETUP] Reinstallo numpy==1.26.4 per sicurezza"
-$BLENDER_PY -m pip install --force-reinstall "numpy==1.26.4" --target "$MODULES_DIR"
+"$BLENDER_PY" -m pip install --force-reinstall "numpy==1.26.4" --target "$MODULES_DIR"
 
 # 9. Installa PortAudio (per sounddevice)
 if ! brew list portaudio &>/dev/null; then
@@ -83,6 +91,11 @@ if ! command -v ollama &> /dev/null; then
 else
     echo "[SETUP] ✓ Ollama già presente"
 fi
+
+# 10b. Avvia Ollama come servizio
+echo "[SETUP] Avvio Ollama..."
+(ollama serve > /dev/null 2>&1 &)
+sleep 5
 
 # 11. Pull modelli Ollama richiesti
 echo "[SETUP] Scarico modelli Ollama richiesti..."
@@ -102,6 +115,4 @@ fi
 
 echo "============================================"
 echo "[SETUP] ✅ Installazione completata!"
-echo "[INFO] Per eseguire script con questi pacchetti usa sempre:"
-echo "       $BLENDER_PY <script.py>"
 echo "============================================"
