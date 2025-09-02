@@ -6,7 +6,7 @@
     <img src="https://forthebadge.com/images/badges/works-on-my-machine.svg"/>
     <br>
     <img src="https://img.shields.io/badge/Python-3.11-blue?logo=python&logoColor=white&style=for-the-badge"/>
-    <img src="https://img.shields.io/badge/Blender-4.4-orange?logo=blender&logoColor=white&style=for-the-badge"/>
+    <img src="https://img.shields.io/badge/Blender-4.5-orange?logo=blender&logoColor=white&style=for-the-badge"/>
     <img src="https://img.shields.io/badge/PyQt5-GUI-brightgreen?logo=qt&logoColor=white&style=for-the-badge"/>
     <img src="https://img.shields.io/badge/Flask-Server-black?logo=flask&logoColor=white&style=for-the-badge"/>
   </p>
@@ -29,10 +29,10 @@ Realizzato da **Simone Recinelli**, **Diego Santarelli** e **Andrea Marini**.
 
 - [📌 Funzionalità del sistema](#-funzionalità-del-sistema)
 - [🧹 Struttura del progetto](#-struttura-del-progetto)
-- [🛠️ Tecnologie utilizzate](#️-tecnologie-utilizzate)
-- [⚖️ Documentazione Blender (PDF)](#️-documentazione-blender-pdf)
+- [🛠️ Tecnologie utilizzate](#-tecnologie-utilizzate)
+- [⚖️ Documentazione Blender (PDF)](#-documentazione-blender-pdf)
 - [📑 Documentazione Blender (JSON)](#-documentazione-blender-json)
-- [⚙️ Requisiti & Setup](#️-requisiti--setup)
+- [⚙️ Requisiti e Setup](#-requisiti-e-setup)
   - [✅ Dipendenze Python: installazione automatica](#-dipendenze-python-installazione-automatica)
   - [📦 Clonare il repository](#-clonare-il-repository)
   - [📥 Installare l'addon su Blender](#-installare-laddon-su-blender)
@@ -176,7 +176,7 @@ Grazie a questa struttura, l’addon è in grado di:
 - evitare risposte generiche non basate sulla documentazione ufficiale
 
 ---
-# ⚙️ Requisiti & Setup
+# ⚙️ Requisiti e Setup
 
 ## ✅ Dipendenze Python: installazione automatica
 Non è necessario installare manualmente i pacchetti Python:  
