@@ -173,9 +173,7 @@ Ogni entry del file ha questa forma:
 Grazie a questa struttura, l’addon è in grado di:  
 - recuperare rapidamente i paragrafi rilevanti alla domanda  
 - costruire un contesto preciso per l’LLM  
-- evitare risposte generiche non basate sulla documentazione ufficiale  
-
-⚡ In pratica: il **PDF è il manuale intero**, mentre il **JSON è il dizionario semantico** su cui il chatbot esegue la ricerca intelligente.
+- evitare risposte generiche non basate sulla documentazione ufficiale
 
 ---
 # ⚙️ Requisiti & Setup
@@ -291,7 +289,7 @@ gli script provvedono ad avviarlo in automatico, ma se necessario puoi avviarlo 
 
 ```bash
 ollama serve
-
+```
 
 
 ### 📥 Installare l'addon su Blender
