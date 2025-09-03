@@ -25,7 +25,7 @@ Realizzato da **Simone Recinelli**, **Diego Santarelli** e **Andrea Marini**.
 ---
 
 
-## 👆🏼 Indice
+# 👆🏼 Indice
 
 - [📌 Funzionalità del sistema](#-funzionalità-del-sistema)
 - [🧹 Struttura del progetto](#-struttura-del-progetto)
@@ -47,7 +47,7 @@ Realizzato da **Simone Recinelli**, **Diego Santarelli** e **Andrea Marini**.
 
 ---
 
-## 📌 Funzionalità del sistema
+# 📌 Funzionalità del sistema
 
 Il sistema Blender GenAI Assistant integra strumenti intelligenti per assistere l’utente nella modellazione 3D in modo contestuale, multimodale e interattivo. Le funzionalità sono accessibili sia da Blender che da un’interfaccia grafica esterna.
 
@@ -79,41 +79,36 @@ Il sistema Blender GenAI Assistant integra strumenti intelligenti per assistere 
 
 ---
 
-## 🧹 Struttura del progetto
+# 🧹 Struttura del progetto
 
+Di seguito viene illustrata l’organizzazione dei file e delle cartelle che compongono il progetto Blender GenAI Assistant, evidenziando il ruolo dei principali moduli e risorse a supporto delle funzionalità implementate:
 ```
 blender_genai/
 ├── icons/                         # Icone SVG/PNG per GUI e pannello
-├── scripts/                       # Script ausiliari e di test
-│   ├── read_pickle.py             # Utility per leggere file pickle
-│   ├── blender_chunks.json        # Chunk JSON tematici per RAG
-│   ├── Blender_doc.pdf            # Documentazione Blender in formato PDF
-│   ├── blender_faiss_index.pkl    # Indice FAISS per il retrieval
-│   ├── book_sliced.pdf            # Documento PDF preprocessato in chunk
-│   ├── .gitattributes             # Configurazione Git (es. LFS)
-│   ├── .gitignore                 # File esclusi dal versionamento
-│   └── __init__.py                # Inizializzazione pacchetto scripts
+├── .gitattributes                 # Configurazione Git
+├── .gitignore                     # File esclusi dal versionamento
+├── __init__.py                    # Inizializzazione pacchetto scripts
+├── blender_chunks.json            # Chunk JSON tematici per RAG
+├── blender_faiss_index.pkl        # Indice FAISS per il retrieval
+├── book_sliced.pdf                # Documento PDF preprocessato in chunk
 ├── extern_gui.py                  # Interfaccia grafica esterna in PyQt5
 ├── genai_operator.py              # Operatori Blender per interazione con AI
 ├── gui_launcher.py                # Avvio separato della GUI esterna
 ├── langchain_rag_blender_pdf.py   # Script RAG basato su documentazione PDF
 ├── LICENSE                        # Licenza MIT del progetto
-├── open_pkl.py                    # Script per aprire file pickle
 ├── panel.py                       # Pannello UI in Blender (sidebar GenAI)
 ├── rag_from_json.py               # Script RAG basato su JSON tematico
 ├── README.md                      # Documentazione principale del progetto
 ├── server.py                      # Server Flask + gestione dipendenze
-├── setup_env_mac_full.sh          # Script di setup completo per macOS (Homebrew, Git, Python, pacchetti, Ollama, Whisper)
-├── setup_env_mac_minimal.sh       # Script di setup minimale per macOS (solo dipendenze Blender + Ollama + Whisper)
-├── setup_env_win_full.bat         # Script di setup completo per Windows (Chocolatey, Git, Python, pacchetti, Ollama, Whisper)
-├── setup_env_win_minimal.bat      # Script di setup minimale per Windows (solo dipendenze Blender + Ollama + Whisper)
+├── setup_env_mac.sh               # Script di setup per macOS (dipendenze Blender + Ollama + Whisper)
+├── setup_env_win.bat              # Script di setup per Windows (dipendenze Blender + Ollama + Whisper)
 ├── speech_server.py               # Server Flask per riconoscimento vocale
 └── utils.py                       # Funzioni core (RAG, embeddings, AI context)
 ```
 
 ---
 
-## 🛠️ Tecnologie utilizzate
+# 🛠️ Tecnologie utilizzate
 
 | Stack            | Tecnologie |
 |------------------|------------|
@@ -128,17 +123,17 @@ blender_genai/
 
 ---
 
-## ⚖️ Documentazione Blender (PDF)
+# ⚖️ Documentazione Blender (PDF)
 
 Per permettere l'elaborazione della documentazione ufficiale di Blender **in locale**, il repository include il file `book_sliced.pdf`.  
 Questo PDF rappresenta l’intero manuale suddiviso in sezioni, utile per avere un riferimento completo della documentazione.
 
-## 📑 Documentazione Blender (JSON)
+# 📑 Documentazione Blender (JSON)
 
-Accanto al PDF, il repository include anche un file `blender_docs.json`.  
+Accanto al PDF, il repository include anche un file `blender_chunks.json`.  
 Si tratta di una versione **strutturata e semantica** della documentazione ufficiale di Blender, utilizzata dal sistema RAG (Retrieval-Augmented Generation) per fornire risposte più pertinenti.
 
-### Struttura del JSON
+## Struttura del JSON
 
 Ogni entry del file ha questa forma:
 
@@ -165,10 +160,10 @@ Ogni entry del file ha questa forma:
 - **text** → spiegazione testuale estratta e pulita  
 - **keywords** → parole chiave per la ricerca semantica e il recupero rapido dei chunk  
 
-### Differenza con il PDF
+## Differenza con il PDF
 
 - **PDF (`book_sliced.pdf`)** → rappresenta l’intera documentazione in formato lineare, utile come sorgente completa ma difficile da interrogare direttamente.  
-- **JSON (`blender_docs.json`)** → fornisce chunk tematici e granulari, ottimizzati per la ricerca semantica con FAISS e `sentence-transformers`.  
+- **JSON (`blender_chunks.json`)** → fornisce chunk tematici e granulari, ottimizzati per la ricerca semantica con FAISS e `sentence-transformers`.  
 
 Grazie a questa struttura, l’addon è in grado di:  
 - recuperare rapidamente i paragrafi rilevanti alla domanda  
@@ -178,15 +173,34 @@ Grazie a questa struttura, l’addon è in grado di:
 ---
 # ⚙️ Requisiti e Setup
 
+## 🔑 Prerequisiti di sistema
+
+Prima di eseguire gli script di setup, assicurati che siano soddisfatti i seguenti requisiti:
+
+- **Blender 4.5** installato sulla macchina (con Python 3.11 integrato).  
+- Sistema operativo compatibile:
+  - macOS (Intel o Apple Silicon)  
+  - Windows 10/11 (x64)  
+- **Connessione Internet** attiva per il primo setup.  
+- **Permessi di esecuzione**:
+  - macOS → rendere eseguibile lo script con `chmod +x`  
+  - Windows → avviare il Prompt dei comandi come **Amministratore**
+
+---
+
 ## ✅ Dipendenze Python: installazione automatica
 Non è necessario installare manualmente i pacchetti Python:  
 le dipendenze vengono installate **automaticamente** tramite gli script inclusi (`.sh` per macOS, `.bat` per Windows).  
 
 Tutti i pacchetti richiesti vengono salvati nella cartella:
 
+- macOS:
 ```
-~/Library/Application Support/Blender/4.5/scripts/modules/     (macOS)
-%APPDATA%\Blender Foundation\Blender\4.5\scripts\modules\ (Windows)
+~/Library/Application Support/Blender/4.5/scripts/modules/
+```
+- Windows:
+```
+%APPDATA%\Blender Foundation\Blender\4.5\scripts\modules\
 ```
 
 Dipendenze installate:
@@ -205,9 +219,9 @@ Dipendenze installate:
 - torch – backend Whisper
 - scipy – gestione audio
 - numpy==1.26.4 – libreria numerica compatibile
-- regex – parsing testuale avanzato
-- pyobjc – solo macOS
-- ffmpeg – eseguibile di sistema, installato automaticamente se assente
+- regex – parsing testuale avanzato  
+- **Solo macOS**: pyobjc  
+- **Sistema**: ffmpeg (installato automaticamente se assente)
 
 ---
 
@@ -223,16 +237,12 @@ cd blender_genai
 
 ## 🛠️ Setup automatico con script
 
-Abbiamo fornito **4 script** che automatizzano l’installazione delle dipendenze:
+Abbiamo fornito **2 script** che automatizzano l’installazione delle dipendenze:
 
-| Sistema | Script Full | Script Minimal |
-|---------|-------------|----------------|
-| **macOS** | `setup_env_mac_full.sh` <br> Installa *Homebrew, Git, Python, PyQt5, PortAudio, ffmpeg, Ollama* + dipendenze Python | `setup_env_mac_minimal.sh` <br> Installa solo le dipendenze Python (presuppone che Homebrew, Git, Python siano già presenti) |
-| **Windows** | `setup_env_win_full.bat` <br> Installa *Chocolatey, Git, Python, ffmpeg, Ollama* + dipendenze Python | `setup_env_win_minimal.bat` <br> Installa solo le dipendenze Python (presuppone che Git, Python siano già presenti) |
-
-### 🔑 Differenza tra Full e Minimal
-- **Full** → pensato per sistemi *vergini*. Installa anche i gestori pacchetti (Homebrew/Chocolatey), Git, Python di sistema, librerie di sistema (PyQt5, PortAudio, ffmpeg), Ollama e i modelli.  
-- **Minimal** → pensato per sistemi *già configurati* con i tool principali. Installa solo le dipendenze Python necessarie al plugin e Ollama se assente.
+| Sistema  | Script |
+|----------|-------------------|
+| **macOS**   | `setup_env_mac.sh` <br> Installa automaticamente tutte le dipendenze (presuppone che Homebrew, Git e Python siano già presenti) |
+| **Windows** | `setup_env_win.bat` <br> Installa automaticamente tutte le dipendenze (presuppone che Git e Python siano già presenti) |
 
 ---
 
@@ -245,16 +255,11 @@ Abbiamo fornito **4 script** che automatizzano l’installazione delle dipendenz
    ```
 2. Dai i permessi di esecuzione (solo la prima volta):
    ```bash
-   chmod +x setup_env_mac_full.sh
-   chmod +x setup_env_mac_minimal.sh
+   chmod +x setup_env_mac.sh
    ```
-3. Avvia lo script scelto:
+3. Avvia lo script:
    ```bash
-   ./setup_env_mac_full.sh
-   ```
-   oppure:
-   ```bash
-   ./setup_env_mac_minimal.sh
+   ./setup_env_mac.sh
    ```
 
 ### Windows
@@ -263,14 +268,37 @@ Abbiamo fornito **4 script** che automatizzano l’installazione delle dipendenz
    ```bat
    cd Desktop\blender_genai
    ```
-3. Esegui lo script scelto:
+3. Esegui lo script:
    ```bat
-   .\setup_env_win_full.bat
+   .\setup_env_win.bat
    ```
-   oppure:
-   ```bat
-   .\setup_env_win_minimal.bat
-   ```
+
+---
+
+## 📥 Installare l'addon su Blender
+Per installare il progetto come addon Blender:
+
+1. Comprimi la cartella **blender_genai** in un file `.zip`.  
+2. Apri Blender.  
+3. Vai su **Modifica > Preferenze > Add-ons**.  
+4. Clicca sull’icona a freccia in alto a destra e scegli **Install from Disk**.  
+5. Seleziona lo `.zip` appena creato e conferma.  
+6. Se necessario, spunta la casella per attivare l’addon.
+
+---
+
+## 🚀 Avviare l’interfaccia
+Una volta installato l’addon:
+
+1. Premi **N** per aprire la sidebar a destra nella 3D View.  
+2. Vai nella sezione **GenAI**.  
+3. Clicca sul bottone **Apri Chat Esterna** per lanciare l’interfaccia PyQt5.  
+
+Da qui potrai:
+- 💬 Chattare con l’assistente in tempo reale  
+- 🖼️ Inviare screenshot della scena Blender  
+- 🎙️ Usare la dettatura vocale e ricevere risposte con sintesi vocale  
+- 🤖 Ottenere risposte intelligenti, documentate e multimodali
 
 ---
 
@@ -290,34 +318,9 @@ gli script provvedono ad avviarlo in automatico, ma se necessario puoi avviarlo 
 ```bash
 ollama serve
 ```
-
-
-### 📥 Installare l'addon su Blender
-Per installare il progetto come addon Blender:
-
-1. Comprimi la cartella blender_genai in un file ".zip".
-2. Apri Blender.
-3. Vai su Modifica > Preferenze > Add-ons.
-4. Clicca sull’icona a freccia in alto a destra e scegli “Install from Disk”.
-5. Seleziona lo .zip appena creato e conferma.
-6. Spunta la casella per attivare l’addon.
-
-### 🚀 Avviare l’interfaccia
-Una volta installato l’addon:
-
-1. Premi N per aprire la sidebar a destra nella 3D View.
-2. Vai nella sezione GenAI.
-3. Clicca sul bottone “Apri Chat Esterna” per lanciare l’interfaccia PyQt5.
-
-Da qui potrai:
-
-- 💬 Chattare con l’assistente in tempo reale
-- 🖼️ Inviare screenshot della scena Blender
-- 🤖 Ottenere risposte intelligenti, documentate e multimodali
-
 ---
 
-## 🪟 Interfaccia del Chatbot
+# 🪟 Interfaccia del Chatbot
 
 L’addon include una interfaccia grafica personalizzata esterna sviluppata in PyQt5, progettata per offrire un'esperienza utente fluida e moderna, ispirata alle applicazioni di messaggistica. È completamente multi-piattaforma (macOS Apple Silicon e Windows), supporta la cronologia delle conversazioni, invio di immagini della scena Blender, e la modalità dark/light con switch dinamico.
 
@@ -356,17 +359,16 @@ Di seguito si allegano due screen dell'interfaccia del chatbot realizzato, rispe
 
 ---
 
-## 🎙️ Avvio manuale dello Speech Server
+# ⚠️🎙️ Avvio manuale dello Speech Server
 
-Nel caso in cui lo `speech_server.py` non parta in automatico nel momenti di apertura della chat esterna, per utilizzare la **dettatura vocale** (Whisper), è necessario avviare manualmente il server Flask dedicato.  
-Gli script `.sh` / `.bat` installano tutte le dipendenze, ma il server va lanciato con il Python integrato di Blender:
+Nel caso in cui lo `speech_server.py` non venga avviato automaticamente all’apertura della chat esterna, per utilizzare la **dettatura vocale** (Whisper), è necessario avviare manualmente il server Flask dedicato con i seguenti comandi:
 
-### macOS
+- #### macOS:
 ```bash
 "/Applications/Blender.app/Contents/Resources/4.5/python/bin/python3.11" speech_server.py
 ```
 
-### Windows
+- #### Windows:
 ```powershell
 & "C:\Program Files\Blender Foundation\Blender 4.5\4.5\python\bin\python.exe" speech_server.py
 ```
@@ -381,14 +383,14 @@ lsof -i :5056   # macOS/Linux
 taskkill /PID <PID> /F   # Windows
 ```
 
-## 📊 Demo
+# 📊 Demo
 
 https://user-images.githubusercontent.com/123456789/xyz/demo_video.mp4  
 *(Inserire video reale o GIF dimostrativa)*
 
 ---
 
-## 👨‍💼 Autori
+# 👨‍💼 Autori
 
 - [Simone Recinelli](https://github.com/SimoneRecinelli) (Matricola S1118757)
 - [Diego Santarelli](https://github.com/diegosantarelli) (Matricola S1118746)
@@ -397,7 +399,7 @@ https://user-images.githubusercontent.com/123456789/xyz/demo_video.mp4
 
 ---
 
-## 📄 Licenza
+# 📄 Licenza
 
 Questo progetto è distribuito sotto licenza MIT.
 
