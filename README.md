@@ -385,8 +385,7 @@ taskkill /PID <PID> /F   # Windows
 
 # 📊 Demo
 
-https://user-images.githubusercontent.com/123456789/xyz/demo_video.mp4  
-*(Inserire video reale o GIF dimostrativa)*
+[![Guarda la demo su YouTube](https://img.youtube.com/vi/GrTJXAU_2ls/0.jpg)](https://youtu.be/GrTJXAU_2ls)
 
 ---
 
