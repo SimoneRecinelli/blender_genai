@@ -73,5 +73,5 @@ else
 fi
 
 echo "============================================"
-echo "[SETUP] ✅ Installazione completata (MINIMAL)!"
+echo "[SETUP] ✅ Installazione completata!"
 echo "============================================"
