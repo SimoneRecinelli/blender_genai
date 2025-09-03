@@ -265,11 +265,11 @@ Abbiamo fornito **4 script** che automatizzano l’installazione delle dipendenz
    ```
 3. Esegui lo script scelto:
    ```bat
-   setup_env_win_full.bat
+   .\setup_env_win_full.bat
    ```
    oppure:
    ```bat
-   setup_env_win_minimal.bat
+   .\setup_env_win_minimal.bat
    ```
 
 ---
