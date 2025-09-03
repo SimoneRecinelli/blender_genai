@@ -358,7 +358,7 @@ Di seguito si allegano due screen dell'interfaccia del chatbot realizzato, rispe
 
 ## 🎙️ Avvio manuale dello Speech Server
 
-Per utilizzare la **dettatura vocale** (Whisper), è necessario avviare manualmente il server Flask `speech_server.py`.  
+Nel caso in cui lo `speech_server.py` non parta in automatico nel momenti di apertura della chat esterna, per utilizzare la **dettatura vocale** (Whisper), è necessario avviare manualmente il server Flask dedicato.  
 Gli script `.sh` / `.bat` installano tutte le dipendenze, ma il server va lanciato con il Python integrato di Blender:
 
 ### macOS
