@@ -25,7 +25,7 @@ REM 3. Installa numpy compatibile
 "%BLENDER_PY%" -m pip install --force-reinstall "numpy==1.26.4" --target "%MODULES_DIR%"
 
 REM 4. Installa openai-whisper senza dipendenze
-"%BLENDER_PY%" -m pip install --no-deps --upgrade openai-whisper --target "%MODULES_DIR%"
+"%BLENDER_PY%" -m pip install --upgrade openai-whisper --target "%MODULES_DIR%"
 
 REM 5. Installa pacchetti principali
 "%BLENDER_PY%" -m pip install ^
