@@ -1,11 +1,11 @@
 #!/bin/bash
-# Setup ambiente Blender GenAI su macOS (MINIMAL)
+# Setup ambiente Blender GenAI su macOS
 
 BLENDER_PY="/Applications/Blender.app/Contents/Resources/4.5/python/bin/python3.11"
 MODULES_DIR="$HOME/Library/Application Support/Blender/4.5/scripts/modules"
 
 echo "============================================"
-echo "[SETUP] Blender GenAI Assistant - macOS (MINIMAL)"
+echo "[SETUP] Blender GenAI Assistant - macOS"
 echo "============================================"
 
 # 0. Usa Python di Blender
