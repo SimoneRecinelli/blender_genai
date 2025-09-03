@@ -148,7 +148,7 @@ def start_flask_server():
         from .utils import query_ollama_with_docs_async
     except ImportError as e:
         print("[ERRORE] Dipendenza mancante all’avvio del server:", e)
-        print("⚠️ Esegui prima setup_env_mac_full.sh o setup_env_win_full.bat")
+        print("⚠️ Esegui prima setup_env_mac_minimal.sh o setup_env_win_minimal.bat")
         return
 
     app = Flask(__name__)
