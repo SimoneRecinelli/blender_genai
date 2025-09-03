@@ -5,7 +5,6 @@ import base64
 import requests
 import json
 
-# === Import condizionato per Blender ===
 try:
     import bpy
     import bmesh
@@ -15,7 +14,7 @@ except ImportError:
     bmesh = None
     BLENDER_ENV = False
 
-# === GPU Detection (Apple Silicon) ===
+# GPU Detection
 def is_gpu_available():
     import platform
     from torch import backends
@@ -39,7 +38,7 @@ def is_question_technical(question: str) -> bool:
     return True
 
 
-# === GESTIONE CRONOLOGIA CHAT CON CLASSE ===
+# GESTIONE CRONOLOGIA CHAT
 
 def get_chat_history_path():
     return os.path.join(os.path.dirname(__file__), "chat_history.json")
@@ -64,7 +63,7 @@ class ChatHistoryManager:
         try:
             with open(self._path, "w", encoding="utf-8") as f:
                 json.dump(self._history, f, ensure_ascii=False, indent=2)
-            os.chmod(self._path, 0o644)  # ✅ Assicura lettura/scrittura
+            os.chmod(self._path, 0o644)
         except Exception as e:
             print(f"[ERRORE] Salvataggio chat: {e}")
 
@@ -87,7 +86,7 @@ class ChatHistoryManager:
     def get_history_list(self):
         return self._history[:]
 
-# === QUERY RAG (senza import globali) ===
+# QUERY RAG
 
 def query_rag(question, top_k=5):
     import faiss
@@ -156,7 +155,6 @@ def recupera_chunk_simili_faiss(domanda, k=15):
         testo = texts[idx]
         meta = metadatas[idx]
 
-        # Fonte preferita: chapter + topic
         chapter = meta.get("chapter")
         topic = meta.get("topic")
 
@@ -170,9 +168,6 @@ def recupera_chunk_simili_faiss(domanda, k=15):
         risultati.append(f"[Fonte: {fonte}]\n{testo}")
 
     return "\n\n".join(risultati)
-
-
-# === CONTESTO MESH BLENDER ===
 
 def get_model_context(selected_objs):
     if not BLENDER_ENV:
@@ -190,7 +185,7 @@ def get_model_context(selected_objs):
         type_counts[obj_type] = type_counts.get(obj_type, 0) + 1
         names_by_type.setdefault(obj_type, []).append(obj.name)
 
-        # === MESH ===
+        # MESH
         if obj_type == 'MESH':
             mesh = obj.data
             dimensions = obj.dimensions
@@ -230,7 +225,7 @@ def get_model_context(selected_objs):
                 "Facce con normali invertite (Z-)": flipped_normals
             }
 
-        # === LIGHT ===
+        # LIGHT
         elif obj_type == 'LIGHT':
             light = obj.data
             context = {
@@ -244,7 +239,7 @@ def get_model_context(selected_objs):
                 "Shadows": "On" if light.use_shadow else "Off"
             }
 
-        # === CAMERA ===
+        # CAMERA
         elif obj_type == 'CAMERA':
             cam = obj.data
             context = {
@@ -260,7 +255,7 @@ def get_model_context(selected_objs):
                 "Depth of Field": "On" if cam.dof.use_dof else "Off"
             }
 
-        # === ALTRI TIPI ===
+        # ALTRI TIPI
         else:
             context = {
                 "Nome oggetto": obj.name,
@@ -271,11 +266,9 @@ def get_model_context(selected_objs):
                 "Scala": f"{obj.scale.x:.2f}, {obj.scale.y:.2f}, {obj.scale.z:.2f}",
             }
 
-            # Se possibile, aggiungi nome del datablock associato (es. font, curve, ecc.)
             if obj.data and hasattr(obj.data, "name"):
                 context["Datablock"] = obj.data.name
 
-            # Se disponibile, aggiungi dimensioni (non tutti gli oggetti le hanno)
             if hasattr(obj, "dimensions"):
                 context[
                     "Dimensioni (X,Y,Z)"] = f"{obj.dimensions.x:.2f}, {obj.dimensions.y:.2f}, {obj.dimensions.z:.2f}"
@@ -283,7 +276,6 @@ def get_model_context(selected_objs):
         summary = "\n".join([f"{k}: {v}" for k, v in context.items()])
         context_list.append(summary)
 
-    # === Riepilogo iniziale ===
     type_summary = []
     for obj_type, count in type_counts.items():
         names = ", ".join(names_by_type[obj_type])
@@ -295,7 +287,7 @@ def get_model_context(selected_objs):
 
 
 
-# === INVIO HTTP A OLLAMA VISION ===
+# INVIO HTTP A OLLAMA VISION 
 
 def send_vision_prompt_to_ollama(prompt: str, image_path: str = None, model: str = "llama3.2-vision") -> str:
     payload = {
@@ -325,7 +317,7 @@ def send_vision_prompt_to_ollama(prompt: str, image_path: str = None, model: str
         return f"[Errore Ollama Vision] {str(e)}"
 
 
-# === QUERY OLLAMA CON DOC + IMMAGINE (ASYNC) ===
+# QUERY OLLAMA CON DOC + IMMAGINE (ASYNC)
 
 def query_ollama_with_docs_async(user_question, props, selected_objects, update_callback=None):
 
@@ -358,7 +350,7 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
             print("[DEBUG] Domanda non tecnica — nessun chunk documentazione usato.")
             blender_docs = ""
 
-        # === PROMPT BUILDER ===
+        # PROMPT BUILDER
         def build_prompt(user_question: str, scene_context: str, doc_text: str, chat_history: str) -> str:
             return (
                 "You are a strict technical assistant for Blender 4.4.\n"
@@ -404,7 +396,7 @@ def query_ollama_with_docs_async(user_question, props, selected_objects, update_
                 f"=== User Question (optional) ===\n{user_question or 'Describe the scene.'}\n"
             )
 
-        # === COSTRUISCI PROMPT ===
+        # COSTRUISCI PROMPT
         if image_path and os.path.exists(image_path):
             prompt = build_image_prompt(user_question, model_context, chat_history)
             if user_question.strip():

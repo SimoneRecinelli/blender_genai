@@ -21,7 +21,7 @@ bl_info = {
 def start_speech_server():
     server_path = os.path.join(os.path.dirname(__file__), "speech_server.py")
 
-    # 🔎 Verifica se è già attivo su porta 5056
+    # Verifica se è già attivo su porta 5056
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         if s.connect_ex(("127.0.0.1", 5056)) == 0:
@@ -32,7 +32,7 @@ def start_speech_server():
     finally:
         s.close()
 
-    # 🟢 Avvia con il Python di Blender (non quello di sistema)
+    # Avvia con il Python di Blender (non quello di sistema)
     try:
         blender_python = sys.executable
         subprocess.Popen([blender_python, server_path],
@@ -57,10 +57,10 @@ def shutdown_gui():
 
 def monitor_blender_shutdown():
     if not bpy.app.background and not bpy.context.window_manager.windows:
-        # Blender sta chiudendo → invia shutdown alla GUI
+        # Shutdown della GUI alla chiusura di Blender
         shutdown_gui()
-        return None  # Non richiama il timer
-    return 1.0  # Richiama ogni 1 secondo
+        return None
+    return 1.0
 
 
 def register():
@@ -68,16 +68,15 @@ def register():
 
     genai_operator.register()
     panel.register()
-    # gui_launcher.register()
 
-    # ✅ Avvia il server Flask
+    # Avvia il server Flask
     try:
         server.start_flask_server()
         print("[INFO] Server Flask avviato da __init__.py")
     except Exception as e:
         print("[ERRORE] Avvio server Flask:", e)
 
-    # ✅ Avvia il server vocale
+    # Avvia il server vocale
     start_speech_server()
 
     bpy.app.timers.register(monitor_blender_shutdown, persistent=True)

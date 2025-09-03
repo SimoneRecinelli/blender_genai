@@ -18,7 +18,6 @@ from PyQt5.QtSvg import QSvgWidget
 IS_MAC = platform.system() == "Darwin"
 IS_WIN = platform.system() == "Windows"
 
-# PyObjC per macOS (aggiunta al sys.path se necessario)
 if IS_MAC:
     user_site = os.path.expanduser("~/.local/lib/python3.11/site-packages")
     if user_site not in sys.path:
@@ -42,14 +41,12 @@ class ChatTextBox(QTextEdit):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Return and not (event.modifiers() & Qt.ShiftModifier):
-            # 🔒 Blocca se non ci sono né testo né immagine
             testo = self.toPlainText().strip()
             if (not testo and not self.parent.image_path):
-                return  # IGNORA pressione Invio
+                return
 
-            # 🔒 Blocca se pulsante invio disabilitato
             if not self.parent.send_button.isEnabled():
-                return  # IGNORA pressione Invio
+                return
 
             if not self.parent.attesa_risposta and not self.parent.dettatura_in_corso:
                 self.parent.invia_domanda()
@@ -90,16 +87,16 @@ class ThemeSwitch(QWidget):
 
         self.setFixedSize(70, 36)
         self.on_toggle = on_toggle
-        self.state = False  # dark mode iniziale
+        self.state = False
         self.setCursor(Qt.PointingHandCursor)
 
-        # === Contenitore grigio fisso ===
+        # Contenitore grigio fisso
         self.track = QFrame(self)
         self.track.setGeometry(0, 0, 70, 36)
         self.track.setStyleSheet("background-color: #ddd; border-radius: 18px;")
         self.track.setAttribute(Qt.WA_StyledBackground, True)
 
-        # === Icone SVG
+        # Icone SVG
         self.icon_moon = QSvgWidget(os.path.join(BASE_DIR, "icons/moon.svg"), self.track)
         self.icon_moon.setFixedSize(16, 16)
         self.icon_moon.move(8, 10)
@@ -108,17 +105,17 @@ class ThemeSwitch(QWidget):
         self.icon_sun.setFixedSize(16, 16)
         self.icon_sun.move(46, 10)
 
-        # === Pallina bianca
+        # Pallina bianca
         self.thumb = QFrame(self)
         self.thumb.setGeometry(2, 2, 32, 32)
         self.thumb.setStyleSheet("background-color: white; border-radius: 16px;")
         self.thumb.setAttribute(Qt.WA_StyledBackground, True)
 
-        # === Animazione
+        # Animazione
         self.anim = QPropertyAnimation(self.thumb, b"geometry")
         self.anim.setDuration(200)
 
-        # === Attiva toggle al click
+        # Attiva toggle al click
         self.track.mousePressEvent = self.toggle_theme
         self.thumb.mousePressEvent = self.toggle_theme
 
@@ -141,7 +138,7 @@ class GenAIClient(QWidget):
 
         self.voice_process = None
 
-        # === Imposta l'icona della finestra in base al sistema operativo ===
+        # Imposta l'icona della finestra in base al sistema operativo
         if IS_MAC:
             from AppKit import NSApplication, NSImage
             icon_path = os.path.join(BASE_DIR, "icons", "genai_icon.icns")
@@ -153,7 +150,6 @@ class GenAIClient(QWidget):
         else:
             icon_path = os.path.join(BASE_DIR, "icons", "genai_icon.png")
 
-        # Usa QIcon cross-platform
         if os.path.exists(icon_path):
             self.setWindowIcon(QIcon(icon_path))
         else:
@@ -266,14 +262,14 @@ class GenAIClient(QWidget):
         self.input_layout.addWidget(self.send_button)
 
         self.main_layout = QVBoxLayout()
-        self.main_layout.setContentsMargins(12, 10, 12, 10)  # sinistra, sopra, destra, sotto
+        self.main_layout.setContentsMargins(12, 10, 12, 10)
         self.main_layout.setSpacing(10)
 
         self.main_layout.addWidget(self.scroll_area)
         self.main_layout.addWidget(self.preview_widget)
         self.main_layout.addLayout(self.input_layout)
 
-        # === Switch moderno centrato ===
+        # Switch centrato
         self.theme_switch = ThemeSwitch(self.toggle_tema)
         switch_row = QHBoxLayout()
         switch_row.addStretch()
@@ -283,12 +279,11 @@ class GenAIClient(QWidget):
 
         self.content = QWidget()
         self.content.setLayout(self.main_layout)
-        self.setLayout(QVBoxLayout())  # wrapper
+        self.setLayout(QVBoxLayout())
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.layout().setSpacing(0)
         self.layout().addWidget(self.content)
 
-        # Applica dark mode solo al contenuto, non alla finestra
         self.content.setStyleSheet(self.dark_stylesheet)
 
         self.image_path = None
@@ -309,7 +304,7 @@ class GenAIClient(QWidget):
         self.speech_server_process = None
         print("[DEBUG] Metodo avvia_speech_server() chiamato")
 
-        self.registrazione_attiva = False  # stato toggle microfono
+        self.registrazione_attiva = False
 
         import psutil
 
@@ -331,7 +326,7 @@ class GenAIClient(QWidget):
                 QApplication.instance().quit()
                 return
 
-            QTimer.singleShot(1000, monitor_blender_process)  # ricontrolla ogni secondo
+            QTimer.singleShot(1000, monitor_blender_process)
 
         QTimer.singleShot(1000, monitor_blender_process)
 
@@ -347,18 +342,18 @@ class GenAIClient(QWidget):
                 self.activateWindow()
                 self.repaint()
 
-            QTimer.singleShot(300, raise_fix)  # ✅ delay essenziale per evitare salto
+            QTimer.singleShot(300, raise_fix)
 
     def mostra_immagine_intera(self, event):
         if self.image_path and os.path.exists(self.image_path):
-            # 🔽 Rimuove temporaneamente "always on top"
+            # Rimuove temporaneamente "always on top"
             self.setWindowFlags(self.windowFlags() & ~Qt.WindowStaysOnTopHint)
             self.show()
 
             viewer = ImageViewer(self.image_path)
             viewer.exec_()
 
-            # 🔼 Ripristina always on top dopo la chiusura
+            # Ripristina "always on top" dopo la chiusura
             self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
             self.show()
             if IS_MAC:
@@ -456,7 +451,7 @@ class GenAIClient(QWidget):
         wrapper_layout = QHBoxLayout()
         wrapper_layout.setContentsMargins(0, 0, 0, 0)
 
-        # === Pulsante lettura vocale ===
+        # Pulsante lettura vocale
         if sender == 'bot':
             speak_button = QPushButton()
             speak_button.setIcon(QIcon(os.path.join(BASE_DIR, "icons", "speak.svg")))
@@ -512,10 +507,10 @@ class GenAIClient(QWidget):
                         self.voice_process = subprocess.Popen(["say", "-v", "Samantha", text])
 
                     elif IS_WIN:
-                        # Windows: usa System.Speech e manda il testo su STDIN (UTF-8)
+                        # Windows: usa System.Speech
                         ps_exe = r"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
                         if not os.path.exists(ps_exe):
-                            ps_exe = "powershell"  # fallback, se serve
+                            ps_exe = "powershell"
 
                         ps_cmd = [
                             ps_exe,
@@ -537,7 +532,7 @@ class GenAIClient(QWidget):
                             ps_cmd,
                             stdin=subprocess.PIPE,
                             stdout=subprocess.DEVNULL,
-                            stderr=subprocess.PIPE,  # così possiamo leggere eventuali errori
+                            stderr=subprocess.PIPE,
                         )
                         try:
                             self.voice_process.stdin.write(text.encode("utf-8", errors="ignore"))
@@ -546,14 +541,13 @@ class GenAIClient(QWidget):
                             pass
 
                     else:
-                        # Linux (opzionale)
+                        # Linux
                         self.voice_process = subprocess.Popen(["espeak", text])
 
                 except FileNotFoundError as e:
                     self.add_message(f"❌ Lettura vocale non disponibile ({e}).", "bot")
                     self.voice_process = None
                 except Exception as e:
-                    # prova a mostrare stderr di PowerShell se presente
                     try:
                         err = b""
                         if self.voice_process and self.voice_process.stderr:
@@ -629,7 +623,6 @@ class GenAIClient(QWidget):
         image_path = self.image_path
         self.rimuovi_immagine()
 
-        # Spinner di caricamento
         self.loading_label = QLabel()
         movie = QMovie(LOADING_GIF)
         self.loading_label.setMovie(movie)
@@ -671,7 +664,6 @@ class GenAIClient(QWidget):
                 risposta = data["response"]
                 self.add_message(risposta, 'bot')
 
-                # 🛑 FERMA IL POLLING SE È UNA RISPOSTA FORZATA O INCOMPLETA
                 lower_resp = risposta.lower()
                 if (
                     "not present in the documentation" in lower_resp
@@ -685,7 +677,7 @@ class GenAIClient(QWidget):
                 self.loading_label.hide()
             self.send_button.setEnabled(True)
             self.attesa_risposta = False
-            self.timer.stop()  # 🔁 ferma anche in caso di errore
+            self.timer.stop()
             self.add_message(f"Errore: {str(e)}", 'bot')
 
     def carica_immagine(self):
@@ -698,7 +690,6 @@ class GenAIClient(QWidget):
             self._lower_window_windows()
             QTimer.singleShot(500, self._esegui_screenshot)
 
-    # --- WINDOWS: abbassa/riporta la finestra in modo sicuro ---
     def _lower_window_windows(self):
         if not IS_WIN:
             return
@@ -937,7 +928,7 @@ class GenAIClient(QWidget):
                                 return p
                         except Exception:
                             continue
-                return sys.executable  # fallback a Blender
+                return sys.executable
 
             import shutil
             blender_python = trova_interprete_compatibile()
@@ -1059,14 +1050,12 @@ class GenAIClient(QWidget):
         )
         self.aggiorna_stato_invio()
 
-
-# 🔁 1. Prova a bindare: se fallisce, esci (GUI già aperta)
 import socket as _sock
 
 def start_singleton_socket():
     s = _sock.socket(_sock.AF_INET, _sock.SOCK_STREAM)
     try:
-        s.bind(("localhost", 5055))  # socket unico
+        s.bind(("localhost", 5055))
         s.listen(1)
 
         def handle_connections():
@@ -1088,7 +1077,7 @@ def start_singleton_socket():
         threading.Thread(target=handle_connections, daemon=True).start()
         return True
     except OSError:
-        return False  # socket già usato: GUI aperta
+        return False
 
 def bring_gui_to_front():
     win = QApplication.activeWindow()

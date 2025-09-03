@@ -3,7 +3,7 @@ import subprocess
 import os
 import sys
 
-# ✅ Proprietà necessarie per la comunicazione
+# Proprietà necessarie per la comunicazione
 class GenAIChatEntry(bpy.types.PropertyGroup):
     sender: bpy.props.EnumProperty(
         name="Sender",
@@ -22,7 +22,7 @@ class GenAIProperties(bpy.types.PropertyGroup):
     genai_image_path: bpy.props.StringProperty(name="Percorso immagine", subtype='FILE_PATH')
     genai_status: bpy.props.StringProperty(name="Stato", default="")
 
-# ✅ Solo il bottone visivo per aprire la GUI
+# Bottone visivo per aprire la GUI
 class GENAI_PT_Panel(bpy.types.Panel):
     bl_label = "GenAI Assistant"
     bl_idname = "GENAI_PT_panel"
@@ -46,7 +46,7 @@ class GENAI_OT_ShowExternalChat(bpy.types.Operator):
         import socket
         script_path = os.path.join(os.path.dirname(__file__), "extern_gui.py")
 
-        # 🔎 Verifica se la GUI è già attiva (socket 5055)
+        # Verifica se la GUI è già attiva (socket 5055)
         try:
             s = socket.create_connection(("localhost", 5055), timeout=1)
             s.sendall(b"bring-to-front")
@@ -54,9 +54,8 @@ class GENAI_OT_ShowExternalChat(bpy.types.Operator):
             self.report({'INFO'}, "Chat già attiva → portata in primo piano.")
             return {'FINISHED'}
         except (ConnectionRefusedError, OSError):
-            pass  # nessuna GUI attiva, avvia nuova istanza
+            pass
 
-        # 🟢 Avvia GUI in processo separato
         try:
             subprocess.Popen(
                 [sys.executable, script_path],
@@ -96,7 +95,7 @@ class GENAI_OT_RunRAGpdf(bpy.types.Operator):
         return {'FINISHED'}
 
 
-# ✅ Registrazione di tutte le classi
+# Registrazione di tutte le classi
 classes = [
     GenAIChatEntry,
     GenAIProperties,

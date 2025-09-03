@@ -3,7 +3,7 @@ import sys
 import platform
 import pickle
 
-# === Aggiunge la cartella modules di Blender al sys.path ===
+# Aggiunge la cartella modules di Blender al sys.path
 def get_modules_dir():
     blender_version = "4.5"  # cambia se usi Blender diverso
     if platform.system() == "Darwin":
@@ -18,7 +18,7 @@ if modules_dir not in sys.path:
     sys.path.insert(0, modules_dir)
 
 
-# === Dipendenze ===
+# Dipendenze
 try:
     from langchain_community.document_loaders import PyMuPDFLoader
     from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -31,35 +31,34 @@ except ImportError as e:
     print("Installa con:\n pip install langchain faiss-cpu sentence-transformers PyMuPDF openai")
     sys.exit(1)
 
-# === Config ===
+# Config
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PDF_PATH = os.path.join(BASE_DIR, "book_sliced.pdf")
 INDEX_PATH = os.path.join(BASE_DIR, "blender_faiss_index.pkl")
 EMBEDDING_MODEL = "intfloat/e5-large-v2"
 QUERY = "How I can apply a texture in Blender?"
 
-# === 1. Caricamento PDF ===
+# Caricamento PDF
 loader = PyMuPDFLoader(PDF_PATH)
 docs = loader.load()
 
-# === 2. Suddivisione in chunk ===
+# Suddivisione in chunk
 splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=100)
 chunks = splitter.split_documents(docs)
 
-# 👉 Aggiungo info extra per i metadati
 for i, doc in enumerate(chunks):
     page = doc.metadata.get("page", "unknown")
     doc.metadata["chunk_index"] = i
     doc.metadata["ref"] = f"pagina {page}, chunk {i}"
 
-# === 3. Embedding model ===
+# Embedding model
 embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
 
-# === 4. Costruzione FAISS retriever ===
+# Costruzione FAISS retriever
 db = FAISS.from_documents(chunks, embeddings)
 retriever = db.as_retriever(search_kwargs={"k": 6})
 
-# === 💾 5. Salvataggio su disco ===
+# Salvataggio su disco
 try:
     with open(INDEX_PATH, "wb") as f:
         pickle.dump({
@@ -70,13 +69,13 @@ try:
 except Exception as e:
     print(f"[ERRORE] durante il salvataggio: {e}")
 
-# === 6. LLM ===
+# LLM
 llm = Ollama(model="llama3:instruct", temperature=0)
 
-# === 7. Catena RAG ===
+# Catena RAG
 qa_chain = RetrievalQA.from_chain_type(llm=llm, retriever=retriever, return_source_documents=True)
 
-# === 8. Esecuzione ===
+# Esecuzione
 print(f"\nDomanda: {QUERY}\n")
 res = qa_chain.invoke(QUERY)
 

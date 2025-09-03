@@ -65,17 +65,17 @@ class GENAI_OT_LoadImage(bpy.types.Operator):
         props = context.scene.genai_props
         props.genai_image_path = self.filepath
 
-        # ✅ Messaggio nel pannello
+        # Messaggio nel pannello
         props.genai_status = f"Immagine caricata: {os.path.basename(self.filepath)}"
 
-        # ✅ Funzione di reset + aggiornamento forzato UI
+        # Funzione di reset
         def clear_status():
             props.genai_status = ""
             for window in bpy.context.window_manager.windows:
                 for area in window.screen.areas:
                     if area.type == 'VIEW_3D':
                         area.tag_redraw()
-            return None  # disattiva timer
+            return None
 
         bpy.app.timers.register(clear_status, first_interval=10.0)
 
@@ -114,7 +114,7 @@ class GENAI_OT_ShowExternalChat(bpy.types.Operator):
         try:
             from . import gui_launcher
 
-            # Se la GUI è già attiva, mandale un messaggio per portarsi in primo piano
+            # Se la GUI è già attiva, manda un messaggio per portarsi in primo piano
             if gui_launcher.bring_window_to_front():
                 self.report({'INFO'}, "🔁 Chat già attiva — riportata in primo piano.")
                 return {'FINISHED'}

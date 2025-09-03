@@ -54,7 +54,7 @@ echo "[SETUP] Installo numpy==1.26.4 (compatibile con Whisper + Numba)"
 echo "[SETUP] Installo openai-whisper (senza dipendenze)"
 "$BLENDER_PY" -m pip install --no-deps --upgrade openai-whisper --target "$MODULES_DIR"
 
-# 7. Installa pacchetti principali (senza PyQt5 da pip, che non funziona su ARM)
+# 7. Installa pacchetti principali
 echo "[SETUP] Installo pacchetti principali..."
 "$BLENDER_PY" -m pip install \
     faiss-cpu flask requests psutil PyMuPDF pyttsx3 \
@@ -63,7 +63,7 @@ echo "[SETUP] Installo pacchetti principali..."
     pyobjc-core pyobjc-framework-Cocoa pyobjc-framework-Quartz \
     --target "$MODULES_DIR" --upgrade
 
-# 7b. Installa PyQt5 con Homebrew (più stabile su macOS ARM)
+# 7b. Installa PyQt5 con Homebrew
 if ! brew list pyqt@5 &>/dev/null; then
     echo "[SETUP] Installo PyQt5 con Homebrew..."
     brew install pyqt@5
@@ -71,7 +71,6 @@ else
     echo "[SETUP] ✓ PyQt5 già presente"
 fi
 
-# 8. Reinstalla numpy 1.26.4 per sicurezza
 echo "[SETUP] Reinstallo numpy==1.26.4 per sicurezza"
 "$BLENDER_PY" -m pip install --force-reinstall "numpy==1.26.4" --target "$MODULES_DIR"
 
@@ -102,7 +101,7 @@ echo "[SETUP] Scarico modelli Ollama richiesti..."
 ollama pull llama3.2-vision
 ollama pull llama3:instruct
 
-# 12. Scarica modello Whisper (base, ~139MB) se manca
+# 12. Scarica modello Whisper se manca
 WHISPER_CACHE="$HOME/.cache/whisper"
 mkdir -p "$WHISPER_CACHE"
 

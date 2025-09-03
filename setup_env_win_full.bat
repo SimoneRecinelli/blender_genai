@@ -65,7 +65,7 @@ REM 7. Installa pacchetti principali
     langchain langchain-core langchain-community langchain-huggingface sentence-transformers ^
     --target "%MODULES_DIR%" --upgrade
 
-REM 8. Reinstalla numpy per sicurezza
+REM
 "%BLENDER_PY%" -m pip install --force-reinstall "numpy==1.26.4" --target "%MODULES_DIR%"
 
 REM 9. Installa pyaudio (usa PortAudio incluso)

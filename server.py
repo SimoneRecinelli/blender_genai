@@ -1,6 +1,6 @@
 import sys, os, platform, threading, time, shutil, ctypes
 
-# === 1. Aggiungi la cartella 'scripts/modules' di Blender a sys.path ===
+# Aggiunge la cartella 'scripts/modules' di Blender a sys.path
 try:
     import bpy
     modules_dir = bpy.utils.user_resource('SCRIPTS', path="modules", create=True)
@@ -11,14 +11,14 @@ except Exception as e:
     modules_dir = None
 
 
-# === 2. Determina la cartella modules in base al sistema operativo ===
+# Determina la cartella modules in base al sistema operativo
 def get_modules_dir():
     try:
         import bpy
-        major, minor, _ = bpy.app.version  # es. (4, 5, 0)
+        major, minor, _ = bpy.app.version
         blender_version = f"{major}.{minor}"
     except Exception:
-        blender_version = "4.5"  # fallback se lanci fuori da Blender
+        blender_version = "4.5"
 
     if platform.system() == "Darwin":
         return os.path.expanduser(f"~/Library/Application Support/Blender/{blender_version}/scripts/modules")
@@ -32,8 +32,6 @@ modules_dir = get_modules_dir()
 if modules_dir not in sys.path:
     sys.path.insert(0, modules_dir)
 
-
-# ========= Helper Windows per elevazione UAC =========
 def _is_admin():
     try:
         return ctypes.windll.shell32.IsUserAnAdmin()
@@ -63,7 +61,7 @@ def _wait_until_ffmpeg_ready(timeout_sec=240, interval_sec=3):
     return False
 
 
-# === 3. Installazione ffmpeg se manca ===
+# Installazione ffmpeg se manca
 def install_ffmpeg_if_needed():
     if shutil.which("ffmpeg") is not None:
         print("[SETUP] ✓ ffmpeg già presente")
@@ -135,7 +133,7 @@ def install_ffmpeg_if_needed():
         print("[ERRORE] Sistema operativo non supportato per l’installazione automatica di ffmpeg.")
 
 
-# === 4. Flask server: Lazy init ===
+# Flask server
 _flask_server_started = False
 
 def start_flask_server():

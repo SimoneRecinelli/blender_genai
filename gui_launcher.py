@@ -14,7 +14,7 @@ def bring_window_to_front():
 
 def launch_gui_if_not_running():
     if bring_window_to_front():
-        return  # Già attiva, non rilancio
+        return
 
     # Lancia GUI solo se non attiva
     gui_path = os.path.join(os.path.dirname(__file__), "extern_gui.py")

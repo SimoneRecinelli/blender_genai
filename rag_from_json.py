@@ -8,7 +8,7 @@ user_site = os.path.expanduser("~/.local/lib/python3.11/site-packages")
 if user_site not in sys.path:
     sys.path.append(user_site)
 
-# === Dipendenze ===
+# Dipendenze
 try:
     from langchain_core.documents import Document
     from langchain_community.vectorstores import FAISS
@@ -20,7 +20,7 @@ except ImportError as e:
     print("Installa con:\n pip install langchain faiss-cpu sentence-transformers openai")
     sys.exit(1)
 
-# === Config ===
+# Config
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 JSON_PATH = os.path.join(BASE_DIR, "blender_chunks.json")
 INDEX_PATH = os.path.join(BASE_DIR, "blender_faiss_index.pkl")
@@ -42,13 +42,10 @@ RISPOSTA (dettagliata, chiara e con riferimenti se presenti):"""
 )
 
 
-# === 1. Caricamento JSON ===
-# print("[INFO] Caricamento chunk da JSON...")
+# Caricamento JSON
 with open(JSON_PATH, "r", encoding="utf-8") as f:
     raw_chunks = json.load(f)
 
-# === 2. Conversione in Document() ===
-# print("[INFO] Creazione Document objects...")
 docs = []
 for entry in raw_chunks:
     metadata = {k: v for k, v in entry.items() if k != "text"}
@@ -56,30 +53,25 @@ for entry in raw_chunks:
     docs.append(Document(page_content=entry["text"], metadata=metadata))
 
 
-# === 3. Embedding ===
-# print(f"[INFO] Calcolo embeddings con: {EMBEDDING_MODEL}")
+# Embedding
 embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
 
-# === 4. FAISS ===
-# print("[INFO] Indicizzazione FAISS...")
+# FAISS
 db = FAISS.from_documents(docs, embeddings)
 retriever = db.as_retriever(search_kwargs={"k": 15})
 
-# === 5. Salvataggio su disco ===
-# print(f"[INFO] Salvataggio indice FAISS in: {INDEX_PATH}")
+# Salvataggio su disco
 with open(INDEX_PATH, "wb") as f:
     pickle.dump({
         "index": db.index,
         "texts": [doc.page_content for doc in docs],
         "metadatas": [doc.metadata for doc in docs]
     }, f)
-# print("Indice salvato correttamente.")
 
-# === 6. LLM ===
-# print("[INFO] Avvio LLM...")
+# LLM
 llm = Ollama(model="llama3:instruct", temperature=0)
 
-# === 7. RetrievalQA ===
+# RetrievalQA
 qa_chain = RetrievalQA.from_chain_type(
     llm=llm,
     retriever=retriever,
@@ -88,7 +80,7 @@ qa_chain = RetrievalQA.from_chain_type(
 )
 
 
-# === 8. Esecuzione ===
+# Esecuzione
 print(f"\nDomanda: {QUERY}\n")
 res = qa_chain.invoke(QUERY)
 

@@ -18,16 +18,12 @@ print("[DEBUG] sys.path:")
 for p in sys.path:
     print("   ", p)
 
-
-# === Stato e coda risultati ===
 stop_recording_flag = threading.Event()
 result_queue = queue.Queue()
 
-# === Imposta sys.path per moduli installati in setup_env_xxx ===
 def get_modules_dir():
-    # rileva versione Blender
     blender_version = "4.5"
-    if platform.system() == "Darwin":  # macOS
+    if platform.system() == "Darwin":
         return os.path.expanduser(f"~/Library/Application Support/Blender/{blender_version}/scripts/modules")
     elif platform.system() == "Windows":
         return os.path.join(os.getenv("APPDATA"), f"Blender Foundation\\Blender\\{blender_version}\\scripts\\modules")
@@ -40,19 +36,19 @@ modules_dir = get_modules_dir()
 if modules_dir not in sys.path:
     sys.path.insert(0, modules_dir)
 
-# === Importa moduli (già installati) ===
+# Importa moduli (già installati)
 from flask import Flask, jsonify
 import whisper
 import numpy as np
 import sounddevice as sd
 from scipy.io.wavfile import write
 
-# === Inizializza Flask e Whisper ===
+# Inizializza Flask e Whisper
 app = Flask(__name__)
 whisper_model = whisper.load_model("base")
 
 
-# === Funzione di registrazione e trascrizione ===
+# Funzione di registrazione e trascrizione
 def background_listen(max_duration=120):
     print("[DEBUG] 🎙️ Registrazione avviata.")
     stop_recording_flag.clear()
@@ -111,7 +107,7 @@ def background_listen(max_duration=120):
         result_queue.put({"status": "error", "error": str(e)})
 
 
-# === Endpoint Flask ===
+# Endpoint Flask
 @app.route('/speech', methods=['GET'])
 def speech_to_text():
     print("[DEBUG] ➤ Richiesta GET /speech ricevuta.")
