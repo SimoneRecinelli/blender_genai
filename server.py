@@ -1,4 +1,4 @@
-import sys, os, platform, threading, time, shutil, ctypes
+import sys, os, platform, threading, time, shutil, ctypes, subprocess
 
 # Aggiunge la cartella 'scripts/modules' di Blender a sys.path
 try:
