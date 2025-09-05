@@ -349,11 +349,11 @@ Una volta catturata la schermata in Blender, l'immagine compare in anteprima nel
 Di seguito si allegano due screen dell'interfaccia del chatbot realizzato, rispettivamente in light mode e dark mode:
 
 <p align="center">
-  <img src="icons/light_mode(1).png" alt="Interfaccia PyQt5 del chatbot GenAI Assistant" width="600"/>
+  <img src="icons/light_mode (1).png" alt="Interfaccia PyQt5 del chatbot GenAI Assistant" width="600"/>
 </p>
 
 <p align="center">
-  <img src="icons/dark_mode(1).png" alt="Interfaccia PyQt5 del chatbot GenAI Assistant" width="600"/>
+  <img src="icons/dark_mode (1).png" alt="Interfaccia PyQt5 del chatbot GenAI Assistant" width="600"/>
 </p>
 
 
