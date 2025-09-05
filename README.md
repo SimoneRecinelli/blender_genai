@@ -290,8 +290,9 @@ Per installare il progetto come addon Blender:
 Una volta installato l’addon:
 
 1. Premi **N** per aprire la sidebar a destra nella 3D View.  
-2. Vai nella sezione **GenAI**.  
-3. Clicca sul bottone **Apri Chat Esterna** per lanciare l’interfaccia PyQt5.  
+2. Vai nella sezione **GenAI**.
+3. **Prima di aprire la Chat esterna** occorre eseguire il RAG desiderato cliccando i rispettivi tasti "**Esegui RAG da JSON**" o "**Esegui RAG da PDF**".
+4. Clicca sul bottone **Apri Chat Esterna** per lanciare l’interfaccia PyQt5.  
 
 Da qui potrai:
 - 💬 Chattare con l’assistente in tempo reale  
