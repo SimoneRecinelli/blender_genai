@@ -27,15 +27,55 @@ def get_device_for_transformer():
     print("[INFO] Uso della CPU per sentence-transformers.")
     return "cpu"
 
+# --- Classificazione domande con embeddings ---
+from sentence_transformers import SentenceTransformer, util
+
+# Carica modello piccolo per classificazione
+_classifier_model = SentenceTransformer("intfloat/e5-small-v2", device=get_device_for_transformer())
+
+# Esempi base
+_examples = {
+    "technical": [
+        "How do I apply a subdivision surface modifier?",
+        "What is the shortcut for extrude in Blender?",
+        "Explain how to use grease pencil annotations.",
+        "How do I render with cycles?",
+        "How to enable proportional editing?"
+    ],
+    "non_technical": [
+        "Hello!",
+        "Good morning",
+        "You are awesome!",
+        "Thanks a lot",
+        "How are you?"
+    ]
+}
+
+# Pre-calcola embeddings degli esempi
+_example_embeddings = {
+    label: _classifier_model.encode(sents, convert_to_tensor=True)
+    for label, sents in _examples.items()
+}
+
+def classify_question(question: str, threshold: float = 0.45) -> str:
+    """Classifica una domanda come 'technical' o 'non_technical'."""
+    if not question.strip():
+        return "non_technical"
+    q_emb = _classifier_model.encode(question, convert_to_tensor=True)
+
+    scores = {}
+    for label, emb_set in _example_embeddings.items():
+        sim = util.cos_sim(q_emb, emb_set).mean().item()
+        scores[label] = sim
+
+    best_label = max(scores, key=scores.get)
+    if scores[best_label] < threshold:
+        return "non_technical"
+    return best_label
 
 def is_question_technical(question: str) -> bool:
-    question = question.strip().lower()
-    banal = {"hello", "hey", "ok", "how are you", "good morning", "good evening"}
-    if question in banal:
-        return False
-    if len(question.split()) < 3:
-        return False
-    return True
+    """Ritorna True solo se la domanda è tecnica (embeddings)."""
+    return classify_question(question) == "technical"
 
 
 # GESTIONE CRONOLOGIA CHAT
