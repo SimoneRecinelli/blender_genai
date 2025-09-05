@@ -29,7 +29,7 @@ Realizzato da **Simone Recinelli**, **Diego Santarelli** e **Andrea Marini**.
 
 - [📌 Funzionalità del sistema](#-funzionalità-del-sistema)
 - [🧹 Struttura del progetto](#-struttura-del-progetto)
-- [🛠️ Tecnologie utilizzate](#tecnologie-utilizzate)
+- [🛠️ Tecnologie utilizzate](#-tecnologie-utilizzate)
 - [⚖️ Documentazione Blender (PDF)](#-documentazione-blender-pdf)
 - [📑 Documentazione Blender (JSON)](#-documentazione-blender-json)
 - [⚙️ Requisiti e Setup](#-requisiti-e-setup)
