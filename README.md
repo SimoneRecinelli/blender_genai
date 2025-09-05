@@ -24,12 +24,11 @@ Realizzato da **Simone Recinelli**, **Diego Santarelli** e **Andrea Marini**.
 
 ---
 
-
 # 👆🏼 Indice
 
 - [📌 Funzionalità del sistema](#-funzionalità-del-sistema)
 - [🧹 Struttura del progetto](#-struttura-del-progetto)
-- [🛠️ Tecnologie utilizzate](#-tecnologie-utilizzate)
+- [🛠️ Tecnologie utilizzate](#tecnologie-utilizzate)
 - [⚖️ Documentazione Blender (PDF)](#-documentazione-blender-pdf)
 - [📑 Documentazione Blender (JSON)](#-documentazione-blender-json)
 - [⚙️ Requisiti e Setup](#-requisiti-e-setup)
@@ -310,7 +309,7 @@ gli script di setup (`.sh` su macOS, `.bat` su Windows) si occupano **automatica
 - avviare il servizio Ollama in background
 - scaricare i modelli richiesti:
   - `llama3.2-vision` → Chatbot multimodale: gestisce le domande con immagini/screenshot della scena Blender.
-  - `llama3:instruct` → Chatbot testuale con RAG: usato per le domande esclusivamente testuali, basandosi su documentazione JSON o PDF.
+  - `llama3:instruct` → modello testuale usato solo per la validazione del RAG (JSON o PDF), non nella pipeline operativa del chatbot.
 
 ⚠️ Affinché il plugin funzioni correttamente, Ollama deve essere **sempre attivo** sulla macchina:  
 gli script provvedono ad avviarlo in automatico, ma se necessario puoi avviarlo manualmente con:
@@ -349,11 +348,11 @@ Una volta catturata la schermata in Blender, l'immagine compare in anteprima nel
 Di seguito si allegano due screen dell'interfaccia del chatbot realizzato, rispettivamente in light mode e dark mode:
 
 <p align="center">
-  <img src="icons/light_mode.png" alt="Interfaccia PyQt5 del chatbot GenAI Assistant" width="600"/>
+  <img src="icons/light_mode (1).png" alt="Interfaccia PyQt5 del chatbot GenAI Assistant" width="600"/>
 </p>
 
 <p align="center">
-  <img src="icons/dark_mode.png" alt="Interfaccia PyQt5 del chatbot GenAI Assistant" width="600"/>
+  <img src="icons/dark_mode (1).png" alt="Interfaccia PyQt5 del chatbot GenAI Assistant" width="600"/>
 </p>
 
 
