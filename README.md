@@ -310,7 +310,7 @@ gli script di setup (`.sh` su macOS, `.bat` su Windows) si occupano **automatica
 - avviare il servizio Ollama in background
 - scaricare i modelli richiesti:
   - `llama3.2-vision` → Chatbot multimodale: gestisce le domande con immagini/screenshot della scena Blender.
-  - `llama3:instruct` → Chatbot testuale con RAG: usato per le domande esclusivamente testuali, basandosi su documentazione JSON o PDF.
+  - `llama3:instruct` → modello testuale usato solo per la validazione del RAG (JSON o PDF), non nella pipeline operativa del chatbot.
 
 ⚠️ Affinché il plugin funzioni correttamente, Ollama deve essere **sempre attivo** sulla macchina:  
 gli script provvedono ad avviarlo in automatico, ma se necessario puoi avviarlo manualmente con:
