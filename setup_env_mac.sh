@@ -33,7 +33,7 @@ echo "[SETUP] Installo pacchetti principali..."
     faiss-cpu flask requests psutil PyMuPDF pyttsx3 \
     SpeechRecognition sounddevice scipy torch regex \
     langchain langchain-core langchain-community langchain-huggingface sentence-transformers \
-    PyQt5 pyobjc
+    PyQt5 pyobjc packaging
 
 # 5. Installa PortAudio per sounddevice
 if ! brew list portaudio &>/dev/null; then
