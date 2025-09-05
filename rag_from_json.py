@@ -12,7 +12,7 @@ if user_site not in sys.path:
 try:
     from langchain_core.documents import Document
     from langchain_community.vectorstores import FAISS
-    from langchain_huggingface import HuggingFaceEmbeddings
+    from langchain_community.embeddings import HuggingFaceEmbeddings
     from langchain.chains import RetrievalQA
     from langchain_community.llms import Ollama
 except ImportError as e:
