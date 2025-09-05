@@ -40,16 +40,47 @@ _examples = {
         "What is the shortcut for extrude in Blender?",
         "Explain how to use grease pencil annotations.",
         "How do I render with cycles?",
-        "How to enable proportional editing?"
+        "How to enable proportional editing?",
+        "How can I bake a texture from one object to another?",
+        "What is the difference between Eevee and Cycles render engines?",
+        "How do I join two meshes together?",
+        "How can I unwrap UVs for a complex model?",
+        "How do I create a keyframe for an object?",
+        "How do I add a new material slot to a mesh?",
+        "How can I link objects between different Blender files?",
+        "What is the shortcut for switching between object and edit mode?",
+        "How do I enable and use the mirror modifier?",
+        "How can I import an OBJ file into Blender?",
+        "What settings control depth of field in the camera?",
+        "How do I enable snapping when modeling?",
+        "How can I bake ambient occlusion?",
+        "What is the difference between parenting and grouping?",
+        "How do I set the world background color?"
     ],
     "non_technical": [
         "Hello!",
         "Good morning",
+        "Good evening",
+        "Hey, how are you?",
         "You are awesome!",
         "Thanks a lot",
-        "How are you?"
+        "Have a nice day!",
+        "Great job!",
+        "Goodbye!",
+        "See you later",
+        "That was helpful, thanks!",
+        "You are so cool",
+        "Nice work!",
+        "Wow, impressive!",
+        "Keep it up!",
+        "Thank you so much",
+        "This is amazing",
+        "I appreciate your help",
+        "Fantastic!",
+        "Good luck!"
     ]
 }
+
 
 # Pre-calcola embeddings degli esempi
 _example_embeddings = {
